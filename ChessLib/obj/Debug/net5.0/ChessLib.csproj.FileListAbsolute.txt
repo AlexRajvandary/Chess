@@ -1,0 +1,12 @@
+C:\Users\Alex Raj\source\chess\ChessLib\bin\Debug\net5.0\ChessLib.deps.json
+C:\Users\Alex Raj\source\chess\ChessLib\bin\Debug\net5.0\ChessLib.dll
+C:\Users\Alex Raj\source\chess\ChessLib\bin\Debug\net5.0\ref\ChessLib.dll
+C:\Users\Alex Raj\source\chess\ChessLib\bin\Debug\net5.0\ChessLib.pdb
+C:\Users\Alex Raj\source\chess\ChessLib\obj\Debug\net5.0\ChessLib.csprojAssemblyReference.cache
+C:\Users\Alex Raj\source\chess\ChessLib\obj\Debug\net5.0\ChessLib.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Alex Raj\source\chess\ChessLib\obj\Debug\net5.0\ChessLib.AssemblyInfoInputs.cache
+C:\Users\Alex Raj\source\chess\ChessLib\obj\Debug\net5.0\ChessLib.AssemblyInfo.cs
+C:\Users\Alex Raj\source\chess\ChessLib\obj\Debug\net5.0\ChessLib.csproj.CoreCompileInputs.cache
+C:\Users\Alex Raj\source\chess\ChessLib\obj\Debug\net5.0\ChessLib.dll
+C:\Users\Alex Raj\source\chess\ChessLib\obj\Debug\net5.0\ref\ChessLib.dll
+C:\Users\Alex Raj\source\chess\ChessLib\obj\Debug\net5.0\ChessLib.pdb
