@@ -15,7 +15,7 @@ namespace ChessLib
             //Северо-восток
             for (int i = Position.Item1, j = Position.Item2; i < 8 & j < 8; i++, j++)
             {
-                if (GameField[i, j] != null)
+                if (GameField[i, j] != " ")
                 {
                     break;
                 }
@@ -24,7 +24,7 @@ namespace ChessLib
             //северо-запад
             for (int i = Position.Item1, j = Position.Item2; i > -1 & j < 8; i--, j++)
             {
-                if (GameField[i, j] != null)
+                if (GameField[i, j] != " ")
                 {
                     break;
                 }
@@ -33,7 +33,7 @@ namespace ChessLib
             //Юго-Восток
             for (int i = Position.Item1, j = Position.Item2; i < 8 & j > -1; i++, j--)
             {
-                if (GameField[i, j] != null)
+                if (GameField[i, j] != " ")
                 {
                     break;
                 }
@@ -42,7 +42,7 @@ namespace ChessLib
             //Юго-Запад
             for (int i = Position.Item1, j = Position.Item2; i > -1 & j > -1; i--, j--)
             {
-                if (GameField[i, j] != null)
+                if (GameField[i, j] != " ")
                 {
                     break;
                 }
@@ -51,7 +51,7 @@ namespace ChessLib
             //Север
             for (int j = Position.Item2; j < 8; j++)
             {
-                if (GameField[Position.Item1, j] != null)
+                if (GameField[Position.Item1, j] != " ")
                 {
                     break;
                 }
@@ -60,7 +60,7 @@ namespace ChessLib
             //Юг
             for (int j = Position.Item2; j > -1; j--)
             {
-                if (GameField[Position.Item1, j] != null)
+                if (GameField[Position.Item1, j] != " ")
                 {
                     break;
                 }
@@ -69,7 +69,7 @@ namespace ChessLib
             //Запад
             for (int i = Position.Item1; i < 8; i++)
             {
-                if (GameField[i, Position.Item2] != null)
+                if (GameField[i, Position.Item2] != " ")
                 {
                     break;
                 }
@@ -78,7 +78,7 @@ namespace ChessLib
             //восток
             for (int i = Position.Item1; i > -1; i--)
             {
-                if (GameField[i, Position.Item2] != null)
+                if (GameField[i, Position.Item2] != " ")
                 {
                     break;
                 }

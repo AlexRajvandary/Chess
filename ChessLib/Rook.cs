@@ -19,7 +19,7 @@ namespace ChessLib
             //Север
             for (int j = Position.Item2; j < 8; j++)
             {
-                if (GameField[Position.Item1, j] != null)
+                if (GameField[Position.Item1, j] != " ")
                 {
                     break;
                 }
@@ -28,7 +28,7 @@ namespace ChessLib
             //Юг
             for (int j = Position.Item2; j > -1; j--)
             {
-                if (GameField[Position.Item1, j] != null)
+                if (GameField[Position.Item1, j] != " ")
                 {
                     break;
                 }
@@ -37,7 +37,7 @@ namespace ChessLib
             //Запад
             for (int i = Position.Item1; i < 8; i++)
             {
-                if (GameField[i, Position.Item2] != null)
+                if (GameField[i, Position.Item2] != " ")
                 {
                     break;
                 }
@@ -46,7 +46,7 @@ namespace ChessLib
             //восток
             for (int i = Position.Item1; i > -1; i--)
             {
-                if (GameField[i, Position.Item2] != null)
+                if (GameField[i, Position.Item2] != " ")
                 {
                     break;
                 }

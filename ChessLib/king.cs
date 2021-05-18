@@ -15,7 +15,7 @@ namespace ChessLib
           
             if (Position.Item1 < 7 && Position.Item2 < 7)
             {
-                if (GameField[Position.Item1 + 1, Position.Item2 + 1] == null)
+                if (GameField[Position.Item1 + 1, Position.Item2 + 1] == " ")
                 {
                     result.Add((Position.Item1 + 1, Position.Item2 + 1));
                 }
@@ -23,7 +23,7 @@ namespace ChessLib
             }
             if (Position.Item2 < 7)
             {
-                if (GameField[Position.Item1, Position.Item2 + 1] == null)
+                if (GameField[Position.Item1, Position.Item2 + 1] == " ")
                 {
                     result.Add((Position.Item1, Position.Item2 + 1));
                 }
@@ -31,7 +31,7 @@ namespace ChessLib
             }
             if (Position.Item1 > 0 && Position.Item2 < 7)
             {
-                if (GameField[Position.Item1 - 1, Position.Item2 + 1] == null)
+                if (GameField[Position.Item1 - 1, Position.Item2 + 1] == " ")
                 {
                     result.Add((Position.Item1 - 1, Position.Item2 + 1));
                 }
@@ -39,7 +39,7 @@ namespace ChessLib
             }
             if (Position.Item1 > 0)
             {
-                if (GameField[Position.Item1 - 1, Position.Item2] == null)
+                if (GameField[Position.Item1 - 1, Position.Item2] == " ")
                 {
                     result.Add((Position.Item1 - 1, Position.Item2));
                 }
@@ -47,7 +47,7 @@ namespace ChessLib
             }
             if (Position.Item1 < 7)
             {
-                if (GameField[Position.Item1 + 1, Position.Item2] == null)
+                if (GameField[Position.Item1 + 1, Position.Item2] == " ")
                 {
                     result.Add((Position.Item1 + 1, Position.Item2));
                 }
@@ -56,7 +56,7 @@ namespace ChessLib
 
             if (Position.Item1 > 0 && Position.Item2 > 0)
             {
-                if (GameField[Position.Item1 - 1, Position.Item2 - 1] == null)
+                if (GameField[Position.Item1 - 1, Position.Item2 - 1] == " ")
                 {
                     result.Add((Position.Item1 - 1, Position.Item2 - 1));
                 }
@@ -64,7 +64,7 @@ namespace ChessLib
             }
             if (Position.Item2 > 0)
             {
-                if (GameField[Position.Item1, Position.Item2 - 1] == null)
+                if (GameField[Position.Item1, Position.Item2 - 1] == " ")
                 {
                     result.Add((Position.Item1, Position.Item2 - 1));
                 }
@@ -72,7 +72,7 @@ namespace ChessLib
             }
             if (Position.Item1 < 7 && Position.Item2 > 0)
             {
-                if (GameField[Position.Item1 + 1, Position.Item2 - 1] == null)
+                if (GameField[Position.Item1 + 1, Position.Item2 - 1] == " ")
                 {
                     result.Add((Position.Item1 + 1, Position.Item2 - 1));
                 }
