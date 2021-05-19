@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\ChessLib.csproj",
+      "projectUniqueName": "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\ChessLib.csproj",
       "projectName": "ChessLib",
-      "projectPath": "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\ChessLib.csproj",
+      "projectPath": "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\ChessLib.csproj",
       "packagesPath": "C:\\Users\\Alex Raj\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\obj\\",
+      "outputPath": "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

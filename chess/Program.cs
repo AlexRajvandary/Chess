@@ -17,119 +17,154 @@ namespace chess
         /// <param name="Pieces">Фигуры</param>
         public static void Move(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
-            int i = 1;
-            int j = 1;
+            int numOfElements = 1;//Для вывбора фигуры по номеру из списка фигур
+            int numOfElementsInLine = 1;//для отображения фигур по 8 в строке
+
+            uint chosenPiece = 0;//Считывает пользовательский ввод для выбора фигуры из предложенного списка
+            uint chosenMove = 0;//Считывает пользовательский ввод для выбора доступного хода из предложенного списка
 
             Console.WriteLine();
             Console.WriteLine("Выберите фигуру");
-            foreach (var p in currentPlayer.MyPieces)
+
+            //Выводит список доступных фигур по 8 штук в строку
+            foreach (var piece in currentPlayer.MyPieces)
             {
-                if (j > 8)
+                if (numOfElementsInLine > 8)
                 {
                     Console.WriteLine();
-                    j = 1;
+                    numOfElementsInLine = 1;
                 }
-                Console.Write(i + " " + p.ToString() + "\t");
-                i++;
-                j++;
+                Console.Write($"{numOfElements}.  {piece}" + "\t");
+                numOfElements++;
+                numOfElementsInLine++;
             }
-            int num = int.Parse(Console.ReadLine());
+
+            chosenPiece = UserInput(currentPlayer.MyPieces.Count);
+
             int counter = 1;//счетчик
-            var moves = currentPlayer.MyPieces[num - 1].AvalableMoves(GameField);//список возможных ходов (список (int,int)-координата клетки)
-            Console.WriteLine("Выберите ход");
-            if(moves.Count == 0)
+
+            var AvailableMoves = currentPlayer.MyPieces[(int)(chosenPiece - 1)].AvailableMoves(GameField);//список возможных ходов (список (int,int)-координата клетки)
+
+            //выводим доступные ходы или сообщение о том, что их нет
+            if (AvailableMoves.Count == 0)
             {
                 Console.WriteLine("доступных ходов нет");
             }
             else
             {
-                foreach (var p in moves)
+                Console.WriteLine("Выберите ход");
+                foreach (var p in AvailableMoves)
                 {
-                    Console.WriteLine(counter + " " + alp[p.Item1] + $"{p.Item2 + 1}");
+                    Console.WriteLine(counter + " " + alphabet[p.Item1] + $"{p.Item2 + 1}");
                     counter++;
                 }
             }
-            int num1 = -1;
-            Console.WriteLine("можно съесть:");
-            var kills = currentPlayer.MyPieces[num - 1].AvalableKills(GameField);//спиксок фигур, которые можно съесть
-            if(kills.Count == 0)
+
+           
+            var availableKills = currentPlayer.MyPieces[(int)(chosenPiece - 1)].AvailableKills(GameField);//спиксок фигур, которые можно съесть
+            //выводим список фигур для атаки или сообщение, что таковых нет
+            if (availableKills.Count == 0)
             {
-                num1 = int.Parse(Console.ReadLine());//переменная служит для выбора какую фигуру съесть
                 Console.WriteLine("Съесть никого нельзя");
+               
             }
             else
             {
-                foreach (var p in kills)
+                AvailableMoves.AddRange(availableKills);//список возможных ходов и убийств фигур противника (список (int,int)-координата клетки)
+                Console.WriteLine("можно съесть:");
+                foreach (var piece in availableKills)
                 {
-                    Console.WriteLine(counter + " " + alp[p.Item1] + $"{p.Item2 + 1}");
+                    Console.WriteLine(counter + " " + alphabet[piece.Item1] + $"{piece.Item2 + 1}");
                     counter++;
                 }
-                num1 = int.Parse(Console.ReadLine());//переменная служит для выбора какую фигуру съесть
+
             }
+           
+            
 
-
-            moves.AddRange(currentPlayer.MyPieces[num - 1].AvalableKills(GameField));//список возможных ходов и убийств фигур противника (список (int,int)-координата клетки)
-
-
-
-
-            if (Pieces.Find(x => x.Position == moves[num1 - 1]) != null)
+            if (AvailableMoves.Count == 0)
             {
-                Pieces.Find(x => x.Position == moves[num1 - 1]).Dead = true;
+                Console.WriteLine("Для выбранной фигуры доступных ходов нет!\n" +
+                    "Выберите другую фигуру");
+                Move(currentPlayer, GameField, Pieces);
+                return;
             }
-
-            if (num1 > 0)
+            else
             {
-                currentPlayer.MyPieces[num - 1].Position = moves[num1 - 1];
+                chosenMove = UserInput(AvailableMoves.Count);//переменная служит для выбора хода
             }
-          
+
+           
+
+            //Проверка не является ли желаемый ход попыткой съесть фигуру (если среди фигур есть та, которая уже находиться на позиции, на которую текущий игрок собирается пойти, то текущий игрок съедает эту фигуру)
+            if (Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]) != null)
+            {
+                Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]).IsDead = true;
+            }
 
 
-
+            currentPlayer.MyPieces[(int)(chosenPiece - 1)].Position = AvailableMoves[(int)(chosenMove - 1)];
 
         }
+        /// <summary>
+        /// Пользовательский ввод
+        /// </summary>
+        /// <param name="numberOfelements"></param>
+        /// <returns></returns>
+        private static uint UserInput( int numberOfelements)
+        {
+            uint chosenElement;
+            while (!uint.TryParse(Console.ReadLine(), out chosenElement) || !(chosenElement <= numberOfelements))
+            {
+                Console.WriteLine("Неверный ввод!\n" +
+                    "Повторите попытку");
+            }
+
+            return chosenElement;
+        }
+
         /// <summary>
         /// Создает шахматные фигуры и устанавливает начальные позиции
         /// </summary>
         /// <returns>Возвращает список шахматных фигур</returns>
         public static List<IPiece> GetPieces()
         {
-            var result = new List<IPiece>();
+            var Piece = new List<IPiece>();
             //Создаем пешки
             for (int i = 0; i < 8; i++)
             {
                 var wPawn = new Pawn(PieceColor.White, (i, 1));
                 var bPawn = new Pawn(PieceColor.Black, (i, 6));
-                result.Add(wPawn);
-                result.Add(bPawn);
+                Piece.Add(wPawn);
+                Piece.Add(bPawn);
             }
             //создаем слонов
-            result.Add(new Bishop((2, 0), PieceColor.White));
-            result.Add(new Bishop((5, 0), PieceColor.White));
-            result.Add(new Bishop((2, 7), PieceColor.Black));
-            result.Add(new Bishop((5, 7), PieceColor.Black));
+            Piece.Add(new Bishop((2, 0), PieceColor.White));
+            Piece.Add(new Bishop((5, 0), PieceColor.White));
+            Piece.Add(new Bishop((2, 7), PieceColor.Black));
+            Piece.Add(new Bishop((5, 7), PieceColor.Black));
 
             //создаем ладьи
-            result.Add(new Rook((0, 0), PieceColor.White));
-            result.Add(new Rook((7, 0), PieceColor.White));
-            result.Add(new Rook((0, 7), PieceColor.Black));
-            result.Add(new Rook((7, 7), PieceColor.Black));
+            Piece.Add(new Rook((0, 0), PieceColor.White));
+            Piece.Add(new Rook((7, 0), PieceColor.White));
+            Piece.Add(new Rook((0, 7), PieceColor.Black));
+            Piece.Add(new Rook((7, 7), PieceColor.Black));
 
             //создаем коней
-            result.Add(new Knight((1, 0), PieceColor.White));
-            result.Add(new Knight((6, 0), PieceColor.White));
-            result.Add(new Knight((1, 7), PieceColor.Black));
-            result.Add(new Knight((6, 7), PieceColor.Black));
+            Piece.Add(new Knight((1, 0), PieceColor.White));
+            Piece.Add(new Knight((6, 0), PieceColor.White));
+            Piece.Add(new Knight((1, 7), PieceColor.Black));
+            Piece.Add(new Knight((6, 7), PieceColor.Black));
 
             //создаем ферзей
-            result.Add(new Queen(PieceColor.Black, (3, 7)));
-            result.Add(new Queen(PieceColor.White, (3, 0)));
+            Piece.Add(new Queen(PieceColor.Black, (3, 7)));
+            Piece.Add(new Queen(PieceColor.White, (3, 0)));
 
             //создаем королей
-            result.Add(new king((4, 0), PieceColor.White));
-            result.Add(new king((4, 7), PieceColor.Black));
+            Piece.Add(new King((4, 0), PieceColor.White));
+            Piece.Add(new King((4, 7), PieceColor.Black));
 
-            return result;
+            return Piece;
         }
         /// <summary>
         /// Игровое поле
@@ -155,59 +190,23 @@ namespace chess
             }
             return GameField;
         }
-
+        /// <summary>
+        /// Удаляет с поля убитые фигуры
+        /// </summary>
+        /// <param name="pieces"></param>
         public static void Update(List<IPiece> pieces)
         {
-            pieces.RemoveAll(x => x.Dead == true);
+            pieces.RemoveAll(x => x.IsDead == true);
         }
+
         /// <summary>
-        /// Визуализация игрового поля
+        /// Визуализация доски, в зависимости от текущего игрока доска поворачивается к текущему игроку
         /// </summary>
-        /// <param name="gameField"></param>
-        public static string[,] Render(string[,] gameField, int curPlayer)
+        /// <param name="gamefield">Игровая доска</param>
+        /// <param name="CurrentPlayer">Текущий игрок (1 - ход белых; -1 - ход черных)</param>
+        public static void Visualize(string[,] gamefield, int CurrentPlayer)
         {
-
-            string[,] result = new string[8, 8];
-            //если текущий ход белых, то отрисовываем доску снизу вверх
-           
-                for (int j = 0; j < 8; j++)
-                {
-
-                    for (int i = 0; i < 8; i++)
-                    {
-                        result[i, j] = gameField[i, j];
-
-                    }
-
-                }
-
-        
-
-            ////если текущий ход черных, то отрисовываем доску сверху вниз
-            //else
-            //{
-            //    for (int j = 7; j > -1; j--)
-            //    {
-            //        for (int i = 7; i > -1; i--)
-            //        {
-
-            //            result[i, j] = gameField[7 -i, 7 - j];
-
-
-
-            //        }
-
-            //    }
-
-            //}
-
-           
-            return result;
-        }
-
-       public static void Visualize(string[,] gamefield, int CurrentPlayer)
-        {
-            if(CurrentPlayer == 1)
+            if (CurrentPlayer == 1)
             {
                 Console.WriteLine("Ход белых");
                 Console.WriteLine();
@@ -222,21 +221,25 @@ namespace chess
                         }
                         else if (i == 0 && j > 0)
                         {
-                            Console.Write(9 -j + " ");
+                            // номер поля по вертикали
+                            Console.Write(9 - j + " ");
                         }
                         else if (j == 0 && i > 0)
                         {
-                            Console.Write(alp[i - 1].ToString().ToUpper() + " ");
+                            // буква поля по горизонтали
+                            Console.Write(alphabet[i - 1].ToString().ToUpper() + " ");
                         }
                         else
                         {
                             if ((i + j) % 2 == 0)
                             {
+                                //Белая клетка и белым цветом красим обозначение фигуры
                                 Console.BackgroundColor = ConsoleColor.White;
                                 Console.ForegroundColor = ConsoleColor.Black;
                             }
                             else
                             {
+                                //Черная клетка и белым цветом красим обозначение фигуры
                                 Console.BackgroundColor = ConsoleColor.Black;
                                 Console.ForegroundColor = ConsoleColor.White;
                             }
@@ -246,7 +249,7 @@ namespace chess
                     }
                     Console.WriteLine();
                 }
-          
+
             }
             else
             {
@@ -267,17 +270,19 @@ namespace chess
                         }
                         else if (j == 0 && i > 0)
                         {
-                            Console.Write(alp[7 - i + 1].ToString().ToUpper() + " ");
+                            Console.Write(alphabet[7 - i + 1].ToString().ToUpper() + " ");
                         }
                         else
                         {
                             if ((i + j) % 2 == 0)
                             {
+                                //Белая клетка и белым цветом красим обозначение фигуры
                                 Console.BackgroundColor = ConsoleColor.White;
                                 Console.ForegroundColor = ConsoleColor.Black;
                             }
                             else
                             {
+                                //Черная клетка и белым цветом красим обозначение фигуры
                                 Console.BackgroundColor = ConsoleColor.Black;
                                 Console.ForegroundColor = ConsoleColor.White;
                             }
@@ -290,8 +295,10 @@ namespace chess
             }
         }
 
-
-        static string alp = "abcdefgh";
+        /// <summary>
+        /// Название клеток по горизонтали
+        /// </summary>
+        static string alphabet = "abcdefgh";
         /// <summary>
         /// Игрок за белых
         /// </summary>
@@ -308,7 +315,13 @@ namespace chess
         /// Шахматные фигуры
         /// </summary>
         static List<IPiece> Pieces;
+        /// <summary>
+        /// Текущий игрок
+        /// </summary>
         static int CurrentPlayer;
+        /// <summary>
+        /// Процесс игры
+        /// </summary>
         static void Game()
         {
             Console.Clear();
@@ -317,7 +330,7 @@ namespace chess
             GameField = GetGameField(Pieces);
 
             //отрисовываем доску
-            Visualize(Render(GameField, CurrentPlayer), CurrentPlayer);
+            Visualize(GameField, CurrentPlayer);
             Console.ResetColor();
 
             if (CurrentPlayer == 1)
@@ -329,7 +342,7 @@ namespace chess
                 Update(Pieces);
                 Console.Clear();
                 GameField = GetGameField(Pieces);
-                Visualize(Render(GameField, CurrentPlayer), CurrentPlayer);
+                Visualize(GameField, CurrentPlayer);
                 Console.WriteLine("Любую клавишу для продолжения...");
                 Console.ReadLine();
                 //меняем текущего игрока
@@ -343,7 +356,7 @@ namespace chess
                 Update(Pieces);
                 Console.Clear();
                 GameField = GetGameField(Pieces);
-                Visualize(Render(GameField, CurrentPlayer), CurrentPlayer);
+                Visualize(GameField, CurrentPlayer);
                 Console.WriteLine("Любую клавишу для продолжения...");
                 Console.ReadLine();
                 //меняем текущего игрока
@@ -351,7 +364,10 @@ namespace chess
 
             }
         }
-        static void NewGame()
+        /// <summary>
+        /// Начинает новую игру
+        /// </summary>
+        static void CreateNewGame()
         {
             //Создаем шахматные фигуры и устанавливаем первоначальные позиции
             Pieces = GetPieces();
@@ -377,7 +393,7 @@ namespace chess
         static void Main(string[] args)
         {
 
-            NewGame();
+            CreateNewGame();
 
 
             Console.ReadLine();

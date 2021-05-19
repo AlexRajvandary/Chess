@@ -6,7 +6,7 @@ namespace ChessLib
 
     public class Pawn : IPiece
     {
-        public bool Dead { get; set; }
+        public bool IsDead { get; set; }
         public PieceColor Color { get; set; }
         public (int, int) Position { get; set; }
 
@@ -20,10 +20,10 @@ namespace ChessLib
         /// </summary>
         /// <param name="GameField"></param>
         /// <returns></returns>
-        public List<(int, int)> AvalableMoves(string[,] GameField)
+        public List<(int, int)> AvailableMoves(string[,] GameField)
         {
-            var result = new List<(int, int)>();
-            Console.WriteLine("Мы здесь");
+            var AvailableMovesList = new List<(int, int)>();
+            
             if (Position == startPos)
             {
                 if (Color == PieceColor.White)
@@ -31,19 +31,19 @@ namespace ChessLib
                     if (GameField[Position.Item1, Position.Item2 + 1] != " ")
                     {
                         Console.WriteLine("Нет свободных ходов!");
-                        return result;
+                        return AvailableMovesList;
                     }
                     else
                     {
-                        result.Add((Position.Item1, Position.Item2 + 1));
+                        AvailableMovesList.Add((Position.Item1, Position.Item2 + 1));
                         if (GameField[Position.Item1, Position.Item2 + 2] != " ")
                         {
-                            return result;
+                            return AvailableMovesList;
                         }
                         else
                         {
-                            result.Add((Position.Item1, Position.Item2 + 2));
-                            return result;
+                            AvailableMovesList.Add((Position.Item1, Position.Item2 + 2));
+                            return AvailableMovesList;
                         }
                     }
                 }
@@ -52,19 +52,19 @@ namespace ChessLib
                     if (GameField[Position.Item1, Position.Item2 - 1] != " ")
                     {
                         Console.WriteLine("Нет свободных ходов!");
-                        return result;
+                        return AvailableMovesList;
                     }
                     else
                     {
-                        result.Add((Position.Item1, Position.Item2 - 1));
+                        AvailableMovesList.Add((Position.Item1, Position.Item2 - 1));
                         if (GameField[Position.Item1, Position.Item2 - 2] != " ")
                         {
-                            return result;
+                            return AvailableMovesList;
                         }
                         else
                         {
-                            result.Add((Position.Item1, Position.Item2 - 2));
-                            return result;
+                            AvailableMovesList.Add((Position.Item1, Position.Item2 - 2));
+                            return AvailableMovesList;
                         }
                     }
                 }
@@ -77,24 +77,24 @@ namespace ChessLib
                 {
                     if (GameField[Position.Item1, Position.Item2 + 1] != " ")
                     {
-                        return result;
+                        return AvailableMovesList;
                     }
                     else
                     {
-                        result.Add((Position.Item1, Position.Item2 + 1));
-                        return result;
+                        AvailableMovesList.Add((Position.Item1, Position.Item2 + 1));
+                        return AvailableMovesList;
                     }
                 }
                 else
                 {
                     if (GameField[Position.Item1, Position.Item2 - 1] != " ")
                     {
-                        return result;
+                        return AvailableMovesList;
                     }
                     else
                     {
-                        result.Add((Position.Item1, Position.Item2 - 1));
-                        return result;
+                        AvailableMovesList.Add((Position.Item1, Position.Item2 - 1));
+                        return AvailableMovesList;
                     }
                 }
 
@@ -105,10 +105,14 @@ namespace ChessLib
         {
             return "p";
         }
-
-        public List<(int, int)> AvalableKills(string[,] GameField)
+        /// <summary>
+        /// Ищет доступные для атаки вражеские фигуры
+        /// </summary>
+        /// <param name="GameField">Игровое поле</param>
+        /// <returns>Возвращает список координат доступных для атаки фигур</returns>
+        public List<(int, int)> AvailableKills(string[,] GameField)
         {
-            var result = new List<(int, int)>();
+            var AvailableKillsList = new List<(int, int)>();
 
             string pieces;
             if (Color == PieceColor.White)
@@ -127,7 +131,7 @@ namespace ChessLib
                     if (Position.Item1 > 0 && Position.Item2 < 7)
                         if (GameField[Position.Item1 - 1, Position.Item2 + 1] != " " && pieces.Contains(GameField[Position.Item1 - 1, Position.Item2 + 1]))
                         {
-                            result.Add((Position.Item1 - 1, Position.Item2 + 1));
+                            AvailableKillsList.Add((Position.Item1 - 1, Position.Item2 + 1));
                         }
                 }
                 if (Position.Item1 < 7 && Position.Item2 < 7)
@@ -135,11 +139,11 @@ namespace ChessLib
                     if (Position.Item1 > 0 && Position.Item2 < 7)
                         if (GameField[Position.Item1 + 1, Position.Item2 + 1] != " " && pieces.Contains(GameField[Position.Item1 + 1, Position.Item2 + 1]))
                         {
-                            result.Add((Position.Item1 + 1, Position.Item2 + 1));
+                            AvailableKillsList.Add((Position.Item1 + 1, Position.Item2 + 1));
                         }
                 }
 
-                return result;
+                return AvailableKillsList;
             }
             else
             {
@@ -147,17 +151,17 @@ namespace ChessLib
                 {
                     if (GameField[Position.Item1 - 1, Position.Item2 - 1] != " " && pieces.Contains(GameField[Position.Item1 - 1, Position.Item2 - 1]))
                     {
-                        result.Add((Position.Item1 - 1, Position.Item2 - 1));
+                        AvailableKillsList.Add((Position.Item1 - 1, Position.Item2 - 1));
                     }
                 }
                 if (Position.Item1 < 7 && Position.Item2 > 0)
                 {
                     if (GameField[Position.Item1 + 1, Position.Item2 - 1] != " " && pieces.Contains(GameField[Position.Item1 + 1, Position.Item2 - 1]))
                     {
-                        result.Add((Position.Item1 + 1, Position.Item2 - 1));
+                        AvailableKillsList.Add((Position.Item1 + 1, Position.Item2 - 1));
                     }
                 }
-                return result;
+                return AvailableKillsList;
             }
 
         }
@@ -167,7 +171,7 @@ namespace ChessLib
             Color = color;
             startPos = position;
             Position = startPos;
-            Dead = false;
+            IsDead = false;
         }
     }
 }

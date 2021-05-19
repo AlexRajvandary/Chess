@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Alex Raj\\source\\chess\\chess\\chess.csproj": {}
+    "C:\\Users\\Alex Raj\\source\\Chess_\\chess\\chess.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\ChessLib.csproj": {
+    "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\ChessLib.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\ChessLib.csproj",
+        "projectUniqueName": "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\ChessLib.csproj",
         "projectName": "ChessLib",
-        "projectPath": "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\ChessLib.csproj",
+        "projectPath": "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\ChessLib.csproj",
         "packagesPath": "C:\\Users\\Alex Raj\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\obj\\",
+        "outputPath": "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -61,14 +61,14 @@
         }
       }
     },
-    "C:\\Users\\Alex Raj\\source\\chess\\chess\\chess.csproj": {
+    "C:\\Users\\Alex Raj\\source\\Chess_\\chess\\chess.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Alex Raj\\source\\chess\\chess\\chess.csproj",
+        "projectUniqueName": "C:\\Users\\Alex Raj\\source\\Chess_\\chess\\chess.csproj",
         "projectName": "chess",
-        "projectPath": "C:\\Users\\Alex Raj\\source\\chess\\chess\\chess.csproj",
+        "projectPath": "C:\\Users\\Alex Raj\\source\\Chess_\\chess\\chess.csproj",
         "packagesPath": "C:\\Users\\Alex Raj\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Alex Raj\\source\\chess\\chess\\obj\\",
+        "outputPath": "C:\\Users\\Alex Raj\\source\\Chess_\\chess\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -88,8 +88,8 @@
           "net5.0": {
             "targetAlias": "net5.0",
             "projectReferences": {
-              "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\ChessLib.csproj": {
-                "projectPath": "C:\\Users\\Alex Raj\\source\\chess\\ChessLib\\ChessLib.csproj"
+              "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\ChessLib.csproj": {
+                "projectPath": "C:\\Users\\Alex Raj\\source\\Chess_\\ChessLib\\ChessLib.csproj"
               }
             }
           }

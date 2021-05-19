@@ -7,17 +7,17 @@ namespace ChessLib
     {
         public PieceColor Color { get; set; }
         public (int, int) Position { get; set; }
-        public bool Dead { get; set; }
+        public bool IsDead { get; set; }
 
-        public List<(int, int)> AvalableMoves(string[,] GameField)
+        public List<(int, int)> AvailableMoves(string[,] GameField)
         {
-            var result = new List<(int, int)>();
+            var AvailableMovesList = new List<(int, int)>();
 
             if (Position.Item1 < 7 && Position.Item2 < 6)
             {
                 if (GameField[Position.Item1 + 1, Position.Item2 + 2]==" ")
                 {
-                    result.Add((Position.Item1 + 1, Position.Item2 + 2));
+                    AvailableMovesList.Add((Position.Item1 + 1, Position.Item2 + 2));
                 }
 
             }
@@ -25,7 +25,7 @@ namespace ChessLib
             {
                 if (GameField[Position.Item1 + 2, Position.Item2 + 1]==" ")
                 {
-                    result.Add((Position.Item1 + 2, Position.Item2 + 1));
+                    AvailableMovesList.Add((Position.Item1 + 2, Position.Item2 + 1));
                 }
 
             }
@@ -33,7 +33,7 @@ namespace ChessLib
             {
                 if (GameField[Position.Item1 + 2, Position.Item2 - 1]==" ")
                 {
-                    result.Add((Position.Item1 + 2, Position.Item2 - 1));
+                    AvailableMovesList.Add((Position.Item1 + 2, Position.Item2 - 1));
                 }
 
             }
@@ -41,7 +41,7 @@ namespace ChessLib
             {
                 if (GameField[Position.Item1 + 1, Position.Item2 - 2]==" ")
                 {
-                    result.Add((Position.Item1 + 1, Position.Item2 - 2));
+                    AvailableMovesList.Add((Position.Item1 + 1, Position.Item2 - 2));
                 }
 
             }
@@ -49,7 +49,7 @@ namespace ChessLib
             {
                 if (GameField[Position.Item1 - 1, Position.Item2 + 2]==" ")
                 {
-                    result.Add((Position.Item1 - 1, Position.Item2 + 2));
+                    AvailableMovesList.Add((Position.Item1 - 1, Position.Item2 + 2));
                 }
 
             }
@@ -57,7 +57,7 @@ namespace ChessLib
             {
                 if (GameField[Position.Item1 - 2, Position.Item2 + 1] == " ")
                 {
-                    result.Add((Position.Item1 - 2, Position.Item2 + 1));
+                    AvailableMovesList.Add((Position.Item1 - 2, Position.Item2 + 1));
                 }
 
             }
@@ -65,7 +65,7 @@ namespace ChessLib
             {
                 if (GameField[Position.Item1 - 2, Position.Item2 - 1] == " ")
                 {
-                    result.Add((Position.Item1 - 2, Position.Item2 - 1));
+                    AvailableMovesList.Add((Position.Item1 - 2, Position.Item2 - 1));
                 }
 
             }
@@ -73,28 +73,28 @@ namespace ChessLib
             {
                 if (GameField[Position.Item1 - 1, Position.Item2 - 2] == " ")
                 {
-                    result.Add((Position.Item1 - 1, Position.Item2 - 2));
+                    AvailableMovesList.Add((Position.Item1 - 1, Position.Item2 - 2));
                 }
 
             }
 
-            return result;
+            return AvailableMovesList;
         }
         public Knight((int,int) startPos, PieceColor color)
         {
             Position = startPos;
             Color = color;
-            Dead = false;
+            IsDead = false;
         }
         public override string ToString()
         {
             return "n";
         }
-        private string pieces = "bnpqr";
-        public List<(int, int)> AvalableKills(string[,] GameField)
+        private string pieces;
+        public List<(int, int)> AvailableKills(string[,] GameField)
         {
             var result = new List<(int, int)>();
-            string pieces;
+           
             if (Color == PieceColor.White)
             {
                 pieces = "bnpqr";
