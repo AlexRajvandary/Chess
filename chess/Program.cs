@@ -1,7 +1,7 @@
-﻿using System;
+﻿using ChessLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using ChessLib;
 namespace chess
 {
 
@@ -60,13 +60,13 @@ namespace chess
                 }
             }
 
-           
+
             var availableKills = currentPlayer.MyPieces[(int)(chosenPiece - 1)].AvailableKills(GameField);//спиксок фигур, которые можно съесть
             //выводим список фигур для атаки или сообщение, что таковых нет
             if (availableKills.Count == 0)
             {
                 Console.WriteLine("Съесть никого нельзя");
-               
+
             }
             else
             {
@@ -79,8 +79,8 @@ namespace chess
                 }
 
             }
-           
-            
+
+
 
             if (AvailableMoves.Count == 0)
             {
@@ -94,7 +94,7 @@ namespace chess
                 chosenMove = UserInput(AvailableMoves.Count);//переменная служит для выбора хода
             }
 
-           
+
 
             //Проверка не является ли желаемый ход попыткой съесть фигуру (если среди фигур есть та, которая уже находиться на позиции, на которую текущий игрок собирается пойти, то текущий игрок съедает эту фигуру)
             if (Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]) != null)
@@ -111,7 +111,7 @@ namespace chess
         /// </summary>
         /// <param name="numberOfelements"></param>
         /// <returns></returns>
-        private static uint UserInput( int numberOfelements)
+        private static uint UserInput(int numberOfelements)
         {
             uint chosenElement;
             while (!uint.TryParse(Console.ReadLine(), out chosenElement) || !(chosenElement <= numberOfelements))

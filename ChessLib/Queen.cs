@@ -37,7 +37,7 @@ namespace ChessLib
             Func<int, int, bool> SouthCondition = (int i, int j) => j > -1;
             Func<int, int, bool> WestCondition = (int i, int j) => i < 8;
             Func<int, int, bool> EastCondition = (int i, int j) => i > -1;
-           
+
             //Север
             AvailableMovesInDirection(North, GameField, AvailableMovesList, NorthCondition);
             //Юг
@@ -177,7 +177,7 @@ namespace ChessLib
         }
 
 
-        public Queen(PieceColor color, (int,int) startPos)
+        public Queen(PieceColor color, (int, int) startPos)
         {
             Position = startPos;
             Color = color;

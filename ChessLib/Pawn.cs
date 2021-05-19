@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ChessLib
 {
@@ -23,7 +23,7 @@ namespace ChessLib
         public List<(int, int)> AvailableMoves(string[,] GameField)
         {
             var AvailableMovesList = new List<(int, int)>();
-            
+
             if (Position == startPos)
             {
                 if (Color == PieceColor.White)

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace ChessLib
 {
@@ -36,7 +32,7 @@ namespace ChessLib
         /// Убить фигуру
         /// </summary>
         /// <param name="piece"></param>
-        public void KillPiece (IPiece piece)
+        public void KillPiece(IPiece piece)
         {
             MyPieces.Remove(piece);
         }

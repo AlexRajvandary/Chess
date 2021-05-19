@@ -30,7 +30,7 @@ namespace ChessLib
             Func<int, int, bool> SouthEastCondition = (int i, int j) => i < 8 & j > -1;
             Func<int, int, bool> SouthWestCondition = (int i, int j) => i > -1 & j > -1;
             //Северо-восток
-            AvailableMovesInDirection(NorthEast,GameField, AvailableMovesList,NorthEastCondition);
+            AvailableMovesInDirection(NorthEast, GameField, AvailableMovesList, NorthEastCondition);
             //северо-запад
             AvailableMovesInDirection(NorthWest, GameField, AvailableMovesList, NorthWestCondition);
             //Юго-Восток
@@ -46,9 +46,9 @@ namespace ChessLib
         /// <param name="GameField">Игровое поле</param>
         /// <param name="AvailableMovesList">Список доступных для хода клеток</param>
         /// <param name="Condition">условие для цикла for (разное в зависимости от выбранного направления)</param>
-        private void AvailableMovesInDirection((int,int)Direction,string[,] GameField, List<(int, int)> AvailableMovesList, Func<int,int,bool> Condition)
+        private void AvailableMovesInDirection((int, int) Direction, string[,] GameField, List<(int, int)> AvailableMovesList, Func<int, int, bool> Condition)
         {
-            for (int i = Position.Item1 + Direction.Item1, j = Position.Item2 + Direction.Item2; Condition(i,j); i+=Direction.Item1, j+=Direction.Item2)
+            for (int i = Position.Item1 + Direction.Item1, j = Position.Item2 + Direction.Item2; Condition(i, j); i += Direction.Item1, j += Direction.Item2)
             {
                 //если клетка не пустая, то сделать на нее ход нельзя
                 if (GameField[i, j] != " ")

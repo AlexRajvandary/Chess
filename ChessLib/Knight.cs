@@ -43,7 +43,7 @@ namespace ChessLib
             Func<int, int, bool> NorthWestCondition = (x, y) => x > 0 && y < 6;
 
 
-            AvailableMoveInDirection(North,GameField, AvailableMovesList,NorthCondition);
+            AvailableMoveInDirection(North, GameField, AvailableMovesList, NorthCondition);
             AvailableMoveInDirection(Northeast, GameField, AvailableMovesList, NorthEastCondition);
             AvailableMoveInDirection(East, GameField, AvailableMovesList, EastCondition);
             AvailableMoveInDirection(SouthEast, GameField, AvailableMovesList, SouthEastCondition);
@@ -55,9 +55,9 @@ namespace ChessLib
             return AvailableMovesList;
         }
 
-        private void AvailableMoveInDirection((int,int) Direction,string[,] GameField, List<(int, int)> AvailableMovesList, Func<int,int,bool> Condition)
+        private void AvailableMoveInDirection((int, int) Direction, string[,] GameField, List<(int, int)> AvailableMovesList, Func<int, int, bool> Condition)
         {
-            if (Condition(Position.Item1,Position.Item2))
+            if (Condition(Position.Item1, Position.Item2))
             {
                 if (GameField[Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2] == " ")
                 {
@@ -67,7 +67,7 @@ namespace ChessLib
             }
         }
 
-        public Knight((int,int) startPos, PieceColor color)
+        public Knight((int, int) startPos, PieceColor color)
         {
             Position = startPos;
             Color = color;
@@ -124,7 +124,7 @@ namespace ChessLib
             Func<int, int, bool> WestCondition = (x, y) => x > 1 && y < 7;
             Func<int, int, bool> NorthWestCondition = (x, y) => x > 0 && y < 6;
 
-            AvailablekillsInOneDirection(North,GameField, result,NorthCondition);
+            AvailablekillsInOneDirection(North, GameField, result, NorthCondition);
             AvailablekillsInOneDirection(Northeast, GameField, result, NorthEastCondition);
             AvailablekillsInOneDirection(East, GameField, result, EastCondition);
             AvailablekillsInOneDirection(SouthEast, GameField, result, SouthWestCondition);
@@ -142,9 +142,9 @@ namespace ChessLib
         /// <param name="GameField">Игровое поле</param>
         /// <param name="AvailableKillsList">список координат вражеских фигур, доступных для атаки</param>
         /// <param name="Condition">Условие</param>
-        private void AvailablekillsInOneDirection((int,int) Direction,string[,] GameField, List<(int, int)> AvailableKillsList,Func<int,int,bool> Condition)
+        private void AvailablekillsInOneDirection((int, int) Direction, string[,] GameField, List<(int, int)> AvailableKillsList, Func<int, int, bool> Condition)
         {
-            if (Condition(Position.Item1,Position.Item2))
+            if (Condition(Position.Item1, Position.Item2))
             {
                 /*Если интересующая нас клетка не пустая И на ней вражеская фигура, то добавляем координаты этой клетки в список фигур, которые мы можем съесть*/
                 if (GameField[Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2] != null && pieces.Contains(GameField[Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2]))

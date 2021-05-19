@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ChessLib
 {
@@ -12,7 +11,7 @@ namespace ChessLib
         public List<(int, int)> AvailableMoves(string[,] GameField)
         {
             var AvailableMovesList = new List<(int, int)>();
-          
+
             if (Position.Item1 < 7 && Position.Item2 < 7)
             {
                 if (GameField[Position.Item1 + 1, Position.Item2 + 1] == " ")

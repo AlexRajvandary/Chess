@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ChessLib
 {
     public class Rook : IPiece
-    { 
+    {
         /// <summary>
         /// обозначения вражеских фигур
         /// </summary>

@@ -29,13 +29,13 @@ namespace ChessLib
         /// </summary>
         /// <param name="GameField"></param>
         /// <returns></returns>
-        public List<(int,int)> AvailableMoves(string[,] GameField);
+        public List<(int, int)> AvailableMoves(string[,] GameField);
         /// <summary>
         /// Проверяет какие фигуры можно съесть
         /// </summary>
         /// <param name="player"></param>
         /// <returns></returns>
         public List<(int, int)> AvailableKills(string[,] GameField);
-    
+
     }
 }
