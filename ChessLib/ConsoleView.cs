@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChessLib
 {
@@ -55,26 +51,17 @@ namespace ChessLib
 
             Console.Write(msg);
 
-           
-        }
-        /// <summary>
-        ///  Выводит на консоль передаваемую информацию и переносит строку
-        /// </summary>
-        /// <param name="msg"></param>
-        public void ShowLine(string msg)
-        {
-            Console.BackgroundColor = BackgroundColor;
-            Console.ForegroundColor = ForegroundColor;
 
-            Console.WriteLine(msg);
         }
+
         string alphabet = "abcdefgh";
         public void Visualize(string[,] gamefield, int CurrentPlayer)
         {
-            if (CurrentPlayer == 1)
+            Console.Clear();
+            if (CurrentPlayer % 2 == 0)
             {
-                Show("Ход белых");
-                ShowLine("");
+                Show("Ход белых\n");
+
                 for (int j = 0; j < 9; j++)
                 {
                     for (int i = 0; i < 9; i++)
@@ -114,14 +101,14 @@ namespace ChessLib
                             SetDefaultColors();
                         }
                     }
-                    ShowLine("");
+                    Show("\n");
                 }
 
             }
             else
             {
-                Show("Ход черных");
-                ShowLine("");
+                Show("Ход черных\n");
+
                 for (int j = 0; j < 9; j++)
                 {
                     for (int i = 0; i < 9; i++)
@@ -159,7 +146,7 @@ namespace ChessLib
                             SetDefaultColors();
                         }
                     }
-                    ShowLine("");
+                    Show("\n");
                 }
             }
         }
@@ -177,7 +164,7 @@ namespace ChessLib
         /// </summary>
         /// <param name="backgroundColor"></param>
         /// <param name="foregroundColor"></param>
-        public ConsoleView(ConsoleColor backgroundColor,ConsoleColor foregroundColor)
+        public ConsoleView(ConsoleColor backgroundColor, ConsoleColor foregroundColor)
         {
             BackgroundColor = backgroundColor;
             ForegroundColor = foregroundColor;

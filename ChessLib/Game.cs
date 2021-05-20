@@ -1,25 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChessLib
 {
     public class Game
     {
+        /// <summary>
+        /// Для подписи клеток
+        /// </summary>
         string alphabet = "abcdefgh";
+        /// <summary>
+        /// Для визуализации
+        /// </summary>
         IView view;
+        /// <summary>
+        /// Игровое поле
+        /// </summary>
         string[,] GameField;
+        /// <summary>
+        /// Текущий игрок
+        /// </summary>
         int CurrentPlayer;
+        /// <summary>
+        /// Фигуры
+        /// </summary>
         List<IPiece> Pieces;
 
-        public Player player1;
+        public List<Player> players;
 
-        public Player player2;
-        
 
-         uint UserInput(int numberOfelements)
+
+
+        uint UserInput(int numberOfelements)
         {
             uint chosenElement;
             while (!uint.TryParse(Console.ReadLine(), out chosenElement) || !(chosenElement <= numberOfelements))
@@ -30,7 +43,11 @@ namespace ChessLib
 
             return chosenElement;
         }
-         List<IPiece> GetPieces()
+        /// <summary>
+        /// Устанавливает начальные позиции фигурам
+        /// </summary>
+        /// <returns>Список фигур</returns>
+        List<IPiece> GetPieces()
         {
             var Piece = new List<IPiece>();
             //Создаем пешки
@@ -69,6 +86,7 @@ namespace ChessLib
 
             return Piece;
         }
+
         public void CreateNewGame()
         {
             Pieces = new List<IPiece>();
@@ -76,13 +94,16 @@ namespace ChessLib
             Pieces = GetPieces();
 
             //переменная служит для очереди игроков
-            CurrentPlayer = 1;
+            CurrentPlayer = 0;
 
             //Игрок с белыми фигурами
-            player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");//CurrentPlayer = 1
+            Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");//CurrentPlayer = 1
 
             //Игрок с черными фигурами
-            player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");//CurrentPlayer = -1
+            Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");//CurrentPlayer = -1
+            players = new List<Player>();
+            players.Add(player1);
+            players.Add(player2);
 
             bool isGameOver = false;
 
@@ -90,7 +111,7 @@ namespace ChessLib
             {
 
                 GameProcess();
-
+                if (CurrentPlayer > 2) CurrentPlayer -= 2;
             }
         }
         string[,] GetGameField(List<IPiece> pieces)
@@ -113,7 +134,7 @@ namespace ChessLib
             return GameField;
         }
 
-         void Move(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
+        void Move(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
             int numOfElements = 1;//Для вывбора фигуры по номеру из списка фигур
             int numOfElementsInLine = 1;//для отображения фигур по 8 в строке
@@ -205,57 +226,41 @@ namespace ChessLib
 
         }
 
-         void Update(List<IPiece> pieces)
+        void Update(List<IPiece> pieces)
         {
             pieces.RemoveAll(x => x.IsDead == true);
         }
 
-       public void GameProcess()
+        void GameProcess()
         {
-            Console.Clear();
+
 
             //получаем фигуры на доске, у каждой фигуры записаны текущее местоположение на доске
             GameField = GetGameField(Pieces);
 
             //отрисовываем доску
             view.Visualize(GameField, CurrentPlayer);
-            Console.ResetColor();
 
-            if (CurrentPlayer == 1)
-            {
 
-                //ход белых
-                Move(player1, GameField, Pieces);
 
-                Update(Pieces);
-                Console.Clear();
-                GameField = GetGameField(Pieces);
-                view.Visualize(GameField, CurrentPlayer);
-                view.Show("Любую клавишу для продолжения...");
-                Console.ReadLine();
-                //меняем текущего игрока
-                CurrentPlayer *= -1;
+            //ход белых
+            Move(players[CurrentPlayer % 2], GameField, Pieces);
 
-            }
-            else
-            {
-                //ход черных
-                Move(player2, GameField, Pieces);
-                Update(Pieces);
-                Console.Clear();
-                GameField = GetGameField(Pieces);
-                view.Visualize(GameField, CurrentPlayer);
-                view.Show("Любую клавишу для продолжения...");
-                Console.ReadLine();
-                //меняем текущего игрока
-                CurrentPlayer *= -1;
+            Update(Pieces);
+            Console.Clear();
+            GameField = GetGameField(Pieces);
+            view.Visualize(GameField, CurrentPlayer);
+            view.Show("Любую клавишу для продолжения...");
+            Console.ReadLine();
+            //меняем текущего игрока
+            CurrentPlayer++;
 
-            }
+
         }
 
         public Game(IView view)
         {
-          
+
 
             this.view = view;
         }
