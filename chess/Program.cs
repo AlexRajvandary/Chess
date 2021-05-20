@@ -8,6 +8,7 @@ namespace chess
 
     class Program
     {
+        public static ConsoleView consoleView;
         /// <summary>
         /// метод реализует ход текущего игрока:
         /// Предлагает выбрать фигуру, затем предлагает выбрать возможный ход
@@ -23,18 +24,18 @@ namespace chess
             uint chosenPiece = 0;//Считывает пользовательский ввод для выбора фигуры из предложенного списка
             uint chosenMove = 0;//Считывает пользовательский ввод для выбора доступного хода из предложенного списка
 
-            Console.WriteLine();
-            Console.WriteLine("Выберите фигуру");
+            
+            consoleView.ShowLine("Выберите фигуру");
 
             //Выводит список доступных фигур по 8 штук в строку
             foreach (var piece in currentPlayer.MyPieces)
             {
                 if (numOfElementsInLine > 8)
                 {
-                    Console.WriteLine();
+                    consoleView.ShowLine("");
                     numOfElementsInLine = 1;
                 }
-                Console.Write($"{numOfElements}.  {piece}" + "\t");
+                consoleView.Show($"{numOfElements}.  {piece}" + "\t");
                 numOfElements++;
                 numOfElementsInLine++;
             }
@@ -48,14 +49,14 @@ namespace chess
             //выводим доступные ходы или сообщение о том, что их нет
             if (AvailableMoves.Count == 0)
             {
-                Console.WriteLine("доступных ходов нет");
+                consoleView.ShowLine("доступных ходов нет");
             }
             else
             {
-                Console.WriteLine("Выберите ход");
+                consoleView.ShowLine("Выберите ход");
                 foreach (var p in AvailableMoves)
                 {
-                    Console.WriteLine(counter + " " + alphabet[p.Item1] + $"{p.Item2 + 1}");
+                    consoleView.ShowLine(counter + " " + alphabet[p.Item1] + $"{p.Item2 + 1}");
                     counter++;
                 }
             }
@@ -65,16 +66,16 @@ namespace chess
             //выводим список фигур для атаки или сообщение, что таковых нет
             if (availableKills.Count == 0)
             {
-                Console.WriteLine("Съесть никого нельзя");
+                consoleView.ShowLine("Съесть никого нельзя");
 
             }
             else
             {
                 AvailableMoves.AddRange(availableKills);//список возможных ходов и убийств фигур противника (список (int,int)-координата клетки)
-                Console.WriteLine("можно съесть:");
+                consoleView.ShowLine("можно съесть:");
                 foreach (var piece in availableKills)
                 {
-                    Console.WriteLine(counter + " " + alphabet[piece.Item1] + $"{piece.Item2 + 1}");
+                    consoleView.ShowLine(counter + " " + alphabet[piece.Item1] + $"{piece.Item2 + 1}");
                     counter++;
                 }
 
@@ -84,7 +85,7 @@ namespace chess
 
             if (AvailableMoves.Count == 0)
             {
-                Console.WriteLine("Для выбранной фигуры доступных ходов нет!\n" +
+                consoleView.Show("Для выбранной фигуры доступных ходов нет!\n" +
                     "Выберите другую фигуру");
                 Move(currentPlayer, GameField, Pieces);
                 return;
@@ -116,7 +117,7 @@ namespace chess
             uint chosenElement;
             while (!uint.TryParse(Console.ReadLine(), out chosenElement) || !(chosenElement <= numberOfelements))
             {
-                Console.WriteLine("Неверный ввод!\n" +
+                consoleView.Show("Неверный ввод!\n" +
                     "Повторите попытку");
             }
 
@@ -208,89 +209,93 @@ namespace chess
         {
             if (CurrentPlayer == 1)
             {
-                Console.WriteLine("Ход белых");
-                Console.WriteLine();
+                consoleView.Show("Ход белых");
+                consoleView.ShowLine("");
                 for (int j = 0; j < 9; j++)
                 {
                     for (int i = 0; i < 9; i++)
                     {
                         if (i == 0 && j == 0)
                         {
-                            Console.Write("  ");
+                            consoleView.Show("  ");
                             continue;
                         }
                         else if (i == 0 && j > 0)
                         {
+                            consoleView.SetDefaultColors();
                             // номер поля по вертикали
-                            Console.Write(9 - j + " ");
+                            consoleView.Show(9 - j + " ");
                         }
                         else if (j == 0 && i > 0)
                         {
+                            consoleView.SetDefaultColors();
                             // буква поля по горизонтали
-                            Console.Write(alphabet[i - 1].ToString().ToUpper() + " ");
+                            consoleView.Show(alphabet[i - 1].ToString().ToUpper() + " ");
                         }
                         else
                         {
                             if ((i + j) % 2 == 0)
                             {
-                                //Белая клетка и белым цветом красим обозначение фигуры
-                                Console.BackgroundColor = ConsoleColor.White;
-                                Console.ForegroundColor = ConsoleColor.Black;
+                                //Белая клетка и черным цветом красим обозначение фигуры
+                                consoleView.SetBackgroundColor(ConsoleColor.White);
+                                consoleView.SetForegroundColor(ConsoleColor.Black);
                             }
                             else
                             {
                                 //Черная клетка и белым цветом красим обозначение фигуры
-                                Console.BackgroundColor = ConsoleColor.Black;
-                                Console.ForegroundColor = ConsoleColor.White;
+                                consoleView.SetBackgroundColor(ConsoleColor.Black);
+                                consoleView.SetForegroundColor(ConsoleColor.White);
                             }
-                            Console.Write(gamefield[i - 1, 8 - j] + " ");
-                            Console.ResetColor();
+                            consoleView.Show(gamefield[i - 1, 8 - j] + " ");
+                            consoleView.SetDefaultColors();
                         }
                     }
-                    Console.WriteLine();
+                   consoleView.ShowLine("");
                 }
 
             }
             else
             {
-                Console.WriteLine("Ход черных");
-                Console.WriteLine();
+                consoleView.Show("Ход черных");
+                consoleView.ShowLine("");
                 for (int j = 0; j < 9; j++)
                 {
                     for (int i = 0; i < 9; i++)
                     {
                         if (i == 0 && j == 0)
                         {
-                            Console.Write("  ");
+                            consoleView.Show("  ");
                             continue;
                         }
                         else if (i == 0 && j > 0)
                         {
-                            Console.Write(j + " ");
+                            consoleView.SetDefaultColors();
+                            consoleView.Show(j + " ");
                         }
                         else if (j == 0 && i > 0)
                         {
-                            Console.Write(alphabet[7 - i + 1].ToString().ToUpper() + " ");
+                            consoleView.SetDefaultColors();
+                            consoleView.Show(alphabet[7 - i + 1].ToString().ToUpper() + " ");
                         }
                         else
                         {
                             if ((i + j) % 2 == 0)
                             {
-                                //Белая клетка и белым цветом красим обозначение фигуры
-                                Console.BackgroundColor = ConsoleColor.White;
-                                Console.ForegroundColor = ConsoleColor.Black;
+                                //Белая клетка и черным цветом красим обозначение фигуры
+                                consoleView.SetBackgroundColor(ConsoleColor.White);
+                                consoleView.SetForegroundColor(ConsoleColor.Black);
                             }
                             else
                             {
                                 //Черная клетка и белым цветом красим обозначение фигуры
-                                Console.BackgroundColor = ConsoleColor.Black;
-                                Console.ForegroundColor = ConsoleColor.White;
+                                consoleView.SetBackgroundColor(ConsoleColor.Black);
+                                consoleView.SetForegroundColor(ConsoleColor.White);
                             }
-                            Console.Write(gamefield[8 - i, j - 1] + " ");
-                            Console.ResetColor();
+                            consoleView.Show(gamefield[8 - i, j - 1] + " ");
+                            consoleView.SetDefaultColors();
                         }
                     }
-                    Console.WriteLine();
+                    consoleView.ShowLine("");
                 }
             }
         }
@@ -343,7 +348,7 @@ namespace chess
                 Console.Clear();
                 GameField = GetGameField(Pieces);
                 Visualize(GameField, CurrentPlayer);
-                Console.WriteLine("Любую клавишу для продолжения...");
+                consoleView.Show("Любую клавишу для продолжения...");
                 Console.ReadLine();
                 //меняем текущего игрока
                 CurrentPlayer *= -1;
@@ -357,7 +362,7 @@ namespace chess
                 Console.Clear();
                 GameField = GetGameField(Pieces);
                 Visualize(GameField, CurrentPlayer);
-                Console.WriteLine("Любую клавишу для продолжения...");
+                consoleView.Show("Любую клавишу для продолжения...");
                 Console.ReadLine();
                 //меняем текущего игрока
                 CurrentPlayer *= -1;
@@ -392,6 +397,7 @@ namespace chess
         }
         static void Main(string[] args)
         {
+            consoleView = new ConsoleView();
 
             CreateNewGame();
 
