@@ -1,82 +1,34 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ChessLib
 {
     public class King : IPiece
     {
+       
         public PieceColor Color { get; set; }
         public (int, int) Position { get; set; }
         public bool IsDead { get; set; }
+        private void AvailableMoveInOneDirection(string[,] GameField, List<(int, int)> AvailableMovesList, (int, int) Direction, Func<int, int, bool> Condition)
+        {
+            if (Condition(Position.Item1, Position.Item2))
+            {
+                if (GameField[Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2] == " ")
+                {
+                    AvailableMovesList.Add((Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2));
+                }
 
+            }
+        }
         public List<(int, int)> AvailableMoves(string[,] GameField)
         {
             var AvailableMovesList = new List<(int, int)>();
-
-            if (Position.Item1 < 7 && Position.Item2 < 7)
+            for(int i = 0; i < 8; i++)
             {
-                if (GameField[Position.Item1 + 1, Position.Item2 + 1] == " ")
-                {
-                    AvailableMovesList.Add((Position.Item1 + 1, Position.Item2 + 1));
-                }
-
+                AvailableMoveInOneDirection(GameField, AvailableMovesList, Directions[i], AttackConditions[i]);
             }
-            if (Position.Item2 < 7)
-            {
-                if (GameField[Position.Item1, Position.Item2 + 1] == " ")
-                {
-                    AvailableMovesList.Add((Position.Item1, Position.Item2 + 1));
-                }
-
-            }
-            if (Position.Item1 > 0 && Position.Item2 < 7)
-            {
-                if (GameField[Position.Item1 - 1, Position.Item2 + 1] == " ")
-                {
-                    AvailableMovesList.Add((Position.Item1 - 1, Position.Item2 + 1));
-                }
-
-            }
-            if (Position.Item1 > 0)
-            {
-                if (GameField[Position.Item1 - 1, Position.Item2] == " ")
-                {
-                    AvailableMovesList.Add((Position.Item1 - 1, Position.Item2));
-                }
-
-            }
-            if (Position.Item1 < 7)
-            {
-                if (GameField[Position.Item1 + 1, Position.Item2] == " ")
-                {
-                    AvailableMovesList.Add((Position.Item1 + 1, Position.Item2));
-                }
-
-            }
-
-            if (Position.Item1 > 0 && Position.Item2 > 0)
-            {
-                if (GameField[Position.Item1 - 1, Position.Item2 - 1] == " ")
-                {
-                    AvailableMovesList.Add((Position.Item1 - 1, Position.Item2 - 1));
-                }
-
-            }
-            if (Position.Item2 > 0)
-            {
-                if (GameField[Position.Item1, Position.Item2 - 1] == " ")
-                {
-                    AvailableMovesList.Add((Position.Item1, Position.Item2 - 1));
-                }
-
-            }
-            if (Position.Item1 < 7 && Position.Item2 > 0)
-            {
-                if (GameField[Position.Item1 + 1, Position.Item2 - 1] == " ")
-                {
-                    AvailableMovesList.Add((Position.Item1 + 1, Position.Item2 - 1));
-                }
-
-            }
+          
+            
 
             return AvailableMovesList;
 
@@ -105,73 +57,46 @@ namespace ChessLib
                 pieces = "BNPQR";
             }
 
-            if (Position.Item1 < 7 && Position.Item2 < 7)
+            for(int i = 0; i < 8; i++)
             {
-                if (pieces.Contains(GameField[Position.Item1 + 1, Position.Item2 + 1]))
+                if(AttackConditions[i](Position.Item1, Position.Item2))
                 {
-                    AvailableKillsList.Add((Position.Item1 + 1, Position.Item2 + 1));
+                    if (pieces.Contains(GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2]))
+                    {
+                        AvailableKillsList.Add((Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2));
+                    }
                 }
-
-            }
-            if (Position.Item2 < 7)
-            {
-                if (pieces.Contains(GameField[Position.Item1, Position.Item2 + 1]))
-                {
-                    AvailableKillsList.Add((Position.Item1, Position.Item2 + 1));
-                }
-
-            }
-            if (Position.Item1 > 0 && Position.Item2 < 7)
-            {
-                if (pieces.Contains(GameField[Position.Item1 - 1, Position.Item2 + 1]))
-                {
-                    AvailableKillsList.Add((Position.Item1 - 1, Position.Item2 + 1));
-                }
-
-            }
-            if (Position.Item1 > 0)
-            {
-                if (pieces.Contains(GameField[Position.Item1 - 1, Position.Item2]))
-                {
-                    AvailableKillsList.Add((Position.Item1 - 1, Position.Item2));
-                }
-
-            }
-            if (Position.Item1 < 7)
-            {
-                if (pieces.Contains(GameField[Position.Item1 + 1, Position.Item2]))
-                {
-                    AvailableKillsList.Add((Position.Item1 + 1, Position.Item2));
-                }
-
-            }
-
-            if (Position.Item1 > 0 && Position.Item2 > 0)
-            {
-                if (pieces.Contains(GameField[Position.Item1 - 1, Position.Item2 - 1]))
-                {
-                    AvailableKillsList.Add((Position.Item1 - 1, Position.Item2 - 1));
-                }
-
-            }
-            if (Position.Item2 > 0)
-            {
-                if (pieces.Contains(GameField[Position.Item1, Position.Item2 - 1]))
-                {
-                    AvailableKillsList.Add((Position.Item1, Position.Item2 - 1));
-                }
-
-            }
-            if (Position.Item1 < 7 && Position.Item2 > 0)
-            {
-                if (pieces.Contains(GameField[Position.Item1 + 1, Position.Item2 - 1]))
-                {
-                    AvailableKillsList.Add((Position.Item1 + 1, Position.Item2 - 1));
-                }
-
             }
 
             return AvailableKillsList;
         }
+
+      
+        /// <summary>
+        /// Условия для проверки доступных клеток для хода/атаки в 8-ми направлениях
+        /// </summary>
+        private readonly Func<int, int, bool>[] AttackConditions = new Func<int, int, bool>[] {
+            (int x, int y) => x < 7 && y < 7,
+            (int x, int y) => y < 7,
+            (int x, int y) => x > 0 && y < 7,
+            (int x, int y) => x > 0,
+            (int x, int y) => x < 7,
+            (int x, int y) => x > 0 && y > 0,
+            (int x, int y) => y > 0,
+            (int x, int y) => x < 7 && y > 0
+         };
+        /// <summary>
+        /// 8 направлений хода/атаки
+        /// </summary>
+        private readonly (int, int)[] Directions = new (int, int)[] { 
+            (1, 1)  , 
+            (0, 1)  ,
+            (-1, 1) ,
+            (-1, 0) ,
+            (1, 0)  ,
+            (-1, -1),
+            (0, -1) , 
+            (1, -1) 
+        };
     }
 }

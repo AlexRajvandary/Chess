@@ -143,22 +143,7 @@ namespace ChessLib
             uint chosenMove = 0;//Считывает пользовательский ввод для выбора доступного хода из предложенного списка
 
 
-            view.Show("Выберите фигуру\n");
-
-            //Выводит список доступных фигур по 8 штук в строку
-            foreach (var piece in currentPlayer.MyPieces)
-            {
-                if (numOfElementsInLine > 8)
-                {
-                    view.Show("\n");
-                    numOfElementsInLine = 1;
-                }
-                view.Show($"{numOfElements}.  {piece}" + "\t");
-                numOfElements++;
-                numOfElementsInLine++;
-            }
-
-            chosenPiece = UserInput(currentPlayer.MyPieces.Count);
+            chosenPiece = ChosePiece(currentPlayer, ref numOfElements, ref numOfElementsInLine);
 
             int counter = 1;//счетчик
 
@@ -221,9 +206,31 @@ namespace ChessLib
                 Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]).IsDead = true;
             }
 
-
+            //Устанавливает новую позицию выбранной фигуре
             currentPlayer.MyPieces[(int)(chosenPiece - 1)].Position = AvailableMoves[(int)(chosenMove - 1)];
 
+        }
+
+        private uint ChosePiece(Player currentPlayer, ref int numOfElements, ref int numOfElementsInLine)
+        {
+            uint chosenPiece;
+            view.Show("Выберите фигуру\n");
+
+            //Выводит список доступных фигур по 8 штук в строку
+            foreach (var piece in currentPlayer.MyPieces)
+            {
+                if (numOfElementsInLine > 8)
+                {
+                    view.Show("\n");
+                    numOfElementsInLine = 1;
+                }
+                view.Show($"{numOfElements}.  {piece}" + "\t");
+                numOfElements++;
+                numOfElementsInLine++;
+            }
+
+            chosenPiece = UserInput(currentPlayer.MyPieces.Count);
+            return chosenPiece;
         }
 
         void Update(List<IPiece> pieces)
