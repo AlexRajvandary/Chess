@@ -9,6 +9,31 @@ namespace ChessLib
         public (int, int) Position { get; set; }
         public bool IsDead { get; set; }
         /// <summary>
+        /// Направление для хода
+        /// </summary>
+        private readonly (int, int)[] Directions = new (int, int)[] { (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2) };
+
+        /*
+         Чтобы узнать можно ли сходить на какую-то клетку, мы должны к текущему положению коня (к его координатам на поле) прибавить, например 2 вверх и 1 влево
+         И мы получим какую-то клетку на поле. Затем нас интересует является ли данная клетка пустой: если да, то можем на нее сходить -> значит добавляем ее координаты в список AvailableMovesList
+         Но для того, чтобы получить эту клетку из массива клеток, нужно убедиться что мы не выйдем за рамки массива
+         для этого нужны условия ниже
+         */
+        /// <summary>
+        /// условия для проверки хода/атаки в одном из 8-ми направлений
+        /// </summary>
+        private readonly Func<int, int, bool>[] Conditions = new Func<int, int, bool>[]
+        {
+            (x, y) => x < 7 && y < 6,
+            (x, y) => x < 6 && y < 7,
+            (x, y) => x < 6 && y > 0,
+            (x, y) => x < 7 && y > 1,
+            (x, y) => x > 0 && y > 1,
+            (x, y) => x > 1 && y > 0,
+            (x, y) => x > 1 && y < 7,
+            (x, y) => x > 0 && y < 6
+        };
+        /// <summary>
         /// Получает список доступных для хода клеток 
         /// </summary>
         /// <param name="GameField">Игровое поле</param>
@@ -17,40 +42,11 @@ namespace ChessLib
         {
             var AvailableMovesList = new List<(int, int)>();
 
-            //Направления для хода
-            var North = (1, 2);
-            var Northeast = (2, 1);
-            var East = (2, -1);
-            var SouthEast = (1, -2);
-            var South = (-1, -2);
-            var SouthWest = (-2, -1);
-            var West = (-2, 1);
-            var NorthWest = (-1, 2);
 
-            /*
-             Чтобы узнать можно ли сходить на какую-то клетку, мы должны к текущему положению коня (к его координатам на поле) прибавить, например 2 вверх и 1 влево
-             И мы получим какую-то клетку на поле. Затем нас интересует является ли данная клетка пустой: если да, то можем на нее сходить -> значит добавляем ее координаты в список AvailableMovesList
-             Но для того, чтобы получить эту клетку из массива клеток, нужно убедиться что мы не выйдем за рамки массива
-             для этого нужны условия ниже
-             */
-            Func<int, int, bool> NorthCondition = (x, y) => x < 7 && y < 6;
-            Func<int, int, bool> NorthEastCondition = (x, y) => x < 6 && y < 7;
-            Func<int, int, bool> EastCondition = (x, y) => x < 6 && y > 0;
-            Func<int, int, bool> SouthEastCondition = (x, y) => x < 7 && y > 1;
-            Func<int, int, bool> SouthCondition = (x, y) => x > 0 && y > 1;
-            Func<int, int, bool> SouthWestCondition = (x, y) => x > 1 && y > 0;
-            Func<int, int, bool> WestCondition = (x, y) => x > 1 && y < 7;
-            Func<int, int, bool> NorthWestCondition = (x, y) => x > 0 && y < 6;
-
-
-            AvailableMoveInDirection(North, GameField, AvailableMovesList, NorthCondition);
-            AvailableMoveInDirection(Northeast, GameField, AvailableMovesList, NorthEastCondition);
-            AvailableMoveInDirection(East, GameField, AvailableMovesList, EastCondition);
-            AvailableMoveInDirection(SouthEast, GameField, AvailableMovesList, SouthEastCondition);
-            AvailableMoveInDirection(South, GameField, AvailableMovesList, SouthCondition);
-            AvailableMoveInDirection(SouthWest, GameField, AvailableMovesList, SouthWestCondition);
-            AvailableMoveInDirection(West, GameField, AvailableMovesList, WestCondition);
-            AvailableMoveInDirection(NorthWest, GameField, AvailableMovesList, NorthWestCondition);
+            for (int i = 0; i < 8; i++)
+            {
+                AvailableMoveInDirection(Directions[i], GameField, AvailableMovesList, Conditions[i]);
+            }
 
             return AvailableMovesList;
         }
@@ -90,6 +86,18 @@ namespace ChessLib
         {
             var result = new List<(int, int)>();
 
+            SetOppositeAndFriendPieces();
+
+            for(int i = 0; i < 8; i++)
+            {
+                AvailablekillsInOneDirection(Directions[i], GameField, result, Conditions[i]);
+            }
+
+            return result;
+        }
+
+        private void SetOppositeAndFriendPieces()
+        {
             if (Color == PieceColor.White)
             {
                 pieces = "bnpqr";
@@ -98,43 +106,8 @@ namespace ChessLib
             {
                 pieces = "BNPQR";
             }
-
-            //Направления для хода
-            var North = (1, 2);
-            var Northeast = (2, 1);
-            var East = (2, -1);
-            var SouthEast = (1, -2);
-            var South = (-1, -2);
-            var SouthWest = (-2, -1);
-            var West = (-2, 1);
-            var NorthWest = (-1, 2);
-
-            /*
-           Чтобы узнать можно ли сходить на какую-то клетку, мы должны к текущему положению коня (к его координатам на поле) прибавить, например 2 вверх и 1 влево
-           И мы получим какую-то клетку на поле. Затем нас интересует является ли данная клетка пустой: если да, то можем на нее сходить -> значит добавляем ее координаты в список AvailableMovesList
-           Но для того, чтобы получить эту клетку из массива клеток, нужно убедиться что мы не выйдем за рамки массива
-           для этого нужны условия ниже
-           */
-            Func<int, int, bool> NorthCondition = (x, y) => x < 7 && y < 6;
-            Func<int, int, bool> NorthEastCondition = (x, y) => x < 6 && y < 7;
-            Func<int, int, bool> EastCondition = (x, y) => x < 6 && y > 0;
-            Func<int, int, bool> SouthEastCondition = (x, y) => x < 7 && y > 1;
-            Func<int, int, bool> SouthCondition = (x, y) => x > 0 && y > 1;
-            Func<int, int, bool> SouthWestCondition = (x, y) => x > 1 && y > 0;
-            Func<int, int, bool> WestCondition = (x, y) => x > 1 && y < 7;
-            Func<int, int, bool> NorthWestCondition = (x, y) => x > 0 && y < 6;
-
-            AvailablekillsInOneDirection(North, GameField, result, NorthCondition);
-            AvailablekillsInOneDirection(Northeast, GameField, result, NorthEastCondition);
-            AvailablekillsInOneDirection(East, GameField, result, EastCondition);
-            AvailablekillsInOneDirection(SouthEast, GameField, result, SouthWestCondition);
-            AvailablekillsInOneDirection(South, GameField, result, SouthCondition);
-            AvailablekillsInOneDirection(SouthWest, GameField, result, SouthWestCondition);
-            AvailablekillsInOneDirection(West, GameField, result, WestCondition);
-            AvailablekillsInOneDirection(NorthWest, GameField, result, NorthWestCondition);
-
-            return result;
         }
+
         /// <summary>
         /// Ищем вражеские фигуры, доступные для атаки
         /// </summary>

@@ -9,6 +9,18 @@ namespace ChessLib
         public (int, int) Position { get; set; }
         public bool IsDead { get; set; }
 
+        //направление поиска фигуры (будет прибавлять первую координату к первой координате позиции фигуры и вторую ко второй) по двумерному массиву (игрового поля)
+        private readonly (int, int)[] Directions = new (int, int)[] { (1, 1), (-1, 1), (1, -1), (-1, -1) };
+
+        //условия для поиска фигуры в массиве(игровом поле)
+        private readonly Func<int, int, bool>[] Conditions = new Func<int, int, bool>[]
+        {
+            (int i, int j) => i < 8 & j < 8,//NorthEast
+            (int i, int j) => i > -1 & j < 8,//NorthWest
+            (int i, int j) => i < 8 & j > -1,//SouthEast
+            (int i, int j) => i > -1 & j > -1//SouthWest
+        };
+
         /// <summary>
         /// Проверка доступных ходов для слона в четырех направлениях
         /// </summary>
@@ -17,26 +29,12 @@ namespace ChessLib
         public List<(int, int)> AvailableMoves(string[,] GameField)
         {
             var AvailableMovesList = new List<(int, int)>();
-            //направление поиска фигуры (будет прибавлять первую координату к первой координате позиции фигуры и вторую ко второй) по двумерному массиву (игрового поля)
-            (int, int) NorthEast = (1, 1);
-            (int, int) NorthWest = (-1, 1);
-            (int, int) SouthEast = (1, -1);
-            (int, int) SouthWest = (-1, -1);
 
+            for (int i = 0; i < 4; i++)
+            {
+                AvailableMovesInDirection(Directions[i], GameField, AvailableMovesList, Conditions[i]);
+            }
 
-            //условия для поиска фигуры в массиве(игровом поле)
-            Func<int, int, bool> NorthEastCondition = (int i, int j) => i < 8 & j < 8;
-            Func<int, int, bool> NorthWestCondition = (int i, int j) => i > -1 & j < 8;
-            Func<int, int, bool> SouthEastCondition = (int i, int j) => i < 8 & j > -1;
-            Func<int, int, bool> SouthWestCondition = (int i, int j) => i > -1 & j > -1;
-            //Северо-восток
-            AvailableMovesInDirection(NorthEast, GameField, AvailableMovesList, NorthEastCondition);
-            //северо-запад
-            AvailableMovesInDirection(NorthWest, GameField, AvailableMovesList, NorthWestCondition);
-            //Юго-Восток
-            AvailableMovesInDirection(SouthEast, GameField, AvailableMovesList, SouthEastCondition);
-            //Юго-Запад
-            AvailableMovesInDirection(SouthWest, GameField, AvailableMovesList, SouthWestCondition);
             return AvailableMovesList;
         }
         /// <summary>
@@ -106,7 +104,17 @@ namespace ChessLib
         public List<(int, int)> AvailableKills(string[,] GameField)
         {
             List<(int, int)> AvailableKillsList = new List<(int, int)>();
+            SetOppositeAndFreindPieces();
+            for (int i = 0; i < 4; i++)
+            {
+                AvailableKillsInDirection(Directions[i], GameField, AvailableKillsList, Conditions[i]);
+            }
 
+            return AvailableKillsList;
+        }
+
+        private void SetOppositeAndFreindPieces()
+        {
             if (Color == PieceColor.White)
             {
                 pieces = "bnpqr";
@@ -117,30 +125,6 @@ namespace ChessLib
                 pieces = "BNPQR";
                 myPieces = "bnpqr";
             }
-            //направление поиска фигуры (будет прибавлять первую координату к первой координате позиции фигуры и вторую ко второй) по двумерному массиву (игрового поля)
-            (int, int) NorthEast = (1, 1);
-            (int, int) Northwest = (-1, 1);
-            (int, int) SouthEast = (1, -1);
-            (int, int) SouthWest = (-1, -1);
-
-
-            //условия для поиска фигуры в массиве(игровом поле)
-            Func<int, int, bool> NorthEastCondition = (int i, int j) => i < 8 & j < 8;
-            Func<int, int, bool> NorthWestCondition = (int i, int j) => i > -1 & j < 8;
-            Func<int, int, bool> SouthEastCondition = (int i, int j) => i < 8 & j > -1;
-            Func<int, int, bool> SouthWestCondition = (int i, int j) => i > -1 & j > -1;
-
-            //Северо-восток
-            AvailableKillsInDirection(NorthEast, GameField, AvailableKillsList, NorthEastCondition);
-            //северо-запад
-            AvailableKillsInDirection(Northwest, GameField, AvailableKillsList, NorthWestCondition);
-            //Юго-Восток
-            AvailableKillsInDirection(SouthEast, GameField, AvailableKillsList, SouthEastCondition);
-            //Юго-Запад
-            AvailableKillsInDirection(SouthWest, GameField, AvailableKillsList, SouthWestCondition);
-
-            return AvailableKillsList;
-
         }
 
         public Bishop((int, int) startPosition, PieceColor Color)

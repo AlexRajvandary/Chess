@@ -114,15 +114,7 @@ namespace ChessLib
         {
             var AvailableKillsList = new List<(int, int)>();
 
-            string pieces;
-            if (Color == PieceColor.White)
-            {
-                pieces = "bnpqr";
-            }
-            else
-            {
-                pieces = "BNPQR";
-            }
+            GetOppositeAndFriendPieces();
 
             if (Color == PieceColor.White)
             {
@@ -164,6 +156,21 @@ namespace ChessLib
                 return AvailableKillsList;
             }
 
+        }
+        private string pieces;
+        private void GetOppositeAndFriendPieces()
+        {
+           
+            if (Color == PieceColor.White)
+            {
+                pieces = "bnpqr";
+            }
+            else
+            {
+                pieces = "BNPQR";
+            }
+
+            
         }
 
         public Pawn(PieceColor color, (int, int) position)

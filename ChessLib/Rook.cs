@@ -18,6 +18,21 @@ namespace ChessLib
         public (int, int) Position { get; set; }
         public bool IsDead { get; set; }
 
+        /*направление поиска фигуры 
+         *         (будет прибавлять первую координату к первой координате позиции фигуры
+         *          и вторую ко второй по двумерному массиву (игрового поля))
+         */
+        private readonly (int, int) North = (0, 1);
+        private readonly (int, int) South = (0, -1);
+        private readonly (int, int) West = (1, 0);
+        private readonly (int, int) East = (-1, 0);
+
+        //условия для поиска фигуры в массиве(игровом поле)
+        private readonly Func<int, int, bool> NorthCondition = (int i, int j) => j < 8;
+        private readonly Func<int, int, bool> SouthCondition = (int i, int j) => j > -1;
+        private readonly Func<int, int, bool> WestCondition = (int i, int j) => i < 8;
+        private readonly Func<int, int, bool> EastCondition = (int i, int j) => i > -1;
+
         /// <summary>
         /// Проверяет доступные для ладьи ходы в 4 направлениях
         /// </summary>
@@ -25,17 +40,7 @@ namespace ChessLib
         /// <returns>Список координат доступных для хода клеток</returns>
         public List<(int, int)> AvailableMoves(string[,] GameField)
         {
-            //направление поиска фигуры (будет прибавлять первую координату к первой координате позиции фигуры и вторую ко второй) по двумерному массиву (игрового поля)
-            (int, int) North = (0, 1);
-            (int, int) South = (0, -1);
-            (int, int) West = (1, 0);
-            (int, int) East = (-1, 0);
-
-            //условия для поиска фигуры в массиве(игровом поле)
-            Func<int, int, bool> NorthCondition = (int i, int j) => j < 8;
-            Func<int, int, bool> SouthCondition = (int i, int j) => j > -1;
-            Func<int, int, bool> WestCondition = (int i, int j) => i < 8;
-            Func<int, int, bool> EastCondition = (int i, int j) => i > -1;
+            
             var AvailableMovesList = new List<(int, int)>();
             //Север
             AvailableMovesInDirection(North, GameField, AvailableMovesList, NorthCondition);
@@ -105,27 +110,7 @@ namespace ChessLib
         {
             var AvailableKillsList = new List<(int, int)>();
 
-            if (Color == PieceColor.White)
-            {
-                pieces = "bnpqr";
-                myPieces = "BNPQR";
-            }
-            else
-            {
-                pieces = "BNPQR";
-                myPieces = "bnpqr";
-            }
-            //направление поиска фигуры (будет прибавлять первую координату к первой координате позиции фигуры и вторую ко второй) по двумерному массиву (игрового поля)
-            (int, int) North = (0, 1);
-            (int, int) South = (0, -1);
-            (int, int) West = (1, 0);
-            (int, int) East = (-1, 0);
-
-            //условия для поиска фигуры в массиве(игровом поле)
-            Func<int, int, bool> NorthCondition = (int i, int j) => j < 8;
-            Func<int, int, bool> SouthCondition = (int i, int j) => j > -1;
-            Func<int, int, bool> WestCondition = (int i, int j) => i < 8;
-            Func<int, int, bool> EastCondition = (int i, int j) => i > -1;
+            SetOppositeAndFreindlyPieces();
 
             //Север
             AvailableKillsInDirection(North, GameField, AvailableKillsList, NorthCondition);
@@ -136,6 +121,22 @@ namespace ChessLib
             //восток
             AvailableKillsInDirection(East, GameField, AvailableKillsList, EastCondition);
             return AvailableKillsList;
+        }
+        /// <summary>
+        /// Устанавливает вражеские и свои фигуры
+        /// </summary>
+        private void SetOppositeAndFreindlyPieces()
+        {
+            if (Color == PieceColor.White)
+            {
+                pieces = "bnpqr";
+                myPieces = "BNPQR";
+            }
+            else
+            {
+                pieces = "BNPQR";
+                myPieces = "bnpqr";
+            }
         }
 
         public Rook((int, int) Position, PieceColor color)
