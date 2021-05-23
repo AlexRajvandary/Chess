@@ -105,8 +105,13 @@ namespace ChessLib
         {
             return "p";
         }
-
+        /// <summary>
+        /// Направления для атаки
+        /// </summary>
         private readonly (int, int)[] Directions = new (int, int)[] { (-1, 1), (1, 1), (-1, -1), (1, -1) };
+        /// <summary>
+        /// Условия для проверки возможности атаки
+        /// </summary>
         private readonly Func<int, int, bool>[] Conditions = new Func<int, int, bool>[]
         {
             (x,y)=> x>0 && y<7,
@@ -143,6 +148,7 @@ namespace ChessLib
 
         }
         private string pieces;
+
         private void GetOppositeAndFriendPieces()
         {
 
