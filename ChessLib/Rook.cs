@@ -40,7 +40,7 @@ namespace ChessLib
         /// <returns>Список координат доступных для хода клеток</returns>
         public List<(int, int)> AvailableMoves(string[,] GameField)
         {
-            
+
             var AvailableMovesList = new List<(int, int)>();
             //Север
             AvailableMovesInDirection(North, GameField, AvailableMovesList, NorthCondition);
@@ -92,10 +92,8 @@ namespace ChessLib
                 {
                     break;
                 }
-                else//если уперлись во вражескую фигуру, то можем ее съесть
-                      if (pieces.Contains(GameField[i, j]))
+                else if (pieces.Contains(GameField[i, j]))
                 {
-
                     AvailableKillsList.Add((i, j));
                     break;
                 }
