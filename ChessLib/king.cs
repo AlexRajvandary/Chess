@@ -43,23 +43,16 @@ namespace ChessLib
         {
             return "k";
         }
-
+        private string pieces;
         public List<(int, int)> AvailableKills(string[,] GameField)
         {
             var AvailableKillsList = new List<(int, int)>();
-            string pieces;
-            if (Color == PieceColor.White)
-            {
-                pieces = "bnpqr";
-            }
-            else
-            {
-                pieces = "BNPQR";
-            }
+            
+            GetOppositeAndFriendPieces();
 
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
-                if(AttackConditions[i](Position.Item1, Position.Item2))
+                if (AttackConditions[i](Position.Item1, Position.Item2))
                 {
                     if (pieces.Contains(GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2]))
                     {
@@ -71,7 +64,22 @@ namespace ChessLib
             return AvailableKillsList;
         }
 
-      
+        private void GetOppositeAndFriendPieces()
+        {
+          
+            if (Color == PieceColor.White)
+            {
+                pieces = "bnpqr";
+            }
+            else
+            {
+                pieces = "BNPQR";
+            }
+
+          
+        }
+
+
         /// <summary>
         /// Условия для проверки доступных клеток для хода/атаки в 8-ми направлениях
         /// </summary>
