@@ -105,6 +105,16 @@ namespace ChessLib
         {
             return "p";
         }
+
+        private readonly (int, int)[] Directions = new (int, int)[] { (-1, 1), (1, 1), (-1, -1), (1, -1) };
+        private readonly Func<int, int, bool>[] Conditions = new Func<int, int, bool>[]
+        {
+            (x,y)=> x>0 && y<7,
+            (x,y)=> x<7 && y<7,
+            (x,y)=> x>0 && y>0,
+            (x,y)=> x<7 && y>0
+
+        };
         /// <summary>
         /// Ищет доступные для атаки вражеские фигуры
         /// </summary>
@@ -115,52 +125,27 @@ namespace ChessLib
             var AvailableKillsList = new List<(int, int)>();
 
             GetOppositeAndFriendPieces();
-
-            if (Color == PieceColor.White)
+            for(int i = 0; i < 4; i++)
             {
-                if (Position.Item1 > 0 && Position.Item2 < 7)
-                {
-                    if (Position.Item1 > 0 && Position.Item2 < 7)
-                        if (GameField[Position.Item1 - 1, Position.Item2 + 1] != " " && pieces.Contains(GameField[Position.Item1 - 1, Position.Item2 + 1]))
-                        {
-                            AvailableKillsList.Add((Position.Item1 - 1, Position.Item2 + 1));
-                        }
-                }
-                if (Position.Item1 < 7 && Position.Item2 < 7)
-                {
-                    if (Position.Item1 > 0 && Position.Item2 < 7)
-                        if (GameField[Position.Item1 + 1, Position.Item2 + 1] != " " && pieces.Contains(GameField[Position.Item1 + 1, Position.Item2 + 1]))
-                        {
-                            AvailableKillsList.Add((Position.Item1 + 1, Position.Item2 + 1));
-                        }
-                }
 
-                return AvailableKillsList;
-            }
-            else
-            {
-                if (Position.Item1 > 0 && Position.Item2 > 0)
-                {
-                    if (GameField[Position.Item1 - 1, Position.Item2 - 1] != " " && pieces.Contains(GameField[Position.Item1 - 1, Position.Item2 - 1]))
+                    if (Conditions[i](Position.Item1,Position.Item2))
                     {
-                        AvailableKillsList.Add((Position.Item1 - 1, Position.Item2 - 1));
+
+                        if (GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2] != " " && pieces.Contains(GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2]))
+                        {
+                            AvailableKillsList.Add((Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2));
+                        }
                     }
-                }
-                if (Position.Item1 < 7 && Position.Item2 > 0)
-                {
-                    if (GameField[Position.Item1 + 1, Position.Item2 - 1] != " " && pieces.Contains(GameField[Position.Item1 + 1, Position.Item2 - 1]))
-                    {
-                        AvailableKillsList.Add((Position.Item1 + 1, Position.Item2 - 1));
-                    }
-                }
-                return AvailableKillsList;
+
             }
+
+            return AvailableKillsList;
 
         }
         private string pieces;
         private void GetOppositeAndFriendPieces()
         {
-           
+
             if (Color == PieceColor.White)
             {
                 pieces = "bnpqr";
@@ -170,7 +155,7 @@ namespace ChessLib
                 pieces = "BNPQR";
             }
 
-            
+
         }
 
         public Pawn(PieceColor color, (int, int) position)
