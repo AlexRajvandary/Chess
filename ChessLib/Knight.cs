@@ -88,7 +88,7 @@ namespace ChessLib
 
             SetOppositeAndFriendPieces();
 
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 AvailablekillsInOneDirection(Directions[i], GameField, result, Conditions[i]);
             }

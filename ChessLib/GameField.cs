@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChessLib
 {
@@ -18,30 +16,30 @@ namespace ChessLib
             }
 
         }
-        void GetAtackStatus(List<IPiece> pieces, (int,int) cell, string[,] gameField)
+        void GetAtackStatus(List<IPiece> pieces, (int, int) cell, string[,] gameField)
         {
             var AllPossibleMoves = new List<(int, int)>();
-            foreach(var piece in pieces)
+            foreach (var piece in pieces)
             {
                 AllPossibleMoves.AddRange(piece.AvailableMoves(gameField));
                 AllPossibleMoves.AddRange(piece.AvailableKills(gameField));
             }
             this[cell.Item1, cell.Item2].isAtacked = AllPossibleMoves.Contains(cell);
-            Console.WriteLine(this[cell.Item1, cell.Item2].isAtacked + " " + $"{cell.Item2+1}" + " " +  "abcdefgh"[cell.Item1]);
+            Console.WriteLine(this[cell.Item1, cell.Item2].isAtacked + " " + $"{cell.Item2 + 1}" + " " + "abcdefgh"[cell.Item1]);
         }
 
         public bool IsCheck()
         {
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
-                for(int j = 0; j < 8; j++)
+                for (int j = 0; j < 8; j++)
                 {
-                    if(this[i,j].isAtacked && this[i,j].Piece is King)
+                    if (this[i, j].isAtacked && this[i, j].Piece is King)
                     {
-                        Console.WriteLine($"{this[i, j].isAtacked}    {i+1} {"abcdefgh"[j]}");
-                        
+                        Console.WriteLine($"{this[i, j].isAtacked}    {i + 1} {"abcdefgh"[j]}");
+
                         return true;
-                       
+
                     }
                 }
             }
@@ -50,9 +48,9 @@ namespace ChessLib
         public void Update(List<IPiece> pieces, string[,] gameFiled, PieceColor curretnPlayer)
         {
             var oppositePices = pieces.Where(piece => piece.Color != curretnPlayer).ToList();
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
-                for(int j = 0; j < 8; j++)
+                for (int j = 0; j < 8; j++)
                 {
                     this[i, j].Piece = null;
                     this[i, j].isFilled = false;
@@ -61,7 +59,7 @@ namespace ChessLib
             }
 
 
-            foreach(var piece in pieces)
+            foreach (var piece in pieces)
             {
                 int i = piece.Position.Item1;
                 int j = piece.Position.Item2;

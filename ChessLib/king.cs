@@ -5,7 +5,7 @@ namespace ChessLib
 {
     public class King : IPiece
     {
-       
+
         public PieceColor Color { get; set; }
         public (int, int) Position { get; set; }
         public bool IsDead { get; set; }
@@ -23,12 +23,12 @@ namespace ChessLib
         public List<(int, int)> AvailableMoves(string[,] GameField)
         {
             var AvailableMovesList = new List<(int, int)>();
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 AvailableMoveInOneDirection(GameField, AvailableMovesList, Directions[i], AttackConditions[i]);
             }
-          
-            
+
+
 
             return AvailableMovesList;
 
@@ -47,7 +47,7 @@ namespace ChessLib
         public List<(int, int)> AvailableKills(string[,] GameField)
         {
             var AvailableKillsList = new List<(int, int)>();
-            
+
             GetOppositeAndFriendPieces();
 
             for (int i = 0; i < 8; i++)
@@ -66,7 +66,7 @@ namespace ChessLib
 
         private void GetOppositeAndFriendPieces()
         {
-          
+
             if (Color == PieceColor.White)
             {
                 pieces = "kbnpqr";
@@ -76,7 +76,7 @@ namespace ChessLib
                 pieces = "KBNPQR";
             }
 
-          
+
         }
 
 
@@ -96,15 +96,15 @@ namespace ChessLib
         /// <summary>
         /// 8 направлений хода/атаки
         /// </summary>
-        private readonly (int, int)[] Directions = new (int, int)[] { 
-            (1, 1)  , 
+        private readonly (int, int)[] Directions = new (int, int)[] {
+            (1, 1)  ,
             (0, 1)  ,
             (-1, 1) ,
             (-1, 0) ,
             (1, 0)  ,
             (-1, -1),
-            (0, -1) , 
-            (1, -1) 
+            (0, -1) ,
+            (1, -1)
         };
     }
 }

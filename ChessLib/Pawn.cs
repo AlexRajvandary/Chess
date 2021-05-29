@@ -130,17 +130,17 @@ namespace ChessLib
             var AvailableKillsList = new List<(int, int)>();
 
             GetOppositeAndFriendPieces();
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
 
-                    if (Conditions[i](Position.Item1,Position.Item2))
-                    {
+                if (Conditions[i](Position.Item1, Position.Item2))
+                {
 
-                        if (GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2] != " " && pieces.Contains(GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2]))
-                        {
-                            AvailableKillsList.Add((Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2));
-                        }
+                    if (GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2] != " " && pieces.Contains(GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2]))
+                    {
+                        AvailableKillsList.Add((Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2));
                     }
+                }
 
             }
 

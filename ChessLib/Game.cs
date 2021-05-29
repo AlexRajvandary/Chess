@@ -138,7 +138,7 @@ namespace ChessLib
 
         void Move(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
-            gameField.Update(Pieces, GameField,currentPlayer.Color);
+            gameField.Update(Pieces, GameField, currentPlayer.Color);
 
             if (gameField.IsCheck())
             {

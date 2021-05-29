@@ -38,7 +38,7 @@ namespace ChessLib
             {
                 AvailableMovesInDirection(Directions[i], GameField, AvailableMovesList, Conditions[i]);
             }
-           
+
             return AvailableMovesList;
         }
         /// <summary>
@@ -109,11 +109,11 @@ namespace ChessLib
         {
             List<(int, int)> AvailableKillsList = new List<(int, int)>();
             SetOppositeAndFreindPieces();
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 AvailableKillsInDirection(Directions[i], GameField, AvailableKillsList, Conditions[i]);
             }
-          
+
 
             return AvailableKillsList;
 
