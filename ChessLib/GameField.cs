@@ -16,6 +16,12 @@ namespace ChessLib
             }
 
         }
+        /// <summary>
+        /// Узнаем атакована ли клетка
+        /// </summary>
+        /// <param name="pieces"></param>
+        /// <param name="cell"></param>
+        /// <param name="gameField"></param>
         void GetAtackStatus(List<IPiece> pieces, (int, int) cell, string[,] gameField)
         {
             var AllPossibleMoves = new List<(int, int)>();
