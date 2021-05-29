@@ -14,10 +14,12 @@ namespace ChessLib
         /// Для визуализации
         /// </summary>
         IView view;
+        private GameField gameField;
+
         /// <summary>
         /// Игровое поле
         /// </summary>
-        string[,] GameField;
+        string[,] GameFieldString;
         /// <summary>
         /// Текущий игрок
         /// </summary>
@@ -97,10 +99,10 @@ namespace ChessLib
             CurrentPlayer = 0;
 
             //Игрок с белыми фигурами
-            Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");//CurrentPlayer = 1
+            Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
 
             //Игрок с черными фигурами
-            Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");//CurrentPlayer = -1
+            Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");
             players = new List<Player>();
             players.Add(player1);
             players.Add(player2);
@@ -136,6 +138,15 @@ namespace ChessLib
 
         void Move(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
+            gameField.Update(Pieces, GameField,currentPlayer.Color);
+
+            if (gameField.IsCheck())
+            {
+                view.Show("У вас шах!");
+                Console.ReadLine();
+                return;
+            }
+
             int numOfElements = 1;//Для вывбора фигуры по номеру из списка фигур
             int numOfElementsInLine = 1;//для отображения фигур по 8 в строке
 
@@ -241,22 +252,22 @@ namespace ChessLib
         void GameProcess()
         {
 
-
+            gameField = new GameField();
             //получаем фигуры на доске, у каждой фигуры записаны текущее местоположение на доске
-            GameField = GetGameField(Pieces);
+            GameFieldString = GetGameField(Pieces);
 
             //отрисовываем доску
-            view.Visualize(GameField, CurrentPlayer);
+            view.Visualize(GameFieldString, CurrentPlayer);
 
 
 
             //ход белых
-            Move(players[CurrentPlayer % 2], GameField, Pieces);
+            Move(players[CurrentPlayer % 2], GameFieldString, Pieces);
 
             Update(Pieces);
             Console.Clear();
-            GameField = GetGameField(Pieces);
-            view.Visualize(GameField, CurrentPlayer);
+            GameFieldString = GetGameField(Pieces);
+            view.Visualize(GameFieldString, CurrentPlayer);
             view.Show("Любую клавишу для продолжения...");
             Console.ReadLine();
             //меняем текущего игрока

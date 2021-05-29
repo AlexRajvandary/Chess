@@ -100,11 +100,11 @@ namespace ChessLib
         {
             if (Color == PieceColor.White)
             {
-                pieces = "bnpqr";
+                pieces = "kbnpqr";
             }
             else
             {
-                pieces = "BNPQR";
+                pieces = "KBNPQR";
             }
         }
 
