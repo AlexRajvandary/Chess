@@ -33,7 +33,11 @@ namespace ChessLib
 
 
 
-
+        /// <summary>
+        /// Пользовательский ввод
+        /// </summary>
+        /// <param name="numberOfelements"></param>
+        /// <returns></returns>
         uint UserInput(int numberOfelements)
         {
             uint chosenElement;
