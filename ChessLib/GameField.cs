@@ -33,7 +33,10 @@ namespace ChessLib
             this[cell.Item1, cell.Item2].isAtacked = AllPossibleMoves.Contains(cell);
             Console.WriteLine(this[cell.Item1, cell.Item2].isAtacked + " " + $"{cell.Item2 + 1}" + " " + "abcdefgh"[cell.Item1]);
         }
-
+        /// <summary>
+        /// Если клетка атакована и на ней король, то шах
+        /// </summary>
+        /// <returns></returns>
         public bool IsCheck()
         {
             for (int i = 0; i < 8; i++)
