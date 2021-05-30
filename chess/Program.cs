@@ -8,11 +8,22 @@ namespace chess
 
         static void Main(string[] args)
         {
-            Game game = new Game(new ConsoleView());
+            do
+            {
+                Console.Clear();
 
-            game.CreateNewGame();
+                Game game = new Game(new ConsoleView());
 
-            Console.ReadLine();
+                game.CreateNewGame();
+
+                Console.WriteLine("Для выхода нажмите escape");
+
+                Console.WriteLine("Или любую клавишу для того, чтобы начать игру заново");
+
+            } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+         
+
+          
         }
     }
 }

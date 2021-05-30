@@ -30,6 +30,7 @@ namespace ChessLib
         List<IPiece> Pieces;
 
         public List<Player> players;
+        private bool isGameOver;
 
 
 
@@ -99,6 +100,8 @@ namespace ChessLib
             //Создаем шахматные фигуры и устанавливаем первоначальные позиции
             Pieces = GetPieces();
 
+            gameField =  new GameField();
+
             //переменная служит для очереди игроков
             CurrentPlayer = 0;
 
@@ -111,7 +114,7 @@ namespace ChessLib
             players.Add(player1);
             players.Add(player2);
 
-            bool isGameOver = false;
+            isGameOver = false;
 
             while (!isGameOver)
             {
@@ -119,6 +122,7 @@ namespace ChessLib
                 GameProcess();
                 if (CurrentPlayer > 2) CurrentPlayer -= 2;
             }
+            Console.WriteLine("Конец игры");
         }
         string[,] GetGameField(List<IPiece> pieces)
         {
@@ -147,6 +151,10 @@ namespace ChessLib
             if (gameField.IsCheck())
             {
                 view.Show("У вас шах!");
+
+                MoveAfterCheck(currentPlayer, GameField, Pieces);
+
+                
                 Console.ReadLine();
                 return;
             }
@@ -248,6 +256,46 @@ namespace ChessLib
             return chosenPiece;
         }
 
+        void MoveAfterCheck(Player currentPlayer, string[,] GameField,List<IPiece> Pieces)
+        {
+            List<(int, int)> AvailableKingMoves = currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].AvailableMoves(GameField);
+
+            AvailableKingMoves.AddRange(currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].AvailableKills(GameField));
+
+            var ValidMoves = AvailableKingMoves?.Where(move => !gameField.GetAtackStatus(Pieces, move, GameField)).ToList();
+
+           
+
+            int counter = 1;
+            if(ValidMoves.Count() != 0)
+            {
+                foreach (var moves in ValidMoves)
+                {
+                    view.Show($"{counter}. {"ABCDEFGH"[moves.Item1]} {moves.Item2 + 1}");
+                    counter += 1;
+                }
+
+                int chosenMove = (int)UserInput(ValidMoves.Count());
+
+                if (Pieces.Find(x => x.Position == ValidMoves[chosenMove - 1]) != null)
+                {
+                    Pieces.Find(x => x.Position == ValidMoves[chosenMove - 1]).IsDead = true;
+                }
+
+                isGameOver = false;
+
+                currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].Position = ValidMoves[chosenMove - 1];
+            }
+            else
+            {
+                Console.WriteLine("Шах и мат!");
+                isGameOver = true;
+            }
+                   
+        
+
+        }
+
         void Update(List<IPiece> pieces)
         {
             pieces.RemoveAll(x => x.IsDead == true);
@@ -256,7 +304,7 @@ namespace ChessLib
         void GameProcess()
         {
 
-            gameField = new GameField();
+            
             //получаем фигуры на доске, у каждой фигуры записаны текущее местоположение на доске
             GameFieldString = GetGameField(Pieces);
 

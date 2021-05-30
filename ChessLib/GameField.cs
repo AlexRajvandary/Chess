@@ -22,7 +22,7 @@ namespace ChessLib
         /// <param name="pieces"></param>
         /// <param name="cell"></param>
         /// <param name="gameField"></param>
-        void GetAtackStatus(List<IPiece> pieces, (int, int) cell, string[,] gameField)
+        public bool GetAtackStatus(List<IPiece> pieces, (int, int) cell, string[,] gameField)
         {
             var AllPossibleMoves = new List<(int, int)>();
             foreach (var piece in pieces)
@@ -31,7 +31,8 @@ namespace ChessLib
                 AllPossibleMoves.AddRange(piece.AvailableKills(gameField));
             }
             this[cell.Item1, cell.Item2].isAtacked = AllPossibleMoves.Contains(cell);
-            Console.WriteLine(this[cell.Item1, cell.Item2].isAtacked + " " + $"{cell.Item2 + 1}" + " " + "abcdefgh"[cell.Item1]);
+            return AllPossibleMoves.Contains(cell);
+            //Console.WriteLine(this[cell.Item1, cell.Item2].isAtacked + " " + $"{cell.Item2 + 1}" + "abcdefgh"[cell.Item1]);
         }
         /// <summary>
         /// Если клетка атакована и на ней король, то шах
