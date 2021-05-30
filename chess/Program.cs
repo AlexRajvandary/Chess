@@ -21,9 +21,9 @@ namespace chess
                 Console.WriteLine("Или любую клавишу для того, чтобы начать игру заново");
 
             } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
-         
 
-          
+
+
         }
     }
 }

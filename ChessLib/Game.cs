@@ -9,7 +9,7 @@ namespace ChessLib
         /// <summary>
         /// Для подписи клеток
         /// </summary>
-        string alphabet = "abcdefgh";
+        string[] alphabet = new string[] { "a", "b", "c", "d", "e", "f", "g", "h" };
         /// <summary>
         /// Для визуализации
         /// </summary>
@@ -94,36 +94,24 @@ namespace ChessLib
             return Piece;
         }
 
+        /// <summary>
+        /// Игровой процесс, пока isGameOver - false, новый ход
+        /// </summary>
         public void CreateNewGame()
         {
-            Pieces = new List<IPiece>();
-            //Создаем шахматные фигуры и устанавливаем первоначальные позиции
-            Pieces = GetPieces();
-
-            gameField =  new GameField();
-
-            //переменная служит для очереди игроков
-            CurrentPlayer = 0;
-
-            //Игрок с белыми фигурами
-            Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
-
-            //Игрок с черными фигурами
-            Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");
-            players = new List<Player>();
-            players.Add(player1);
-            players.Add(player2);
-
-            isGameOver = false;
 
             while (!isGameOver)
             {
-
                 GameProcess();
                 if (CurrentPlayer > 2) CurrentPlayer -= 2;
             }
             Console.WriteLine("Конец игры");
         }
+        /// <summary>
+        /// Получаем строковое представление игровой доски из позиций фигур
+        /// </summary>
+        /// <param name="pieces">Список фигур</param>
+        /// <returns>Строковое представление игровой доски</returns>
         string[,] GetGameField(List<IPiece> pieces)
         {
             string[,] GameField = new string[8, 8];
@@ -143,19 +131,24 @@ namespace ChessLib
             }
             return GameField;
         }
-
+        /// <summary>
+        /// Выбор фигуры и выбор хода
+        /// </summary>
+        /// <param name="currentPlayer">Текущий игрок</param>
+        /// <param name="GameField">Строковое представление игрового поля</param>
+        /// <param name="Pieces">Список фигур</param>
         void Move(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
             gameField.Update(Pieces, GameField, currentPlayer.Color);
 
+            ///Если королю стоит шах, то нужно убрать короляв безопасное место
             if (gameField.IsCheck())
             {
                 view.Show("У вас шах!");
 
                 MoveAfterCheck(currentPlayer, GameField, Pieces);
 
-                
-                Console.ReadLine();
+
                 return;
             }
 
@@ -233,7 +226,13 @@ namespace ChessLib
             currentPlayer.MyPieces[(int)(chosenPiece - 1)].Position = AvailableMoves[(int)(chosenMove - 1)];
 
         }
-
+        /// <summary>
+        /// Выбор фигуры для хода
+        /// </summary>
+        /// <param name="currentPlayer"></param>
+        /// <param name="numOfElements"></param>
+        /// <param name="numOfElementsInLine"></param>
+        /// <returns></returns>
         private uint ChosePiece(Player currentPlayer, ref int numOfElements, ref int numOfElementsInLine)
         {
             uint chosenPiece;
@@ -256,7 +255,13 @@ namespace ChessLib
             return chosenPiece;
         }
 
-        void MoveAfterCheck(Player currentPlayer, string[,] GameField,List<IPiece> Pieces)
+        /// <summary>
+        /// Ход, когда поставили шах королю. Если ходов у короля нет, то мат. Метод реализует выбор доступного хода для короля, если доступные ходы есть.
+        /// </summary>
+        /// <param name="currentPlayer"></param>
+        /// <param name="GameField"></param>
+        /// <param name="Pieces"></param>
+        void MoveAfterCheck(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
             List<(int, int)> AvailableKingMoves = currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].AvailableMoves(GameField);
 
@@ -264,10 +269,10 @@ namespace ChessLib
 
             var ValidMoves = AvailableKingMoves?.Where(move => !gameField.GetAtackStatus(Pieces, move, GameField)).ToList();
 
-           
+
 
             int counter = 1;
-            if(ValidMoves.Count() != 0)
+            if (ValidMoves.Count() != 0)
             {
                 foreach (var moves in ValidMoves)
                 {
@@ -289,31 +294,34 @@ namespace ChessLib
             else
             {
                 Console.WriteLine("Шах и мат!");
+                Console.ReadLine();
+                
                 isGameOver = true;
             }
-                   
-        
+
+
 
         }
-
+        /// <summary>
+        /// Убираем убитые фигуры
+        /// </summary>
+        /// <param name="pieces"></param>
         void Update(List<IPiece> pieces)
         {
             pieces.RemoveAll(x => x.IsDead == true);
         }
-
+        /// <summary>
+        /// Один ход (Отрисовка доски, изменение позицицй фигур, выбор хода и т.д.)
+        /// </summary>
         void GameProcess()
         {
-
-            
             //получаем фигуры на доске, у каждой фигуры записаны текущее местоположение на доске
             GameFieldString = GetGameField(Pieces);
 
             //отрисовываем доску
             view.Visualize(GameFieldString, CurrentPlayer);
 
-
-
-            //ход белых
+            //ход 
             Move(players[CurrentPlayer % 2], GameFieldString, Pieces);
 
             Update(Pieces);
@@ -331,8 +339,27 @@ namespace ChessLib
         public Game(IView view)
         {
 
-
             this.view = view;
+
+            Pieces = new List<IPiece>();
+            //Создаем шахматные фигуры и устанавливаем первоначальные позиции
+            Pieces = GetPieces();
+
+            gameField = new GameField();
+
+            //переменная служит для очереди игроков
+            CurrentPlayer = 0;
+
+            //Игрок с белыми фигурами
+            Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
+
+            //Игрок с черными фигурами
+            Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");
+            players = new List<Player>();
+            players.Add(player1);
+            players.Add(player2);
+
+            isGameOver = false;
         }
     }
 }

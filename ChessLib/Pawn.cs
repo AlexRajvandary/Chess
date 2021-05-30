@@ -30,12 +30,12 @@ namespace ChessLib
                 {
                     if (GameField[Position.Item1, Position.Item2 + 1] != " ")
                     {
-                       
+
                         return AvailableMovesList;
                     }
                     else
                     {
-                      
+
                         AvailableMovesList.Add((Position.Item1, Position.Item2 + 1));
                         if (GameField[Position.Item1, Position.Item2 + 2] != " ")
                         {
@@ -52,12 +52,12 @@ namespace ChessLib
                 {
                     if (GameField[Position.Item1, Position.Item2 - 1] != " ")
                     {
-                        
+
                         return AvailableMovesList;
                     }
                     else
                     {
-                        
+
                         AvailableMovesList.Add((Position.Item1, Position.Item2 - 1));
                         if (GameField[Position.Item1, Position.Item2 - 2] != " ")
                         {
