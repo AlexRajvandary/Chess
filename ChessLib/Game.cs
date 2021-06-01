@@ -14,7 +14,7 @@ namespace ChessLib
         /// Для визуализации
         /// </summary>
         IView view;
-        private GameField gameField;
+        public GameField gameField;
 
         /// <summary>
         /// Игровое поле
@@ -23,14 +23,14 @@ namespace ChessLib
         /// <summary>
         /// Текущий игрок
         /// </summary>
-        int CurrentPlayer;
+        public int CurrentPlayer;
         /// <summary>
         /// Фигуры
         /// </summary>
-        List<IPiece> Pieces;
+        public List<IPiece> Pieces;
 
         public List<Player> players;
-        private bool isGameOver;
+        public bool isGameOver;
 
 
 
@@ -54,7 +54,7 @@ namespace ChessLib
         /// Устанавливает начальные позиции фигурам
         /// </summary>
         /// <returns>Список фигур</returns>
-        List<IPiece> GetPieces()
+        public List<IPiece> GetPieces()
         {
             var Piece = new List<IPiece>();
             //Создаем пешки
@@ -112,7 +112,7 @@ namespace ChessLib
         /// </summary>
         /// <param name="pieces">Список фигур</param>
         /// <returns>Строковое представление игровой доски</returns>
-        string[,] GetGameField(List<IPiece> pieces)
+        public string[,] GetGameField(List<IPiece> pieces)
         {
             string[,] GameField = new string[8, 8];
             foreach (var piece in pieces)
@@ -336,6 +336,31 @@ namespace ChessLib
 
         }
 
+        
+        public Game()
+        {
+            
+
+            //переменная служит для очереди игроков
+            CurrentPlayer = 0;
+
+            Pieces = new List<IPiece>();
+            //Создаем шахматные фигуры и устанавливаем первоначальные позиции
+            Pieces = GetPieces();
+
+            gameField = new GameField();
+
+            //Игрок с белыми фигурами
+            Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
+
+            //Игрок с черными фигурами
+            Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");
+            players = new List<Player>
+            {
+                player1,
+                player2
+            };
+        }
         public Game(IView view)
         {
 

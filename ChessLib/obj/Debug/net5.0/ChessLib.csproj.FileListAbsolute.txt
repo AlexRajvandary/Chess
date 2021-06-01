@@ -22,3 +22,4 @@ C:\Users\Alex Raj\source\Chess_\ChessLib\obj\Debug\net5.0\ChessLib.csproj.CoreCo
 C:\Users\Alex Raj\source\Chess_\ChessLib\obj\Debug\net5.0\ChessLib.dll
 C:\Users\Alex Raj\source\Chess_\ChessLib\obj\Debug\net5.0\ref\ChessLib.dll
 C:\Users\Alex Raj\source\Chess_\ChessLib\obj\Debug\net5.0\ChessLib.pdb
+C:\Users\Alex Raj\source\Chess_\ChessLib\obj\Debug\net5.0\ChessLib.csproj.ResolveComReference.cache
