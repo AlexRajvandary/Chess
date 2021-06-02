@@ -339,7 +339,7 @@ namespace ChessLib
         
         public Game()
         {
-            
+            //хз
 
             //переменная служит для очереди игроков
             CurrentPlayer = 0;
