@@ -236,10 +236,10 @@ namespace ChessLib
         /// <param name="AttackedPosition">Ход</param>
         /// <param name="gameField">Игровое поле</param>
         /// <param name="pieces">Фигуры</param>
-        public  void CheckIfPieceWasKilled((int,int)PiecePosition,(int,int)AttackedPosition, string[,] gameField,List<IPiece> pieces)
+        public void CheckIfPieceWasKilled((int, int) PiecePosition, (int, int) AttackedPosition, string[,] gameField, List<IPiece> pieces)
         {
             //Проверка не является ли желаемый ход попыткой съесть фигуру (если среди фигур есть та, которая уже находиться на позиции, на которую текущий игрок собирается пойти, то текущий игрок съедает эту фигуру)
-            if (gameField[AttackedPosition.Item1,AttackedPosition.Item2] != "")
+            if (gameField[AttackedPosition.Item1, AttackedPosition.Item2] != "")
             {
                 pieces.Find(x => x.Position == AttackedPosition).IsDead = true;
                 pieces.Find(x => x.Position == PiecePosition).Position = AttackedPosition;
@@ -315,7 +315,7 @@ namespace ChessLib
             {
                 Console.WriteLine("Шах и мат!");
                 Console.ReadLine();
-                
+
                 isGameOver = true;
             }
 
@@ -356,7 +356,7 @@ namespace ChessLib
 
         }
 
-        
+
         public Game()
         {
             //хз
