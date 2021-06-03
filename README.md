@@ -7,7 +7,7 @@
 ![alt text](images/11oHN91EaFc.jpg)
 ## Структура проекта
 - **Chess/ChessBoard**
-    - WPF проекст (MVVM)
+    - WPF проект (MVVM)
 - **Chess/ChessLib**
     - Библиотека классов. Здесь реализована логика движения фигур.
 - **Chess/chess**
