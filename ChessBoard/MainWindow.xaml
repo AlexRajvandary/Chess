@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ChessBoard"
         xmlns:controls="clr-namespace:ChessBoard.Controls"
         mc:Ignorable="d"
-        Title="WPF Window" SizeToContent="WidthAndHeight" ResizeMode="CanMinimize"
+        Title="Chess" SizeToContent="WidthAndHeight" ResizeMode="CanMinimize"
         d:DataContext="{d:DesignInstance local:MainViewModel, IsDesignTimeCreatable=True}"
         SnapsToDevicePixels="True">
     <Window.Resources>

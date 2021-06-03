@@ -214,18 +214,38 @@ namespace ChessLib
                 chosenMove = UserInput(AvailableMoves.Count);//переменная служит для выбора хода
             }
 
-
-
-            //Проверка не является ли желаемый ход попыткой съесть фигуру (если среди фигур есть та, которая уже находиться на позиции, на которую текущий игрок собирается пойти, то текущий игрок съедает эту фигуру)
-            if (Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]) != null)
-            {
-                Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]).IsDead = true;
-            }
+            CheckIfPieceWasKilled(Pieces, chosenMove, AvailableMoves);
 
             //Устанавливает новую позицию выбранной фигуре
             currentPlayer.MyPieces[(int)(chosenPiece - 1)].Position = AvailableMoves[(int)(chosenMove - 1)];
 
         }
+
+        private static void CheckIfPieceWasKilled(List<IPiece> Pieces, uint chosenMove, List<(int, int)> AvailableMoves)
+        {
+            //Проверка не является ли желаемый ход попыткой съесть фигуру (если среди фигур есть та, которая уже находиться на позиции, на которую текущий игрок собирается пойти, то текущий игрок съедает эту фигуру)
+            if (Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]) != null)
+            {
+                Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]).IsDead = true;
+            }
+        }
+        /// <summary>
+        /// Метод для wpf-версии: проверяет, является ли текущей ход атакой на фигуру, если да, то присваеваем ей статус атакованной
+        /// </summary>
+        /// <param name="PiecePosition">Позиция выбранной фигуры</param>
+        /// <param name="AttackedPosition">Ход</param>
+        /// <param name="gameField">Игровое поле</param>
+        /// <param name="pieces">Фигуры</param>
+        public  void CheckIfPieceWasKilled((int,int)PiecePosition,(int,int)AttackedPosition, string[,] gameField,List<IPiece> pieces)
+        {
+            //Проверка не является ли желаемый ход попыткой съесть фигуру (если среди фигур есть та, которая уже находиться на позиции, на которую текущий игрок собирается пойти, то текущий игрок съедает эту фигуру)
+            if (gameField[AttackedPosition.Item1,AttackedPosition.Item2] != "")
+            {
+                pieces.Find(x => x.Position == AttackedPosition).IsDead = true;
+                pieces.Find(x => x.Position == PiecePosition).Position = AttackedPosition;
+            }
+        }
+
         /// <summary>
         /// Выбор фигуры для хода
         /// </summary>
@@ -306,7 +326,7 @@ namespace ChessLib
         /// Убираем убитые фигуры
         /// </summary>
         /// <param name="pieces"></param>
-        void Update(List<IPiece> pieces)
+        public void Update(List<IPiece> pieces)
         {
             pieces.RemoveAll(x => x.IsDead == true);
         }

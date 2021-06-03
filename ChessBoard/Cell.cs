@@ -34,6 +34,10 @@
 
         public int Horizontal { get; set; }
 
+        public override string ToString()
+        {
+            return $"{"ABCDEFGH"[this.Horizontal]}{this.Vertical+1}";
+        }
         public Position(int Horizontal,int Vertical)
         {
             this.Horizontal = Horizontal;
