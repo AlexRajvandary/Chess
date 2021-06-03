@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "chess", "chess\chess.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChessLib", "ChessLib\ChessLib.csproj", "{45358B55-5F62-46A3-90AF-267C00C15E7D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChessBoard", "..\ChessBoard\ChessBoard\ChessBoard.csproj", "{04235AC6-FCE2-411D-9048-EF4D24810E6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChessBoard", "..\ChessBoardFromStackOverFlow\ChessBoard\ChessBoard\ChessBoard.csproj", "{7BD2FF21-084C-4C0D-85B8-C8397E8B1E2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{45358B55-5F62-46A3-90AF-267C00C15E7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45358B55-5F62-46A3-90AF-267C00C15E7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45358B55-5F62-46A3-90AF-267C00C15E7D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{04235AC6-FCE2-411D-9048-EF4D24810E6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{04235AC6-FCE2-411D-9048-EF4D24810E6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{04235AC6-FCE2-411D-9048-EF4D24810E6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{04235AC6-FCE2-411D-9048-EF4D24810E6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BD2FF21-084C-4C0D-85B8-C8397E8B1E2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BD2FF21-084C-4C0D-85B8-C8397E8B1E2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BD2FF21-084C-4C0D-85B8-C8397E8B1E2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BD2FF21-084C-4C0D-85B8-C8397E8B1E2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
