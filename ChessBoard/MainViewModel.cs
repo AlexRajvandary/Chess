@@ -11,7 +11,7 @@ namespace ChessBoard
         int currentPlayer;
         private Board _board = new Board();
         private ICommand _newGameCommand;
-        private ICommand _clearCommand;
+        
         private ICommand _cellCommand;
         List<Player> players;
 
@@ -118,6 +118,11 @@ namespace ChessBoard
                 King king = (King)game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
 
                 ValidAttacks = king.AvailableKills(game.GetGameField(pieces));
+                var AvailableAttacksForKingInCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(pieces, x, GetGameFieldString()));
+                foreach (var removedMoves in AvailableAttacksForKingInCheck)
+                {
+                    ValidAttacks.Remove(removedMoves);
+                }
                 if (ValidAttacks.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
 
@@ -139,12 +144,12 @@ namespace ChessBoard
                     {
                         info += $"/t{"ABCDEFGH"[i.Item1]}{i.Item2 + 1}/n";
                     }
-                    MessageBox.Show($"Что-то не так: \n{info}");
-
+                    MessageBox.Show($"Король не может атаковать клетку {CurrentCell.Position.ToString()}: \n{info}");
 
                 }
             }
-
+            game.Update(pieces);
+            game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
             return ValidAttacks;
         }
         /// <summary>
@@ -165,6 +170,12 @@ namespace ChessBoard
                 King king = (King)game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
 
                 ValidMoves = king.AvailableMoves(game.GetGameField(pieces));
+                var AvailableMovesForKingInCheck = ValidMoves.FindAll(x => game.gameField.GetAtackStatus(pieces, x, GetGameFieldString()));
+                foreach (var removedMoves in AvailableMovesForKingInCheck)
+                {
+                    ValidMoves.Remove(removedMoves);
+                }
+                
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
                     PreviousActiveCell.Active = false;
@@ -185,11 +196,12 @@ namespace ChessBoard
                     {
                         info += $"\t{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
                     }
-                    MessageBox.Show($"Что-то не так,текущий ход:{"ABCDEFGH"[CurrentCell.Position.Horizontal]}{CurrentCell.Position.Vertical + 1}\n\t Доступные ходы: \n{info}");
+                    MessageBox.Show($"Король не может пойти на клетку: {CurrentCell.Position}\n\t Доступные ходы: \n{info}");
 
                 }
             }
-
+            game.Update(pieces);
+            game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
             return ValidMoves;
         }
         /// <summary>
@@ -228,10 +240,20 @@ namespace ChessBoard
         {
             if (CurrentCell.State == State.Empty && PreviousActiveCell != null)
             {
+
                 game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
                 IPiece piece = game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
                 ValidMoves = piece.AvailableMoves(game.GetGameField(pieces));
-
+                List<(int, int)> validMovesWithoutCheckCheck = new List<(int, int)>();
+                if (piece is King)
+                {
+                    var InvalidMovesWithoutCheckCheck = ValidMoves.FindAll(x => game.gameField.GetAtackStatus(pieces, x, GetGameFieldString()));
+                    foreach(var move in InvalidMovesWithoutCheckCheck)
+                    {
+                        ValidMoves.Remove(move);
+                    }
+                    
+                }
 
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
@@ -239,7 +261,8 @@ namespace ChessBoard
                     CurrentCell.State = PreviousActiveCell.State;
                     PreviousActiveCell.State = State.Empty;
                     game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
-
+                    game.Update(pieces);
+                    game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
                     currentPlayer++;
                     if (currentPlayer >= 2)
                     {
@@ -251,16 +274,13 @@ namespace ChessBoard
                     string info = "";
                     foreach (var move in ValidMoves)
                     {
-                        info += $"{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
+                        info += $"\t{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
                     }
-                    MessageBox.Show($"Что-то не так,текущий ход:{"ABCDEFGH"[CurrentCell.Position.Horizontal]}{CurrentCell.Position.Vertical + 1} доступные ходы: \n{info}");
+                    MessageBox.Show($"Данная фигура не может пойти на клетку:{CurrentCell.Position}\nДоступные ходы: \n{info}");
                 }
 
-
-
-
             }
-
+            
             return ValidMoves;
         }
         /// <summary>
@@ -313,13 +333,11 @@ namespace ChessBoard
                         MessageBox.Show($"Съесть нельзя! Доступные клетки для атаки\n:{AttackInfo}");
                     }
 
-
                 }
 
-
-
             }
-
+            game.Update(pieces);
+            game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
             return ValidAttacks;
         }
         /// <summary>
