@@ -4,10 +4,18 @@ using System.Linq;
 
 namespace ChessBoard
 {
+    /// <summary>
+    /// Игровое поле
+    /// </summary>
     public class Board : IEnumerable<Cell>
     {
         private readonly Cell[,] _area;
-
+        /// <summary>
+        /// Доступ к каждой клетке игрового поля по индексу
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="column"></param>
+        /// <returns></returns>
         public State this[int row, int column]
         {
             get => _area[row, column].State;
