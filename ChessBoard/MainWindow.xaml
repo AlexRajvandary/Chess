@@ -26,7 +26,7 @@
         </Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Column="1" Margin="-5,0">
             <Button Content="New Game" Margin="5" Padding="10,5" Command="{Binding NewGameCommand}"/>
-            <Button Content="Clear" Margin="5" Padding="10,5" Command="{Binding ClearCommand}"/>
+            
         </StackPanel>
         <ItemsControl Grid.Row="2" ItemsSource="{Binding Numbers}" Width="21">
             <ItemsControl.ItemTemplate>

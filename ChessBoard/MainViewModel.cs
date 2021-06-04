@@ -30,20 +30,18 @@ namespace ChessBoard
                 OnPropertyChanged();
             }
         }
-
+        /// <summary>
+        /// При нажатии на кнопку new game
+        /// </summary>
         public ICommand NewGameCommand => _newGameCommand ??= new RelayCommand(parameter =>
         {
             game = new Game();
             SetupBoard();
         });
-
-        public ICommand ClearCommand => _clearCommand ??= new RelayCommand(parameter =>
-        {
-            game = new Game();
-
-            SetupBoard();
-        });
-
+       
+        /// <summary>
+        /// Нажатии на клетку выполняется данный метод 
+        /// </summary>
         public ICommand CellCommand => _cellCommand ??= new RelayCommand(parameter =>
         {
 
