@@ -57,50 +57,148 @@ namespace ChessBoard
 
             if (game.gameField.IsCheck())
             {
-
-                if (CurrentCell.State != State.Empty && PriveousActiveCell is null)
-                {
-                    MessageBox.Show("Мы не здесь");
-                    CurrentCell.Active = true;
-                    if (game.gameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece is King)
-                    {
-                        MessageBox.Show("все правильно");
-                    }
-                    else
-                    {
-                        MessageBox.Show("Шах!");
-                        MessageBox.Show("Необходимо переставитьь короля");
-
-                    }
-                }
-                if (CurrentCell.State != State.Empty && PriveousActiveCell != null)
-                {
-                    MessageBox.Show("Мы здесь");
-                    CurrentCell.Active = true;
-                    PriveousActiveCell.Active = false;
-                    if (game.gameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece is King)
-                    {
-                        MessageBox.Show("все правильно");
-                    }
-                    else
-                    {
-                        MessageBox.Show("Шах!");
-                        MessageBox.Show("Необходимо переставитьь короля");
-
-                    }
-                }
+                IsKingWasChosed(CurrentCell, PriveousActiveCell);
+                //атака королем под шахом
+                ValidAtacks = KingAttackCheck(CurrentCell, ValidAtacks, PriveousActiveCell);
+                //ход королем под шахом
+                ValidMoves = KingMoveCheck(CurrentCell, ValidMoves, PriveousActiveCell);
             }
             else
             {
-                //Если текущая клетка не пустая и предыдущей клетки нет
+
                 ChosePiece(CurrentCell, PriveousActiveCell);
                 ValidAtacks = Attack(CurrentCell, ValidAtacks, PriveousActiveCell);
                 ValidMoves = Move(CurrentCell, ValidMoves, PriveousActiveCell);
                 game.gameField.Update(pieces, getGameFieldString(), players[currentPlayer % 2].Color);
+                if (game.gameField.IsCheck())
+                {
+                    MessageBox.Show("Шах!");
+                }
             }
 
         }, parameter => parameter is Cell cell && (Board.Any(x => x.Active) || cell.State != State.Empty));
 
+        /// <summary>
+        /// Выбран ли король (при шахе)
+        /// </summary>
+        /// <param name="CurrentCell">Текущая клетка</param>
+        /// <param name="PriveousActiveCell">предыдущая клетка</param>
+        private void IsKingWasChosed(Cell CurrentCell, Cell PriveousActiveCell)
+        {
+            if (CurrentCell.State != State.Empty && PriveousActiveCell is null)
+            {
+
+                MessageBox.Show("Шах! Необходимо переставитьь короля!");
+                if (game.gameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece is King)
+                {
+
+                    CurrentCell.Active = !CurrentCell.Active;
+
+                }
+                else
+                {
+                    MessageBox.Show("Шах! Необходимо переставитьь короля!");
+
+                }
+            }
+        }
+        /// <summary>
+        /// Атака королем под шахом
+        /// </summary>
+        /// <param name="CurrentCell">Текущая клетка</param>
+        /// <param name="ValidAtacks">Доступные клетки для атаки</param>
+        /// <param name="PriveousActiveCell">Предыдущая клетка</param>
+        /// <returns></returns>
+        private List<(int, int)> KingAttackCheck(Cell CurrentCell, List<(int, int)> ValidAtacks, Cell PriveousActiveCell)
+        {
+            if (CurrentCell.State != State.Empty && PriveousActiveCell != null)
+            {
+                game.Update(pieces);
+                game.gameField.Update(pieces, getGameFieldString(), players[currentPlayer % 2].Color);
+                CurrentCell.Active = true;
+                PriveousActiveCell.Active = false;
+                King king = (King)game.gameField[PriveousActiveCell.Position.Horizontal, PriveousActiveCell.Position.Vertical].Piece;
+
+                ValidAtacks = king.AvailableKills(game.GetGameField(pieces));
+                if (ValidAtacks.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
+                {
+
+                    CurrentCell.State = PriveousActiveCell.State;
+                    PriveousActiveCell.Active = false;
+                    PriveousActiveCell.State = State.Empty;
+                    game.CheckIfPieceWasKilled((PriveousActiveCell.Position.Horizontal, PriveousActiveCell.Position.Vertical), (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical), getGameFieldString(), pieces);
+                    game.Update(pieces);
+                    currentPlayer++;
+                    if (currentPlayer >= 2)
+                    {
+                        currentPlayer -= 2;
+                    }
+                }
+                else
+                {
+                    string info = "";
+                    foreach (var i in ValidAtacks)
+                    {
+                        info += $"/t{"ABCDEFGH"[i.Item1]}{i.Item2 + 1}/n";
+                    }
+                    MessageBox.Show($"Что-то не так: \n{info}");
+
+
+                }
+            }
+
+            return ValidAtacks;
+        }
+        /// <summary>
+        /// Ход королем под шахом
+        /// </summary>
+        /// <param name="CurrentCell">Текущая клетка</param>
+        /// <param name="ValidMoves">Доступные клетки для хода</param>
+        /// <param name="PriveousActiveCell">Предыдущая клетка</param>
+        /// <returns></returns>
+        private List<(int, int)> KingMoveCheck(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PriveousActiveCell)
+        {
+            if (CurrentCell.State == State.Empty && PriveousActiveCell != null)
+            {
+                game.Update(pieces);
+                game.gameField.Update(pieces, getGameFieldString(), players[currentPlayer % 2].Color);
+                CurrentCell.Active = true;
+                PriveousActiveCell.Active = false;
+                King king = (King)game.gameField[PriveousActiveCell.Position.Horizontal, PriveousActiveCell.Position.Vertical].Piece;
+
+                ValidMoves = king.AvailableMoves(game.GetGameField(pieces));
+                if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
+                {
+                    PriveousActiveCell.Active = false;
+                    CurrentCell.State = PriveousActiveCell.State;
+                    PriveousActiveCell.State = State.Empty;
+                    game.gameField[PriveousActiveCell.Position.Horizontal, PriveousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
+
+                    currentPlayer++;
+                    if (currentPlayer >= 2)
+                    {
+                        currentPlayer -= 2;
+                    }
+                }
+                else
+                {
+                    string info = "";
+                    foreach (var move in ValidMoves)
+                    {
+                        info += $"\t{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
+                    }
+                    MessageBox.Show($"Что-то не так,текущий ход:{"ABCDEFGH"[CurrentCell.Position.Horizontal]}{CurrentCell.Position.Vertical + 1}\n\t Доступные ходы: \n{info}");
+
+                }
+            }
+
+            return ValidMoves;
+        }
+        /// <summary>
+        /// проверет выбрал ли игрок правильную фигуру
+        /// </summary>
+        /// <param name="CurrentCell">Текущая клетка</param>
+        /// <param name="PriveousActiveCell">Предыдущая клетка</param>
         private void ChosePiece(Cell CurrentCell, Cell PriveousActiveCell)
         {
             if (CurrentCell.State != State.Empty && PriveousActiveCell == null)
@@ -121,7 +219,13 @@ namespace ChessBoard
 
             }
         }
-
+        /// <summary>
+        /// Ход, проверяет можно ли сделать ход и делает его, либо сообщает об ошибке
+        /// </summary>
+        /// <param name="CurrentCell">Текущая клетка</param>
+        /// <param name="ValidMoves">Доступные клетки для хода</param>
+        /// <param name="PriveousActiveCell">Предыдущая клетка</param>
+        /// <returns></returns>
         private List<(int, int)> Move(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PriveousActiveCell)
         {
             if (CurrentCell.State == State.Empty && PriveousActiveCell != null)
@@ -161,13 +265,17 @@ namespace ChessBoard
 
             return ValidMoves;
         }
-
+        /// <summary>
+        /// Проверяет можно ли атаковать и атакует, либо выводит сообщение об ошибке
+        /// </summary>
+        /// <param name="CurrentCell">Текущая клетка</param>
+        /// <param name="ValidAtacks">Доступные клетки для атаки</param>>
+        /// <param name="PriveousActiveCell">Предыдущая клетка</param>
+        /// <returns></returns>
         private List<(int, int)> Attack(Cell CurrentCell, List<(int, int)> ValidAtacks, Cell PriveousActiveCell)
         {
             if (CurrentCell.State != State.Empty && PriveousActiveCell != null)
             {
-
-
 
                 game.gameField.Update(pieces, getGameFieldString(), players[currentPlayer % 2].Color);
 
@@ -216,7 +324,9 @@ namespace ChessBoard
 
             return ValidAtacks;
         }
-
+        /// <summary>
+        /// Утсанавливает начальные позиции фигурам при старте игры, для WPF
+        /// </summary>
         private void SetupBoard()
         {
             currentPlayer = 0;
@@ -260,11 +370,6 @@ namespace ChessBoard
         {
             string[,] result = game.GetGameField(pieces);
             return result;
-        }
-
-        private bool IsMyColor(Player player, IPiece piece)
-        {
-            return player.Color == piece.Color;
         }
     }
 }
