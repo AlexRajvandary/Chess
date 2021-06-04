@@ -55,13 +55,56 @@ namespace ChessBoard
 
             Cell PriveousActiveCell = Board.FirstOrDefault(x => x.Active);//предыдущая активная клетка, на которую нажали до текущей (т.е. как бы в первый раз мы выбрали фигуру, а потом, когда нажали на вторую клетку, выбрали куда пойти )
 
-
-
-            //Если текущая клетка не пустая и предыдущей клетки нет
-            if (CurrentCell.State != State.Empty && PriveousActiveCell == null)
+            if (game.gameField.IsCheck())
             {
 
+                if (CurrentCell.State != State.Empty && PriveousActiveCell is null)
+                {
+                    MessageBox.Show("Мы не здесь");
+                    CurrentCell.Active = true;
+                    if (game.gameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece is King)
+                    {
+                        MessageBox.Show("все правильно");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Шах!");
+                        MessageBox.Show("Необходимо переставитьь короля");
 
+                    }
+                }
+                if (CurrentCell.State != State.Empty && PriveousActiveCell != null)
+                {
+                    MessageBox.Show("Мы здесь");
+                    CurrentCell.Active = true;
+                    PriveousActiveCell.Active = false;
+                    if (game.gameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece is King)
+                    {
+                        MessageBox.Show("все правильно");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Шах!");
+                        MessageBox.Show("Необходимо переставитьь короля");
+
+                    }
+                }
+            }
+            else
+            {
+                //Если текущая клетка не пустая и предыдущей клетки нет
+                ChosePiece(CurrentCell, PriveousActiveCell);
+                ValidAtacks = Attack(CurrentCell, ValidAtacks, PriveousActiveCell);
+                ValidMoves = Move(CurrentCell, ValidMoves, PriveousActiveCell);
+                game.gameField.Update(pieces, getGameFieldString(), players[currentPlayer % 2].Color);
+            }
+
+        }, parameter => parameter is Cell cell && (Board.Any(x => x.Active) || cell.State != State.Empty));
+
+        private void ChosePiece(Cell CurrentCell, Cell PriveousActiveCell)
+        {
+            if (CurrentCell.State != State.Empty && PriveousActiveCell == null)
+            {
 
                 game.gameField.Update(pieces, getGameFieldString(), players[currentPlayer % 2].Color);
 
@@ -70,16 +113,57 @@ namespace ChessBoard
                 {
                     CurrentCell.Active = !CurrentCell.Active;
 
-
                 }
                 else
                 {
                     MessageBox.Show("Не ваша фигура!");
                 }
 
+            }
+        }
+
+        private List<(int, int)> Move(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PriveousActiveCell)
+        {
+            if (CurrentCell.State == State.Empty && PriveousActiveCell != null)
+            {
+                game.gameField.Update(pieces, getGameFieldString(), players[currentPlayer % 2].Color);
+                IPiece piece = game.gameField[PriveousActiveCell.Position.Horizontal, PriveousActiveCell.Position.Vertical].Piece;
+                ValidMoves = piece.AvailableMoves(game.GetGameField(pieces));
+
+
+                if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
+                {
+                    PriveousActiveCell.Active = false;
+                    CurrentCell.State = PriveousActiveCell.State;
+                    PriveousActiveCell.State = State.Empty;
+                    game.gameField[PriveousActiveCell.Position.Horizontal, PriveousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
+
+                    currentPlayer++;
+                    if (currentPlayer >= 2)
+                    {
+                        currentPlayer -= 2;
+                    }
+                }
+                else
+                {
+                    string info = "";
+                    foreach (var move in ValidMoves)
+                    {
+                        info += $"{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
+                    }
+                    MessageBox.Show($"Что-то не так,текущий ход:{"ABCDEFGH"[CurrentCell.Position.Horizontal]}{CurrentCell.Position.Vertical + 1} доступные ходы: \n{info}");
+                }
+
+
 
 
             }
+
+            return ValidMoves;
+        }
+
+        private List<(int, int)> Attack(Cell CurrentCell, List<(int, int)> ValidAtacks, Cell PriveousActiveCell)
+        {
             if (CurrentCell.State != State.Empty && PriveousActiveCell != null)
             {
 
@@ -129,41 +213,9 @@ namespace ChessBoard
 
 
             }
-            if (CurrentCell.State == State.Empty && PriveousActiveCell != null)
-            {
-                game.gameField.Update(pieces, getGameFieldString(), players[currentPlayer % 2].Color);
-                IPiece piece = game.gameField[PriveousActiveCell.Position.Horizontal, PriveousActiveCell.Position.Vertical].Piece;
-                ValidMoves = piece.AvailableMoves(game.GetGameField(pieces));
 
-
-                if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
-                {
-                    PriveousActiveCell.Active = false;
-                    CurrentCell.State = PriveousActiveCell.State;
-                    PriveousActiveCell.State = State.Empty;
-                    game.gameField[PriveousActiveCell.Position.Horizontal, PriveousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
-
-                    currentPlayer++;
-                    if (currentPlayer >= 2)
-                    {
-                        currentPlayer -= 2;
-                    }
-                }
-                else
-                {
-                    string info = "";
-                    foreach (var move in ValidMoves)
-                    {
-                        info += $"{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
-                    }
-                    MessageBox.Show($"Что-то не так,текущий ход:{"ABCDEFGH"[CurrentCell.Position.Horizontal]}{CurrentCell.Position.Vertical + 1} доступные ходы: \n{info}");
-                }
-
-
-
-
-            }
-        }, parameter => parameter is Cell cell && (Board.Any(x => x.Active) || cell.State != State.Empty));
+            return ValidAtacks;
+        }
 
         private void SetupBoard()
         {

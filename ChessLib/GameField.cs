@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace ChessLib
@@ -46,10 +45,29 @@ namespace ChessLib
                 {
                     if (this[i, j].isAtacked && this[i, j].Piece is King)
                     {
-                        Console.WriteLine($"{this[i, j].isAtacked}    {i + 1} {"abcdefgh"[j]}");
+
 
                         return true;
 
+                    }
+                }
+            }
+            return false;
+        }
+        /// <summary>
+        /// Проверяет находиться ли король под шахом, для WPF
+        /// </summary>
+        /// <param name="gameField"></param>
+        /// <returns></returns>
+        public bool IsCheck(GameField gameField)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    if (gameField[i, j].isAtacked && gameField[i, j].Piece is King)
+                    {
+                        return true;
                     }
                 }
             }
