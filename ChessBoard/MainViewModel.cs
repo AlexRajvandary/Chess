@@ -18,6 +18,14 @@ namespace ChessBoard
         private Game game;
         private List<IPiece> pieces;
 
+        public List<string> playerMoves;
+
+        public IEnumerable<string> PlayersMoves {
+            get
+            {
+               return playerMoves;
+            }
+        }
         public IEnumerable<char> Numbers => "87654321";
         public IEnumerable<char> Letters => "ABCDEFGH";
 
@@ -27,7 +35,10 @@ namespace ChessBoard
             set
             {
                 _board = value;
+              
                 OnPropertyChanged();
+
+               
             }
         }
         /// <summary>
@@ -55,6 +66,7 @@ namespace ChessBoard
 
             if (game.gameField.IsCheck())
             {
+               
                 IsKingWasChosed(CurrentCell, PreviousActiveCell);
                 //атака королем под шахом
                 ValidAttacks = KingAttackCheck(CurrentCell, ValidAttacks, PreviousActiveCell);
@@ -63,7 +75,7 @@ namespace ChessBoard
             }
             else
             {
-
+                
                 ChosePiece(CurrentCell, PreviousActiveCell);
                 ValidAttacks = Attack(CurrentCell, ValidAttacks, PreviousActiveCell);
                 ValidMoves = Move(CurrentCell, ValidMoves, PreviousActiveCell);
@@ -136,6 +148,7 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
+                    MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
                 }
                 else
                 {
@@ -188,6 +201,8 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
+                    MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+
                 }
                 else
                 {
@@ -268,6 +283,7 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
+                    MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
                 }
                 else
                 {
@@ -283,6 +299,9 @@ namespace ChessBoard
             
             return ValidMoves;
         }
+
+       
+
         /// <summary>
         /// Проверяет можно ли атаковать и атакует, либо выводит сообщение об ошибке
         /// </summary>
@@ -322,6 +341,15 @@ namespace ChessBoard
                         {
                             currentPlayer -= 2;
                         }
+                        if(game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Color == PieceColor.White)
+                        {
+                            MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+                        }
+                        else
+                        {
+
+                        }
+                       
                     }
                     else
                     {
@@ -375,11 +403,12 @@ namespace ChessBoard
             board[7, 6] = State.WhiteKnight;
             board[7, 7] = State.WhiteRook;
             Board = board;
+            playerMoves = new List<string>();
         }
-
-        public MainViewModel()
+        MainWindow MainWindow;
+        public MainViewModel(MainWindow mainWindow)
         {
-
+            MainWindow = mainWindow;
 
         }
         private string[,] GetGameFieldString()

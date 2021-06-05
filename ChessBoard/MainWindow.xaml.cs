@@ -1,4 +1,4 @@
-﻿
+﻿using ChessBoard;
 namespace ChessBoard
 {
     /// <summary>
@@ -9,7 +9,19 @@ namespace ChessBoard
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+            DataContext = new MainViewModel(this);
+        }
+        public void AddNewWhiteMove(string Move)
+        {
+            ((MainViewModel)DataContext).playerMoves.Add(Move);
+            this.MovesList.Items.Add(Move);
+
+        }
+        public void AddNewBlackMove(string Move)
+        {
+            ((MainViewModel)DataContext).playerMoves.Add(Move);
+            this.MovesList.Items.Add(Move);
+
         }
     }
 }
