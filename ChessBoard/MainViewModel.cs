@@ -347,7 +347,7 @@ namespace ChessBoard
                         }
                         else
                         {
-
+                            MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
                         }
                        
                     }
