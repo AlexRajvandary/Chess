@@ -4,7 +4,7 @@
 ### WPF
 ![img](images/chessPlay.gif)
 ### Console
-![alt text](images/11oHN91EaFc.jpg)
+![img](images/chessConsolePlay.gif)
 ## Структура проекта
 - **Chess/ChessBoard**
     - WPF проект (MVVM)
