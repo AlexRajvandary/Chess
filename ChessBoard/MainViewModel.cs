@@ -98,7 +98,8 @@ namespace ChessBoard
             if (CurrentCell.State != State.Empty && PreviousActiveCell is null)
             {
 
-                MessageBox.Show("Шах! Необходимо переставитьь короля!");
+                MessageBox.Show("Шах! Необходимо переставить короля!");
+
                 if (game.gameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece is King)
                 {
 
@@ -107,7 +108,7 @@ namespace ChessBoard
                 }
                 else
                 {
-                    MessageBox.Show("Шах! Необходимо переставитьь короля!");
+                    MessageBox.Show("Выбирите короля!");
 
                 }
             }
@@ -128,9 +129,10 @@ namespace ChessBoard
                 CurrentCell.Active = true;
                 PreviousActiveCell.Active = false;
                 King king = (King)game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
-
+                
                 ValidAttacks = king.AvailableKills(game.GetGameField(pieces));
-                var AvailableAttacksForKingInCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(pieces, x, GetGameFieldString()));
+                //Проверяем атакована ли клетка, на которую собирается пойти король
+                var AvailableAttacksForKingInCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(pieces.Where(x=> x.Color!= king.Color).ToList(), x, GetGameFieldString()));
                 foreach (var removedMoves in AvailableAttacksForKingInCheck)
                 {
                     ValidAttacks.Remove(removedMoves);
@@ -183,7 +185,8 @@ namespace ChessBoard
                 King king = (King)game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
 
                 ValidMoves = king.AvailableMoves(game.GetGameField(pieces));
-                var AvailableMovesForKingInCheck = ValidMoves.FindAll(x => game.gameField.GetAtackStatus(pieces, x, GetGameFieldString()));
+                var EnemyPieces = pieces.Where(x => x.Color != king.Color).ToList();
+                var AvailableMovesForKingInCheck = ValidMoves.FindAll(x => game.gameField.GetAtackStatus(EnemyPieces, x, GetGameFieldString()));
                 foreach (var removedMoves in AvailableMovesForKingInCheck)
                 {
                     ValidMoves.Remove(removedMoves);
@@ -260,9 +263,11 @@ namespace ChessBoard
                 IPiece piece = game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
                 ValidMoves = piece.AvailableMoves(game.GetGameField(pieces));
                 List<(int, int)> validMovesWithoutCheckCheck = new List<(int, int)>();
+
+                var EnemyPieces = pieces.Where(x => x.Color != piece.Color).ToList();
                 if (piece is King)
                 {
-                    var InvalidMovesWithoutCheckCheck = ValidMoves.FindAll(x => game.gameField.GetAtackStatus(pieces, x, GetGameFieldString()));
+                    var InvalidMovesWithoutCheckCheck = ValidMoves.FindAll(x => game.gameField.GetAtackStatus(EnemyPieces, x, GetGameFieldString()));
                     foreach(var move in InvalidMovesWithoutCheckCheck)
                     {
                         ValidMoves.Remove(move);
@@ -328,6 +333,23 @@ namespace ChessBoard
                     game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
                     IPiece piece = game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
                     ValidAttacks = piece.AvailableKills(game.GetGameField(pieces));
+                    if (piece is King)
+                    {
+                        var InvalidMovesWithoutCheckCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(pieces.Where(x=> x.Color!= piece.Color).ToList(), x, GetGameFieldString()));
+                        foreach (var move in InvalidMovesWithoutCheckCheck)
+                        {
+                            ValidAttacks.Remove(move);
+                        }
+                    }
+                  
+                        var InvalidAttacks = ValidAttacks.FindAll(x => game.gameField[x.Item1, x.Item2].Piece is King);
+                        foreach(var move in InvalidAttacks)
+                        {
+                            ValidAttacks.Remove(move);
+                        }
+                  
+
+                    
 
                     if (ValidAttacks.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                     {
