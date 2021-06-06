@@ -9,6 +9,8 @@ namespace ChessLib
         public PieceColor Color { get; set; }
         public (int, int) Position { get; set; }
         public bool IsDead { get; set; }
+
+        public bool IsMoved { get; set; }
         private void AvailableMoveInOneDirection(string[,] GameField, List<(int, int)> AvailableMovesList, (int, int) Direction, Func<int, int, bool> Condition)
         {
             if (Condition(Position.Item1, Position.Item2))
@@ -33,11 +35,70 @@ namespace ChessLib
             return AvailableMovesList;
 
         }
+        /// <summary>
+        /// Короткая рокировка
+        /// </summary>
+        /// <param name="rook">Ладья, с которой рокеруемся</param>
+        /// <param name="gameField">игровое поле</param>
+        /// <param name="pieces">Вражеские фигуры</param>
+        /// <param name="gameFieldStr">Игровое поле в строковом представлении</param>
+        /// <returns></returns>
+        public bool ShortCastling(Rook rook,GameField gameField,List<IPiece> pieces,string[,] gameFieldStr)
+        {
+            if(!IsMoved && !rook.IsMoved)
+            {
+                bool isAttacked = false;
+                bool isFree = false;
+                for(int i= Position.Item1+1; i < 7; i++)
+                {
+                    if (gameField.GetAtackStatus(pieces, (i, Position.Item2), gameFieldStr))
+                    {
+                        isAttacked = true;
+                    }
+                    if (gameField.IsCellFree((i, Position.Item2), gameFieldStr))
+                    {
+                        isFree = true;
+                    }
+                }
+                return !isAttacked && !isFree;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Длинная рокировка, метод проверяет можно ли сделать рокировку
+        /// </summary>
+        /// <param name="rook">Ладья, с которой рокируемся</param>
+        /// <param name="gameField">Игровое поле</param>
+        /// <param name="EnemyPieces">Вражеские фигуры</param>
+        /// <param name="gameFieldStr"></param>
+        /// <returns>True - если рокировка возможна</returns>
+        public bool LongCastling(Rook rook, GameField gameField, List<IPiece> EnemyPieces, string[,] gameFieldStr)
+        {
+            if (!IsMoved && !rook.IsMoved)
+            {
+                bool isAttacked = false;
+                bool isFree = false;
+                for (int i = Position.Item1-1; i > 0; i--)
+                {
+                    if (gameField.GetAtackStatus(EnemyPieces, (i, Position.Item2), gameFieldStr))
+                    {
+                        isAttacked = true;
+                    }
+                    if (gameField.IsCellFree((i, Position.Item2), gameFieldStr))
+                    {
+                        isFree = true;
+                    }
+                }
+                return !isAttacked && !isFree;
+            }
+            return false;
+        }
         public King((int, int) Position, PieceColor color)
         {
             this.Position = Position;
             Color = color;
             IsDead = false;
+            IsMoved = false;
         }
         public override string ToString()
         {

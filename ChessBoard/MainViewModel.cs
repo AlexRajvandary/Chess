@@ -11,7 +11,7 @@ namespace ChessBoard
         int currentPlayer;
         private Board _board = new Board();
         private ICommand _newGameCommand;
-        
+
         private ICommand _cellCommand;
         List<Player> players;
 
@@ -20,10 +20,11 @@ namespace ChessBoard
 
         public List<string> playerMoves;
 
-        public IEnumerable<string> PlayersMoves {
+        public IEnumerable<string> PlayersMoves
+        {
             get
             {
-               return playerMoves;
+                return playerMoves;
             }
         }
         public IEnumerable<char> Numbers => "87654321";
@@ -35,10 +36,10 @@ namespace ChessBoard
             set
             {
                 _board = value;
-              
+
                 OnPropertyChanged();
 
-               
+
             }
         }
         /// <summary>
@@ -49,7 +50,7 @@ namespace ChessBoard
             game = new Game();
             SetupBoard();
         });
-       
+
         /// <summary>
         /// Нажатии на клетку выполняется данный метод 
         /// </summary>
@@ -66,7 +67,7 @@ namespace ChessBoard
 
             if (game.gameField.IsCheck())
             {
-               
+
                 IsKingWasChosed(CurrentCell, PreviousActiveCell);
                 //атака королем под шахом
                 ValidAttacks = KingAttackCheck(CurrentCell, ValidAttacks, PreviousActiveCell);
@@ -75,7 +76,7 @@ namespace ChessBoard
             }
             else
             {
-                
+
                 ChosePiece(CurrentCell, PreviousActiveCell);
                 ValidAttacks = Attack(CurrentCell, ValidAttacks, PreviousActiveCell);
                 ValidMoves = Move(CurrentCell, ValidMoves, PreviousActiveCell);
@@ -129,10 +130,10 @@ namespace ChessBoard
                 CurrentCell.Active = true;
                 PreviousActiveCell.Active = false;
                 King king = (King)game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
-                
+
                 ValidAttacks = king.AvailableKills(game.GetGameField(pieces));
                 //Проверяем атакована ли клетка, на которую собирается пойти король
-                var AvailableAttacksForKingInCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(pieces.Where(x=> x.Color!= king.Color).ToList(), x, GetGameFieldString()));
+                var AvailableAttacksForKingInCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(pieces.Where(x => x.Color != king.Color).ToList(), x, GetGameFieldString()));
                 foreach (var removedMoves in AvailableAttacksForKingInCheck)
                 {
                     ValidAttacks.Remove(removedMoves);
@@ -150,14 +151,9 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
-                    if (game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Color == PieceColor.White)
-                    {
-                        MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
-                    }
-                    else
-                    {
-                        MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
-                    }
+
+                    MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+
                 }
                 else
                 {
@@ -198,7 +194,7 @@ namespace ChessBoard
                 {
                     ValidMoves.Remove(removedMoves);
                 }
-                
+
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
                     PreviousActiveCell.Active = false;
@@ -211,14 +207,9 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
-                    if (game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Color == PieceColor.White)
-                    {
-                        MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
-                    }
-                    else
-                    {
-                        MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
-                    }
+
+                    MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+
 
                 }
                 else
@@ -282,30 +273,74 @@ namespace ChessBoard
                 if (piece is King)
                 {
                     var InvalidMovesWithoutCheckCheck = ValidMoves.FindAll(x => game.gameField.GetAtackStatus(EnemyPieces, x, GetGameFieldString()));
-                    foreach(var move in InvalidMovesWithoutCheckCheck)
+                    foreach (var move in InvalidMovesWithoutCheckCheck)
                     {
                         ValidMoves.Remove(move);
                     }
-                    
+                    var RoyalRook = pieces.Where(somePiece => somePiece.Color == piece.Color).Where(myPiece => myPiece is Rook).Where(SomeRook => ((Rook)SomeRook).RookKind == RookKind.Royal).ToList();
+                    var QueenRook = pieces.Where(somePiece => somePiece.Color == piece.Color).Where(myPiece => myPiece is Rook).Where(SomeRook => ((Rook)SomeRook).RookKind == RookKind.Queen).ToList();
+                    if (((King)piece).ShortCastling((Rook)RoyalRook[0], game.gameField, EnemyPieces, GetGameFieldString()))
+                    {
+                        ValidMoves.Add((6, piece.Position.Item2));
+                    }
+                    if (((King)piece).LongCastling((Rook)QueenRook[0], game.gameField, EnemyPieces, GetGameFieldString()))
+                    {
+                        ValidMoves.Add((1, piece.Position.Item2));
+                    }
+
                 }
 
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
-                    if (game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Color == PieceColor.White)
+                    if ((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (6, piece.Position.Item2))
                     {
-                        MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+                        //короткая рокировка
+                        ((King)piece).Position = (6, ((King)piece).Position.Item2);
+                        var rook = pieces.Where(somePiece => somePiece.Color == piece.Color).Where(myPiece => myPiece is Rook).Where(SomeRook => ((Rook)SomeRook).RookKind == RookKind.Royal).ToList();
+                        rook[0].Position = (5, rook[0].Position.Item2);
+
+                        //Отрисовка короткой рокировки
+                        /*
+                        При обращении к Board через индексы важно помнить, что позиция по горизонтали у Board - вторая координата, позиция по вертикали - первая.
+                        Порядок по вертикали сверху вниз, то есть белый король находится на 7 строке у Board
+                        */
+                        PreviousActiveCell.Active = false;
+                        Board[7 - piece.Position.Item2, 6] = PreviousActiveCell.State;
+                        PreviousActiveCell.State = State.Empty;
+                        Board[7 - piece.Position.Item2, 5] = Board[7 - piece.Position.Item2, 7];
+                        Board[7 - piece.Position.Item2, 7] = State.Empty;
+
+                    }
+                    else if ((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (1, piece.Position.Item2))
+                    {
+                        //Длинная рокировка
+                        ((King)piece).Position = (2, ((King)piece).Position.Item2);
+                        var rook = pieces.Where(somePiece => somePiece.Color == piece.Color).Where(myPiece => myPiece is Rook).Where(SomeRook => ((Rook)SomeRook).RookKind == RookKind.Queen).ToList();
+                        rook[0].Position = (3, rook[0].Position.Item2);
+
+                        //Отрисовка короткой рокировки
+                        /*
+                        При обращении к Board через индексы важно помнить, что позиция по горизонтали у Board - вторая координата, позиция по вертикали - первая.
+                        Порядок по вертикали сверху вниз, то есть белый король находится на 7 строке у Board
+                        */
+                        PreviousActiveCell.Active = false;
+                        Board[7 - piece.Position.Item2, 2] = PreviousActiveCell.State;
+                        PreviousActiveCell.State = State.Empty;
+                        Board[7 - piece.Position.Item2, 3] = Board[7 - piece.Position.Item2, 0];
+                        Board[7 - piece.Position.Item2, 0] = State.Empty;
                     }
                     else
                     {
-                       
-                        MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
-                      
+                        //Добавляем сделанный ход на listview в главном окне
+                        MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+
+                        PreviousActiveCell.Active = false;
+                        CurrentCell.State = PreviousActiveCell.State;
+                        PreviousActiveCell.State = State.Empty;
+                        game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
+
                     }
 
-                    PreviousActiveCell.Active = false;
-                    CurrentCell.State = PreviousActiveCell.State;
-                    PreviousActiveCell.State = State.Empty;
-                    game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
                     game.Update(pieces);
                     game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
                     currentPlayer++;
@@ -313,7 +348,6 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
-                  
                 }
                 else
                 {
@@ -326,11 +360,11 @@ namespace ChessBoard
                 }
 
             }
-            
+
             return ValidMoves;
         }
 
-       
+
 
         /// <summary>
         /// Проверяет можно ли атаковать и атакует, либо выводит сообщение об ошибке
@@ -360,21 +394,21 @@ namespace ChessBoard
                     ValidAttacks = piece.AvailableKills(game.GetGameField(pieces));
                     if (piece is King)
                     {
-                        var InvalidMovesWithoutCheckCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(pieces.Where(x=> x.Color!= piece.Color).ToList(), x, GetGameFieldString()));
+                        var InvalidMovesWithoutCheckCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(pieces.Where(x => x.Color != piece.Color).ToList(), x, GetGameFieldString()));
                         foreach (var move in InvalidMovesWithoutCheckCheck)
                         {
                             ValidAttacks.Remove(move);
                         }
                     }
-                  
-                        var InvalidAttacks = ValidAttacks.FindAll(x => game.gameField[x.Item1, x.Item2].Piece is King);
-                        foreach(var move in InvalidAttacks)
-                        {
-                            ValidAttacks.Remove(move);
-                        }
-                  
 
-                    
+                    var InvalidAttacks = ValidAttacks.FindAll(x => game.gameField[x.Item1, x.Item2].Piece is King);
+                    foreach (var move in InvalidAttacks)
+                    {
+                        ValidAttacks.Remove(move);
+                    }
+
+
+
 
                     if (ValidAttacks.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                     {
@@ -388,15 +422,9 @@ namespace ChessBoard
                         {
                             currentPlayer -= 2;
                         }
-                        if(game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Color == PieceColor.White)
-                        {
-                            MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
-                        }
-                        else
-                        {
-                            MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
-                        }
-                       
+
+                        MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+
                     }
                     else
                     {

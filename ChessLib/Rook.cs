@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace ChessLib
 {
+    public enum RookKind
+    {
+        Royal,
+        Queen
+    }
     public class Rook : IPiece
     {
         /// <summary>
@@ -14,6 +19,8 @@ namespace ChessLib
         /// </summary>
         private string myPieces;
 
+        public RookKind RookKind {get;}
+        public bool IsMoved { get; set; }
         public PieceColor Color { get; set; }
         public (int, int) Position { get; set; }
         public bool IsDead { get; set; }
@@ -142,6 +149,16 @@ namespace ChessLib
             this.Position = Position;
             Color = color;
             IsDead = false;
+            IsMoved = false;
+
+            if(Position.Item1 == 0)
+            {
+                RookKind = RookKind.Queen;
+            }
+            else
+            {
+                RookKind = RookKind.Royal;
+            }
         }
     }
 }

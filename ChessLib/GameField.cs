@@ -33,6 +33,16 @@ namespace ChessLib
             return AllPossibleMoves.Contains(cell);
         }
         /// <summary>
+        /// Узнаем свободна ли клетка
+        /// </summary>
+        /// <param name="Cell"></param>
+        /// <param name="gameField"></param>
+        /// <returns></returns>
+        public bool IsCellFree((int,int)Cell, string[,] gameField)
+        {
+            return gameField[Cell.Item1, Cell.Item2] == " ";
+        }
+        /// <summary>
         /// Если клетка атакована и на ней король, то шах
         /// </summary>
         /// <returns></returns>
@@ -53,25 +63,7 @@ namespace ChessLib
             }
             return false;
         }
-        /// <summary>
-        /// Проверяет находиться ли король под шахом, для WPF
-        /// </summary>
-        /// <param name="gameField"></param>
-        /// <returns></returns>
-        public bool IsCheck(GameField gameField)
-        {
-            for (int i = 0; i < 8; i++)
-            {
-                for (int j = 0; j < 8; j++)
-                {
-                    if (gameField[i, j].isAtacked && gameField[i, j].Piece is King)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+     
         public void Update(List<IPiece> pieces, string[,] gameFiled, PieceColor curretnPlayer)
         {
             var oppositePices = pieces.Where(piece => piece.Color != curretnPlayer).ToList();
