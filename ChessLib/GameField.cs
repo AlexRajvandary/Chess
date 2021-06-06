@@ -31,7 +31,7 @@ namespace ChessLib
             }
             this[cell.Item1, cell.Item2].isAtacked = AllPossibleMoves.Contains(cell);
             return AllPossibleMoves.Contains(cell);
-          
+        }
         /// <summary>
         /// Если клетка атакована и на ней король, то шах
         /// </summary>

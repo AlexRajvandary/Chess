@@ -19,8 +19,11 @@ namespace ChessBoard
         }
         public void AddNewBlackMove(string Move)
         {
-            ((MainViewModel)DataContext).playerMoves[((MainViewModel)DataContext).playerMoves.Count-1]+=$" {Move}";
-            this.MovesList.Items[this.MovesList.Items.Count-1]+= $" {Move}";
+          
+
+            var LastMove = ((MainViewModel)DataContext).playerMoves[((MainViewModel)DataContext).playerMoves.Count - 1];
+            ((MainViewModel)DataContext).playerMoves.RemoveAt(((MainViewModel)DataContext).playerMoves.Count - 1);
+            ((MainViewModel)DataContext).playerMoves.Add(LastMove + " " + Move);
 
         }
     }

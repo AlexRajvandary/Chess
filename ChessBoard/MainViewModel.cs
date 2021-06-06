@@ -150,7 +150,14 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
-                    MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+                    if (game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Color == PieceColor.White)
+                    {
+                        MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+                    }
+                    else
+                    {
+                        MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
+                    }
                 }
                 else
                 {
@@ -204,7 +211,14 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
-                    MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+                    if (game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Color == PieceColor.White)
+                    {
+                        MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+                    }
+                    else
+                    {
+                        MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
+                    }
 
                 }
                 else
@@ -277,6 +291,17 @@ namespace ChessBoard
 
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
+                    if (game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Color == PieceColor.White)
+                    {
+                        MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+                    }
+                    else
+                    {
+                       
+                        MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
+                        MessageBox.Show("Мы здесь");
+                    }
+
                     PreviousActiveCell.Active = false;
                     CurrentCell.State = PreviousActiveCell.State;
                     PreviousActiveCell.State = State.Empty;
@@ -288,7 +313,7 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
-                    MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
+                  
                 }
                 else
                 {
@@ -427,11 +452,11 @@ namespace ChessBoard
             Board = board;
             playerMoves = new List<string>();
         }
-        MainWindow MainWindow;
+        public MainWindow MainWindow;
         public MainViewModel(MainWindow mainWindow)
         {
-            MainWindow = mainWindow;
 
+            MainWindow = mainWindow;
         }
         private string[,] GetGameFieldString()
         {
