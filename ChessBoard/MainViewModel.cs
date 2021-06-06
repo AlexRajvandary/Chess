@@ -268,7 +268,8 @@ namespace ChessBoard
                 IPiece piece = game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
                 ValidMoves = piece.AvailableMoves(game.GetGameField(pieces));
                 List<(int, int)> validMovesWithoutCheckCheck = new List<(int, int)>();
-
+                bool ShortCastle = false;
+                bool LongCastle = false;
                 var EnemyPieces = pieces.Where(x => x.Color != piece.Color).ToList();
                 if (piece is King)
                 {
@@ -279,11 +280,13 @@ namespace ChessBoard
                     }
                     var RoyalRook = pieces.Where(somePiece => somePiece.Color == piece.Color).Where(myPiece => myPiece is Rook).Where(SomeRook => ((Rook)SomeRook).RookKind == RookKind.Royal).ToList();
                     var QueenRook = pieces.Where(somePiece => somePiece.Color == piece.Color).Where(myPiece => myPiece is Rook).Where(SomeRook => ((Rook)SomeRook).RookKind == RookKind.Queen).ToList();
-                    if (((King)piece).ShortCastling((Rook)RoyalRook[0], game.gameField, EnemyPieces, GetGameFieldString()))
+                    ShortCastle = ((King)piece).ShortCastling((Rook)RoyalRook[0], game.gameField, EnemyPieces, GetGameFieldString());
+                    if (ShortCastle)
                     {
                         ValidMoves.Add((6, piece.Position.Item2));
                     }
-                    if (((King)piece).LongCastling((Rook)QueenRook[0], game.gameField, EnemyPieces, GetGameFieldString()))
+                    LongCastle = ((King)piece).LongCastling((Rook)QueenRook[0], game.gameField, EnemyPieces, GetGameFieldString());
+                    if (LongCastle)
                     {
                         ValidMoves.Add((1, piece.Position.Item2));
                     }
@@ -292,7 +295,7 @@ namespace ChessBoard
 
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
-                    if ((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (6, piece.Position.Item2))
+                    if (ShortCastle && piece is King && (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (6, piece.Position.Item2))
                     {
                         //короткая рокировка
                         ((King)piece).Position = (6, ((King)piece).Position.Item2);
@@ -311,7 +314,7 @@ namespace ChessBoard
                         Board[7 - piece.Position.Item2, 7] = State.Empty;
 
                     }
-                    else if ((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (1, piece.Position.Item2))
+                    else if (LongCastle && piece is King && (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (1, piece.Position.Item2))
                     {
                         //Длинная рокировка
                         ((King)piece).Position = (2, ((King)piece).Position.Item2);
@@ -328,6 +331,9 @@ namespace ChessBoard
                         PreviousActiveCell.State = State.Empty;
                         Board[7 - piece.Position.Item2, 3] = Board[7 - piece.Position.Item2, 0];
                         Board[7 - piece.Position.Item2, 0] = State.Empty;
+
+                        //Добавляем сделанный ход на listview в главном окне
+                        MainWindow.AddNewWhiteMove($"Длинная рокировка {piece.Color}");
                     }
                     else
                     {

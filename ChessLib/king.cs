@@ -48,19 +48,20 @@ namespace ChessLib
             if(!IsMoved && !rook.IsMoved)
             {
                 bool isAttacked = false;
-                bool isFree = false;
+                bool isFree = true;
                 for(int i= Position.Item1+1; i < 7; i++)
                 {
                     if (gameField.GetAtackStatus(pieces, (i, Position.Item2), gameFieldStr))
                     {
                         isAttacked = true;
                     }
-                    if (gameField.IsCellFree((i, Position.Item2), gameFieldStr))
+                    if (!gameField.IsCellFree((i, Position.Item2), gameFieldStr))
                     {
-                        isFree = true;
+                        isFree = false;
                     }
+                    Console.WriteLine(" ");
                 }
-                return !isAttacked && !isFree;
+                return !isAttacked && isFree;
             }
             return false;
         }
@@ -77,19 +78,19 @@ namespace ChessLib
             if (!IsMoved && !rook.IsMoved)
             {
                 bool isAttacked = false;
-                bool isFree = false;
+                bool isFree = true;
                 for (int i = Position.Item1-1; i > 0; i--)
                 {
                     if (gameField.GetAtackStatus(EnemyPieces, (i, Position.Item2), gameFieldStr))
                     {
                         isAttacked = true;
                     }
-                    if (gameField.IsCellFree((i, Position.Item2), gameFieldStr))
+                    if (!gameField.IsCellFree((i, Position.Item2), gameFieldStr))
                     {
-                        isFree = true;
+                        isFree = false;
                     }
                 }
-                return !isAttacked && !isFree;
+                return !isAttacked && isFree;
             }
             return false;
         }
