@@ -299,7 +299,7 @@ namespace ChessBoard
                     {
                        
                         MainWindow.AddNewBlackMove(CurrentCell.Position.ToString());
-                        MessageBox.Show("Мы здесь");
+                      
                     }
 
                     PreviousActiveCell.Active = false;

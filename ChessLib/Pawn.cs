@@ -14,7 +14,10 @@ namespace ChessLib
         /// Стартовая позиция, нужна для проверки доступных ходов у пешки (если пешка в начальной позиции, то существует 2 варианта хода)
         /// </summary>
         private (int, int) startPos;
+        private Func<(int,int),bool> EndVerticalPos;
+        private readonly (int, int)[] DirectionsForMove = new (int, int)[] { (0, 1), (0, -1) };
 
+        private List<(int, int)> MoveDir { get; set; }
         /// <summary>
         /// проверяет все доступные ходы для текущей пешки
         /// </summary>
@@ -24,104 +27,42 @@ namespace ChessLib
         {
             var AvailableMovesList = new List<(int, int)>();
 
-            if (Position == startPos)
+            if (this.Position == this.startPos)
             {
-                if (Color == PieceColor.White)
+                if (GameField[Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2] == " ")
                 {
-                    if (GameField[Position.Item1, Position.Item2 + 1] != " ")
+                    AvailableMovesList.Add((Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2));
+                    if (GameField[Position.Item1 + MoveDir[1].Item1, Position.Item2 + MoveDir[1].Item2] == " ")
                     {
-
-                        return AvailableMovesList;
-                    }
-                    else
-                    {
-
-                        AvailableMovesList.Add((Position.Item1, Position.Item2 + 1));
-                        if (GameField[Position.Item1, Position.Item2 + 2] != " ")
-                        {
-                            return AvailableMovesList;
-                        }
-                        else
-                        {
-                            AvailableMovesList.Add((Position.Item1, Position.Item2 + 2));
-                            return AvailableMovesList;
-                        }
-                    }
-                }
-                else
-                {
-                    if (GameField[Position.Item1, Position.Item2 - 1] != " ")
-                    {
-
-                        return AvailableMovesList;
-                    }
-                    else
-                    {
-
-                        AvailableMovesList.Add((Position.Item1, Position.Item2 - 1));
-                        if (GameField[Position.Item1, Position.Item2 - 2] != " ")
-                        {
-                            return AvailableMovesList;
-                        }
-                        else
-                        {
-                            AvailableMovesList.Add((Position.Item1, Position.Item2 - 2));
-                            return AvailableMovesList;
-                        }
+                        AvailableMovesList.Add((Position.Item1 + MoveDir[1].Item1, Position.Item2 + MoveDir[1].Item2));
                     }
                 }
 
             }
             else
             {
-
-                if (Color == PieceColor.White)
+                if (EndVerticalPos(Position) && GameField[Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2] == " ")
                 {
-                    if (GameField[Position.Item1, Position.Item2 + 1] != " ")
-                    {
-                        return AvailableMovesList;
-                    }
-                    else
-                    {
-                        AvailableMovesList.Add((Position.Item1, Position.Item2 + 1));
-                        return AvailableMovesList;
-                    }
+                    AvailableMovesList.Add((Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2));
                 }
-                else
-                {
-                    if (GameField[Position.Item1, Position.Item2 - 1] != " ")
-                    {
-                        return AvailableMovesList;
-                    }
-                    else
-                    {
-                        AvailableMovesList.Add((Position.Item1, Position.Item2 - 1));
-                        return AvailableMovesList;
-                    }
-                }
-
             }
+            return AvailableMovesList;
         }
 
         public override string ToString()
         {
             return "p";
         }
+        
         /// <summary>
         /// Направления для атаки
         /// </summary>
-        private readonly (int, int)[] Directions = new (int, int)[] { (-1, 1), (1, 1), (-1, -1), (1, -1) };
+        private List<(int, int)> AttackDir { get; set; }
         /// <summary>
-        /// Условия для проверки возможности атаки
+        /// Условия для атаки
         /// </summary>
-        private readonly Func<int, int, bool>[] Conditions = new Func<int, int, bool>[]
-        {
-            (x,y)=> x>0 && y<7,
-            (x,y)=> x<7 && y<7,
-            (x,y)=> x>0 && y>0,
-            (x,y)=> x<7 && y>0
+        private Func<int, int, bool>[] Conditions { get; set; }
 
-        };
         /// <summary>
         /// Ищет доступные для атаки вражеские фигуры
         /// </summary>
@@ -132,15 +73,15 @@ namespace ChessLib
             var AvailableKillsList = new List<(int, int)>();
 
             GetOppositeAndFriendPieces();
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 2; i++)
             {
 
                 if (Conditions[i](Position.Item1, Position.Item2))
                 {
 
-                    if (GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2] != " " && pieces.Contains(GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2]))
+                    if (GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2] != " " && pieces.Contains(GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2]))
                     {
-                        AvailableKillsList.Add((Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2));
+                        AvailableKillsList.Add((Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2));
                     }
                 }
 
@@ -169,6 +110,29 @@ namespace ChessLib
         public Pawn(PieceColor color, (int, int) position)
         {
             Color = color;
+            if (Color == PieceColor.White)
+            {
+                MoveDir = new List<(int, int)> { (0, 1), (0, 2) };
+                AttackDir = new List<(int, int)> { (-1, 1), (1, 1) };
+                Conditions = new Func<int, int, bool>[] {
+                    (x,y)=> x>0 && y<7,
+                    (x,y)=> x<7 && y<7
+                };
+                EndVerticalPos = ((int, int) CurrentPosition) => CurrentPosition.Item2 < 7;
+             
+
+            }
+            else
+            {
+
+                MoveDir = new List<(int, int)> { (0, -1), (0, -2) };
+                AttackDir = new List<(int, int)> { (-1, -1), (1, -1) };
+                Conditions = new Func<int, int, bool>[] {
+                     (x, y) => x > 0 && y > 0,
+                     (x, y) => x < 7 && y > 0
+                };
+                EndVerticalPos = ((int, int) CurrentPosition) => CurrentPosition.Item2 > 0;
+            }
             startPos = position;
             Position = startPos;
             IsDead = false;
