@@ -141,6 +141,8 @@ namespace ChessBoard
                 if (ValidAttacks.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
 
+                    king.IsMoved = true;
+
                     CurrentCell.State = PreviousActiveCell.State;
                     PreviousActiveCell.Active = false;
                     PreviousActiveCell.State = State.Empty;
@@ -197,6 +199,10 @@ namespace ChessBoard
 
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
+                   
+                        king.IsMoved = true;
+                  
+
                     PreviousActiveCell.Active = false;
                     CurrentCell.State = PreviousActiveCell.State;
                     PreviousActiveCell.State = State.Empty;
@@ -265,12 +271,18 @@ namespace ChessBoard
             {
 
                 game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+                //Фигура, которую мы выбрали
                 IPiece piece = game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
+                //Доступные ходы у фигуры
                 ValidMoves = piece.AvailableMoves(game.GetGameField(pieces));
                 List<(int, int)> validMovesWithoutCheckCheck = new List<(int, int)>();
+                //Доступна ли короткая рокировка
                 bool ShortCastle = false;
+                //Доступна ли длинная рокировка
                 bool LongCastle = false;
+                //Вражеские фигуры
                 var EnemyPieces = pieces.Where(x => x.Color != piece.Color).ToList();
+                //Если выбранная фигура Король, то из доступных ходов нужно убрать, те которые атакованы вражескими фигурами, чтобы не было шаха
                 if (piece is King)
                 {
                     var InvalidMovesWithoutCheckCheck = ValidMoves.FindAll(x => game.gameField.GetAtackStatus(EnemyPieces, x, GetGameFieldString()));
@@ -278,9 +290,11 @@ namespace ChessBoard
                     {
                         ValidMoves.Remove(move);
                     }
+                    //Проверяем доступность рокировок
                     var RoyalRook = pieces.Where(somePiece => somePiece.Color == piece.Color).Where(myPiece => myPiece is Rook).Where(SomeRook => ((Rook)SomeRook).RookKind == RookKind.Royal).ToList();
                     var QueenRook = pieces.Where(somePiece => somePiece.Color == piece.Color).Where(myPiece => myPiece is Rook).Where(SomeRook => ((Rook)SomeRook).RookKind == RookKind.Queen).ToList();
                     ShortCastle = ((King)piece).ShortCastling((Rook)RoyalRook[0], game.gameField, EnemyPieces, GetGameFieldString());
+                    //Если рокировки доступны, то добавляем их в список доступных ходов
                     if (ShortCastle)
                     {
                         ValidMoves.Add((6, piece.Position.Item2));
@@ -292,7 +306,7 @@ namespace ChessBoard
                     }
 
                 }
-
+                //Если ход, который мы собираемся сделать доступен, то делаем
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
                     if (ShortCastle && piece is King && (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (6, piece.Position.Item2))
@@ -337,6 +351,7 @@ namespace ChessBoard
                     }
                     else
                     {
+
                         //Добавляем сделанный ход на listview в главном окне
                         MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
 
@@ -345,6 +360,14 @@ namespace ChessBoard
                         PreviousActiveCell.State = State.Empty;
                         game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
 
+                    }
+                    if (piece is King king)
+                    {
+                        king.IsMoved = true;
+                    }
+                    if (piece is Rook Rook)
+                    {
+                        Rook.IsMoved = true;
                     }
 
                     game.Update(pieces);
@@ -418,6 +441,8 @@ namespace ChessBoard
 
                     if (ValidAttacks.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                     {
+
+
                         CurrentCell.State = PreviousActiveCell.State;
                         PreviousActiveCell.Active = false;
                         PreviousActiveCell.State = State.Empty;
@@ -441,6 +466,15 @@ namespace ChessBoard
                         }
                         MessageBox.Show($"Съесть нельзя! Доступные клетки для атаки\n:{AttackInfo}");
                     }
+                    if (piece is King king)
+                    {
+                        king.IsMoved = true;
+                    }
+                    if (piece is Rook rook)
+                    {
+                        rook.IsMoved = true;
+                    }
+
 
                 }
 
