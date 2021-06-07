@@ -13,11 +13,12 @@ namespace ChessLib
         /// <summary>
         /// Стартовая позиция, нужна для проверки доступных ходов у пешки (если пешка в начальной позиции, то существует 2 варианта хода)
         /// </summary>
-        private (int, int) startPos;
-        private Func<(int,int),bool> EndVerticalPos;
+        public (int, int) StartPos;
+        private Func<(int, int), bool> EndVerticalPos;
         private readonly (int, int)[] DirectionsForMove = new (int, int)[] { (0, 1), (0, -1) };
 
-        private List<(int, int)> MoveDir { get; set; }
+        public List<(int, int)> MoveDir { get; set; }
+        private List<(int, int)> EnemyMoveDir { get; set; }
         /// <summary>
         /// проверяет все доступные ходы для текущей пешки
         /// </summary>
@@ -27,7 +28,7 @@ namespace ChessLib
         {
             var AvailableMovesList = new List<(int, int)>();
 
-            if (this.Position == this.startPos)
+            if (this.Position == this.StartPos)
             {
                 if (GameField[Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2] == " ")
                 {
@@ -48,16 +49,19 @@ namespace ChessLib
             }
             return AvailableMovesList;
         }
+        public bool FirstMove { get; set; } 
 
         public override string ToString()
         {
             return "p";
         }
-        
+
         /// <summary>
         /// Направления для атаки
         /// </summary>
         private List<(int, int)> AttackDir { get; set; }
+      
+
         /// <summary>
         /// Условия для атаки
         /// </summary>
@@ -90,7 +94,51 @@ namespace ChessLib
             return AvailableKillsList;
 
         }
+
+        public List<(int, int)> AvailableKills(string[,] GameField, Pawn EnemyPawn)
+        {
+            var AvailableKillsList = new List<(int, int)>();
+            
+            GetOppositeAndFriendPieces();
+            if(EnemyPawn is null)
+            {
+                AvailableKillsList = AvailableKills(GameField);
+            }
+            else
+            {
+                for (int i = 0; i < 2; i++)
+                {
+
+                    if (Conditions[i](Position.Item1, Position.Item2))
+                    {
+
+                        if (GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2] != " " && pieces.Contains(GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2]))
+                        {
+                            AvailableKillsList.Add((Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2));
+                        }
+                        else if (GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2].ToLower() == "p" && AvailableEnPassent(EnemyPawn))
+                        {
+                            AvailableKillsList.Add((Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2));
+                        }
+                    }
+
+                }
+            }
+           
+
+            return AvailableKillsList;
+
+        }
         private string pieces;
+
+        public bool AvailableEnPassent(Pawn EnemyPawn)
+        {
+            bool IsEnemyPositionCorrect = EnemyPawn.Position == (EnemyPawn.StartPos.Item1 + EnemyMoveDir[1].Item1, EnemyPawn.StartPos.Item2 + EnemyMoveDir[1].Item2);
+            bool IsVerticalPositionCorrect = Position.Item2 == EnemyPawn.Position.Item2;
+            bool IsHorizontalposition1Correct = Position.Item1 == EnemyPawn.Position.Item1 + 1;
+            bool IsHorizontalposition2Correct = Position.Item1 == EnemyPawn.Position.Item1 - 1;
+            return EnemyPawn.FirstMove && IsEnemyPositionCorrect && (IsHorizontalposition1Correct || IsHorizontalposition2Correct) && IsVerticalPositionCorrect;
+        }
 
         private void GetOppositeAndFriendPieces()
         {
@@ -113,29 +161,33 @@ namespace ChessLib
             if (Color == PieceColor.White)
             {
                 MoveDir = new List<(int, int)> { (0, 1), (0, 2) };
+                EnemyMoveDir = new List<(int, int)> { (0, -1), (0, -2) };
                 AttackDir = new List<(int, int)> { (-1, 1), (1, 1) };
                 Conditions = new Func<int, int, bool>[] {
                     (x,y)=> x>0 && y<7,
                     (x,y)=> x<7 && y<7
                 };
                 EndVerticalPos = ((int, int) CurrentPosition) => CurrentPosition.Item2 < 7;
-             
+
 
             }
             else
             {
 
                 MoveDir = new List<(int, int)> { (0, -1), (0, -2) };
+                EnemyMoveDir = new List<(int, int)> { (0, 1), (0, 2) };
                 AttackDir = new List<(int, int)> { (-1, -1), (1, -1) };
+               
                 Conditions = new Func<int, int, bool>[] {
                      (x, y) => x > 0 && y > 0,
                      (x, y) => x < 7 && y > 0
                 };
                 EndVerticalPos = ((int, int) CurrentPosition) => CurrentPosition.Item2 > 0;
             }
-            startPos = position;
-            Position = startPos;
+            StartPos = position;
+            Position = StartPos;
             IsDead = false;
+            FirstMove = false;
         }
     }
 }
