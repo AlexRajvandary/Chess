@@ -49,7 +49,7 @@ namespace ChessLib
             }
             return AvailableMovesList;
         }
-        public bool FirstMove { get; set; } 
+        public bool FirstMove { get; set; }
 
         public override string ToString()
         {
@@ -60,7 +60,7 @@ namespace ChessLib
         /// Направления для атаки
         /// </summary>
         private List<(int, int)> AttackDir { get; set; }
-      
+
 
         /// <summary>
         /// Условия для атаки
@@ -98,9 +98,9 @@ namespace ChessLib
         public List<(int, int)> AvailableKills(string[,] GameField, Pawn EnemyPawn)
         {
             var AvailableKillsList = new List<(int, int)>();
-            
+
             GetOppositeAndFriendPieces();
-            if(EnemyPawn is null)
+            if (EnemyPawn is null)
             {
                 AvailableKillsList = AvailableKills(GameField);
             }
@@ -124,7 +124,7 @@ namespace ChessLib
 
                 }
             }
-           
+
 
             return AvailableKillsList;
 
@@ -177,7 +177,7 @@ namespace ChessLib
                 MoveDir = new List<(int, int)> { (0, -1), (0, -2) };
                 EnemyMoveDir = new List<(int, int)> { (0, 1), (0, 2) };
                 AttackDir = new List<(int, int)> { (-1, -1), (1, -1) };
-               
+
                 Conditions = new Func<int, int, bool>[] {
                      (x, y) => x > 0 && y > 0,
                      (x, y) => x < 7 && y > 0

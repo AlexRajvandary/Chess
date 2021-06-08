@@ -38,7 +38,7 @@ namespace ChessLib
         /// <param name="Cell"></param>
         /// <param name="gameField"></param>
         /// <returns></returns>
-        public bool IsCellFree((int,int)Cell, string[,] gameField)
+        public bool IsCellFree((int, int) Cell, string[,] gameField)
         {
             return gameField[Cell.Item1, Cell.Item2] == " ";
         }
@@ -63,7 +63,7 @@ namespace ChessLib
             }
             return false;
         }
-     
+
         public void Update(List<IPiece> pieces, string[,] gameFiled, PieceColor curretnPlayer)
         {
             var oppositePices = pieces.Where(piece => piece.Color != curretnPlayer).ToList();

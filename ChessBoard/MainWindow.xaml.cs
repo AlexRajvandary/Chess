@@ -1,5 +1,4 @@
-﻿using ChessBoard;
-namespace ChessBoard
+﻿namespace ChessBoard
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -19,7 +18,7 @@ namespace ChessBoard
         }
         public void AddNewBlackMove(string Move)
         {
-          
+
 
             var LastMove = ((MainViewModel)DataContext).playerMoves[((MainViewModel)DataContext).playerMoves.Count - 1];
             ((MainViewModel)DataContext).playerMoves.RemoveAt(((MainViewModel)DataContext).playerMoves.Count - 1);

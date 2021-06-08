@@ -199,9 +199,9 @@ namespace ChessBoard
 
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
-                   
-                        king.IsMoved = true;
-                  
+
+                    king.IsMoved = true;
+
 
                     PreviousActiveCell.Active = false;
                     CurrentCell.State = PreviousActiveCell.State;
@@ -307,20 +307,20 @@ namespace ChessBoard
 
                 }
 
-                if(piece is Pawn)
+                if (piece is Pawn)
                 {
                     var Enemypawn = EnemyPieces.Where(x => x.Position.Item2 == piece.Position.Item2).Where(x => x is Pawn).ToList();
-                    if(Enemypawn != null)
+                    if (Enemypawn != null)
                     {
-                        foreach(var pawn in Enemypawn)
+                        foreach (var pawn in Enemypawn)
                         {
                             var validPawnMoves = ((Pawn)piece).AvailableKills(game.GetGameField(pieces), (Pawn)pawn);
                             ValidMoves = ValidMoves.Union(validPawnMoves)?.ToList();
                         }
-                       
-                      
+
+
                     }
-                  
+
                 }
                 //Если ход, который мы собираемся сделать доступен, то делаем
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
@@ -365,22 +365,25 @@ namespace ChessBoard
                         //Добавляем сделанный ход на listview в главном окне
                         MainWindow.AddNewWhiteMove($"Длинная рокировка {piece.Color}");
                     }
-                    else if (EnemyPieces.Where(x => x.Position.Item2 == piece.Position.Item2).Where(x => x is Pawn).ToList().Count>0 && piece is Pawn)
+                    else if (EnemyPieces.Where(x => x.Position.Item2 == piece.Position.Item2).Where(x => x is Pawn).ToList().Count > 0 && piece is Pawn)
                     {
-
+                        /*
+                         Взятие на проходе
+                        En passent
+                         */
                         PreviousActiveCell.Active = false;
                         CurrentCell.State = PreviousActiveCell.State;
                         PreviousActiveCell.State = State.Empty;
 
                         Board[7 - piece.Position.Item2, CurrentCell.Position.Horizontal] = State.Empty;
 
-                        //game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
+                        game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
 
 
                     }
                     else
                     {
-                        if(piece is Pawn && (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (((Pawn)piece).StartPos.Item1 + ((Pawn)piece).MoveDir[1].Item1, ((Pawn)piece).StartPos.Item2 + ((Pawn)piece).MoveDir[1].Item2))
+                        if (piece is Pawn && (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (((Pawn)piece).StartPos.Item1 + ((Pawn)piece).MoveDir[1].Item1, ((Pawn)piece).StartPos.Item2 + ((Pawn)piece).MoveDir[1].Item2))
                         {
                             ((Pawn)piece).FirstMove = true;
                         }

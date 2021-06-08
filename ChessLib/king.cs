@@ -43,13 +43,13 @@ namespace ChessLib
         /// <param name="pieces">Вражеские фигуры</param>
         /// <param name="gameFieldStr">Игровое поле в строковом представлении</param>
         /// <returns></returns>
-        public bool ShortCastling(Rook rook,GameField gameField,List<IPiece> pieces,string[,] gameFieldStr)
+        public bool ShortCastling(Rook rook, GameField gameField, List<IPiece> pieces, string[,] gameFieldStr)
         {
-            if(!IsMoved && !rook.IsMoved)
+            if (!IsMoved && !rook.IsMoved)
             {
                 bool isAttacked = false;
                 bool isFree = true;
-                for(int i= Position.Item1+1; i < 7; i++)
+                for (int i = Position.Item1 + 1; i < 7; i++)
                 {
                     if (gameField.GetAtackStatus(pieces, (i, Position.Item2), gameFieldStr))
                     {
@@ -79,7 +79,7 @@ namespace ChessLib
             {
                 bool isAttacked = false;
                 bool isFree = true;
-                for (int i = Position.Item1-1; i > 0; i--)
+                for (int i = Position.Item1 - 1; i > 0; i--)
                 {
                     if (gameField.GetAtackStatus(EnemyPieces, (i, Position.Item2), gameFieldStr))
                     {

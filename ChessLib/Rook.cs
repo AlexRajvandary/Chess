@@ -19,7 +19,7 @@ namespace ChessLib
         /// </summary>
         private string myPieces;
 
-        public RookKind RookKind {get;}
+        public RookKind RookKind { get; }
         public bool IsMoved { get; set; }
         public PieceColor Color { get; set; }
         public (int, int) Position { get; set; }
@@ -151,7 +151,7 @@ namespace ChessLib
             IsDead = false;
             IsMoved = false;
 
-            if(Position.Item1 == 0)
+            if (Position.Item1 == 0)
             {
                 RookKind = RookKind.Queen;
             }
