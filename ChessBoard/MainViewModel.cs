@@ -322,6 +322,12 @@ namespace ChessBoard
                     }
 
                 }
+                else
+                {
+                    if(game.gameField.GetAtackStatus(EnemyPieces,piece.Position, GetGameFieldString())){
+                        ValidMoves.Clear();
+                    }
+                }
 
                 if (piece is Pawn)
                 {
@@ -338,6 +344,7 @@ namespace ChessBoard
                     }
 
                 }
+                
                 //Если ход, который мы собираемся сделать доступен, то делаем
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
