@@ -385,7 +385,7 @@ namespace ChessBoard
                     {
                         if (piece is Pawn && (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (((Pawn)piece).StartPos.Item1 + ((Pawn)piece).MoveDir[1].Item1, ((Pawn)piece).StartPos.Item2 + ((Pawn)piece).MoveDir[1].Item2))
                         {
-                            ((Pawn)piece).FirstMove = true;
+                            ((Pawn)piece).EnPassantAvailable = true;
                         }
                         //Добавляем сделанный ход на listview в главном окне
                         MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
@@ -403,6 +403,13 @@ namespace ChessBoard
                     if (piece is Rook Rook)
                     {
                         Rook.IsMoved = true;
+                    }
+
+                    var enemyPieces = pieces.Where(p => p.Color != piece.Color && p is Pawn);
+
+                    foreach(var EnemyPawn in enemyPieces)
+                    {
+                        ((Pawn)EnemyPawn).EnPassantAvailable = false;
                     }
 
                     game.Update(pieces);

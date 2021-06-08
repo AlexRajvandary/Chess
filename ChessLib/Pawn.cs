@@ -49,7 +49,7 @@ namespace ChessLib
             }
             return AvailableMovesList;
         }
-        public bool FirstMove { get; set; }
+        public bool EnPassantAvailable { get; set; }
 
         public override string ToString()
         {
@@ -137,7 +137,7 @@ namespace ChessLib
             bool IsVerticalPositionCorrect = Position.Item2 == EnemyPawn.Position.Item2;
             bool IsHorizontalposition1Correct = Position.Item1 == EnemyPawn.Position.Item1 + 1;
             bool IsHorizontalposition2Correct = Position.Item1 == EnemyPawn.Position.Item1 - 1;
-            return EnemyPawn.FirstMove && IsEnemyPositionCorrect && (IsHorizontalposition1Correct || IsHorizontalposition2Correct) && IsVerticalPositionCorrect;
+            return EnemyPawn.EnPassantAvailable && IsEnemyPositionCorrect && (IsHorizontalposition1Correct || IsHorizontalposition2Correct) && IsVerticalPositionCorrect;
         }
 
         private void GetOppositeAndFriendPieces()
@@ -187,7 +187,7 @@ namespace ChessLib
             StartPos = position;
             Position = StartPos;
             IsDead = false;
-            FirstMove = false;
+            EnPassantAvailable = false;
         }
     }
 }
