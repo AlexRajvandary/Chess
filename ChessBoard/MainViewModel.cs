@@ -67,20 +67,30 @@ namespace ChessBoard
 
             if (game.gameField.IsCheck())
             {
-
+                game.Update(pieces);
+                game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
                 IsKingWasChosed(CurrentCell, PreviousActiveCell);
                 //атака королем под шахом
                 ValidAttacks = KingAttackCheck(CurrentCell, ValidAttacks, PreviousActiveCell);
                 //ход королем под шахом
                 ValidMoves = KingMoveCheck(CurrentCell, ValidMoves, PreviousActiveCell);
+                game.Update(pieces);
+                game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
             }
             else
             {
+                game.Update(pieces);
+                game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
 
                 ChosePiece(CurrentCell, PreviousActiveCell);
+                //Игрок хочет атаковать
                 ValidAttacks = Attack(CurrentCell, ValidAttacks, PreviousActiveCell);
+                //Игрок хочет сделать ход
                 ValidMoves = Move(CurrentCell, ValidMoves, PreviousActiveCell);
+
+                game.Update(pieces);
                 game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+
                 if (game.gameField.IsCheck())
                 {
                     MessageBox.Show("Шах!");
@@ -125,8 +135,7 @@ namespace ChessBoard
         {
             if (CurrentCell.State != State.Empty && PreviousActiveCell != null)
             {
-                game.Update(pieces);
-                game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+                
                 CurrentCell.Active = true;
                 PreviousActiveCell.Active = false;
                 King king = (King)game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
@@ -147,13 +156,18 @@ namespace ChessBoard
                     PreviousActiveCell.Active = false;
                     PreviousActiveCell.State = State.Empty;
                     game.CheckIfPieceWasKilled((PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical), (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical), GetGameFieldString(), pieces);
-                    game.Update(pieces);
+                  
                     currentPlayer++;
                     if (currentPlayer >= 2)
                     {
                         currentPlayer -= 2;
                     }
+                    var enemyPieces = pieces.Where(p => p.Color != king.Color && p is Pawn);
 
+                    foreach (var EnemyPawn in enemyPieces)
+                    {
+                        ((Pawn)EnemyPawn).EnPassantAvailable = false;
+                    }
                     MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
 
                 }
@@ -168,8 +182,8 @@ namespace ChessBoard
 
                 }
             }
-            game.Update(pieces);
-            game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+          
+            
             return ValidAttacks;
         }
         /// <summary>
@@ -183,8 +197,7 @@ namespace ChessBoard
         {
             if (CurrentCell.State == State.Empty && PreviousActiveCell != null)
             {
-                game.Update(pieces);
-                game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+               
                 CurrentCell.Active = true;
                 PreviousActiveCell.Active = false;
                 King king = (King)game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
@@ -213,6 +226,12 @@ namespace ChessBoard
                     {
                         currentPlayer -= 2;
                     }
+                    var enemyPieces = pieces.Where(p => p.Color != king.Color && p is Pawn);
+
+                    foreach (var EnemyPawn in enemyPieces)
+                    {
+                        ((Pawn)EnemyPawn).EnPassantAvailable = false;
+                    }
 
                     MainWindow.AddNewWhiteMove(CurrentCell.Position.ToString());
 
@@ -229,8 +248,8 @@ namespace ChessBoard
 
                 }
             }
-            game.Update(pieces);
-            game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+          
+           
             return ValidMoves;
         }
         /// <summary>
@@ -242,9 +261,6 @@ namespace ChessBoard
         {
             if (CurrentCell.State != State.Empty && PreviousActiveCell == null)
             {
-
-                game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
-
 
                 if (game.gameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece.Color == players[currentPlayer % 2].Color)
                 {
@@ -270,7 +286,7 @@ namespace ChessBoard
             if (CurrentCell.State == State.Empty && PreviousActiveCell != null)
             {
 
-                game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+               
                 //Фигура, которую мы выбрали
                 IPiece piece = game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
                 //Доступные ходы у фигуры
@@ -412,8 +428,7 @@ namespace ChessBoard
                         ((Pawn)EnemyPawn).EnPassantAvailable = false;
                     }
 
-                    game.Update(pieces);
-                    game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+                   
                     currentPlayer++;
                     if (currentPlayer >= 2)
                     {
@@ -449,7 +464,7 @@ namespace ChessBoard
             if (CurrentCell.State != State.Empty && PreviousActiveCell != null)
             {
 
-                game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+               
 
                 //если игрок захотел поменять выбранную фигуру
                 if (game.gameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece.Color == players[currentPlayer % 2].Color)
@@ -460,7 +475,7 @@ namespace ChessBoard
                 }
                 else//если игрок хочет съесть фигуру
                 {
-                    game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+                   
                     IPiece piece = game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
                     ValidAttacks = piece.AvailableKills(game.GetGameField(pieces));
                     if (piece is King)
@@ -516,13 +531,18 @@ namespace ChessBoard
                     {
                         rook.IsMoved = true;
                     }
+                    var enemyPieces = pieces.Where(p => p.Color != piece.Color && p is Pawn);
 
+                    foreach (var EnemyPawn in enemyPieces)
+                    {
+                        ((Pawn)EnemyPawn).EnPassantAvailable = false;
+                    }
 
                 }
 
             }
-            game.Update(pieces);
-            game.gameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+           
+           
             return ValidAttacks;
         }
         /// <summary>
