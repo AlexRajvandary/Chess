@@ -325,6 +325,7 @@ namespace ChessBoard
                 else
                 {
                     if(game.gameField.GetAtackStatus(EnemyPieces,piece.Position, GetGameFieldString())){
+                        MessageBox.Show("Если мы здесь, значит мы не можем сделать ход изза шаха");
                         ValidMoves.Clear();
                     }
                 }
