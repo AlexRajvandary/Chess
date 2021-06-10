@@ -700,7 +700,7 @@ namespace ChessBoard
         private void SetupBoard()
         {
             CurrentPlayer = 0;
-            Pieces = game.GetPieces();
+            Pieces = game.GetPiecesStartPosition();
             Players = new List<Player>()
         {
             new Player(ChessLib.PieceColor.White,Pieces.Where(x=> x.Color == ChessLib.PieceColor.White).ToList(),"user1"),

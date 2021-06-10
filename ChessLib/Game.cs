@@ -54,44 +54,44 @@ namespace ChessLib
         /// Устанавливает начальные позиции фигурам
         /// </summary>
         /// <returns>Список фигур</returns>
-        public List<IPiece> GetPieces()
+        public List<IPiece> GetPiecesStartPosition()
         {
-            var Piece = new List<IPiece>();
+            var Pieces = new List<IPiece>();
             //Создаем пешки
             for (int i = 0; i < 8; i++)
             {
                 var wPawn = new Pawn(PieceColor.White, (i, 1));
                 var bPawn = new Pawn(PieceColor.Black, (i, 6));
-                Piece.Add(wPawn);
-                Piece.Add(bPawn);
+                Pieces.Add(wPawn);
+                Pieces.Add(bPawn);
             }
             //создаем слонов
-            Piece.Add(new Bishop((2, 0), PieceColor.White));
-            Piece.Add(new Bishop((5, 0), PieceColor.White));
-            Piece.Add(new Bishop((2, 7), PieceColor.Black));
-            Piece.Add(new Bishop((5, 7), PieceColor.Black));
+            Pieces.Add(new Bishop((2, 0), PieceColor.White));
+            Pieces.Add(new Bishop((5, 0), PieceColor.White));
+            Pieces.Add(new Bishop((2, 7), PieceColor.Black));
+            Pieces.Add(new Bishop((5, 7), PieceColor.Black));
 
             //создаем ладьи
-            Piece.Add(new Rook((0, 0), PieceColor.White));
-            Piece.Add(new Rook((7, 0), PieceColor.White));
-            Piece.Add(new Rook((0, 7), PieceColor.Black));
-            Piece.Add(new Rook((7, 7), PieceColor.Black));
+            Pieces.Add(new Rook((0, 0), PieceColor.White));
+            Pieces.Add(new Rook((7, 0), PieceColor.White));
+            Pieces.Add(new Rook((0, 7), PieceColor.Black));
+            Pieces.Add(new Rook((7, 7), PieceColor.Black));
 
             //создаем коней
-            Piece.Add(new Knight((1, 0), PieceColor.White));
-            Piece.Add(new Knight((6, 0), PieceColor.White));
-            Piece.Add(new Knight((1, 7), PieceColor.Black));
-            Piece.Add(new Knight((6, 7), PieceColor.Black));
+            Pieces.Add(new Knight((1, 0), PieceColor.White));
+            Pieces.Add(new Knight((6, 0), PieceColor.White));
+            Pieces.Add(new Knight((1, 7), PieceColor.Black));
+            Pieces.Add(new Knight((6, 7), PieceColor.Black));
 
             //создаем ферзей
-            Piece.Add(new Queen(PieceColor.Black, (3, 7)));
-            Piece.Add(new Queen(PieceColor.White, (3, 0)));
+            Pieces.Add(new Queen(PieceColor.Black, (3, 7)));
+            Pieces.Add(new Queen(PieceColor.White, (3, 0)));
 
             //создаем королей
-            Piece.Add(new King((4, 0), PieceColor.White));
-            Piece.Add(new King((4, 7), PieceColor.Black));
+            Pieces.Add(new King((4, 0), PieceColor.White));
+            Pieces.Add(new King((4, 7), PieceColor.Black));
 
-            return Piece;
+            return Pieces;
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace ChessLib
         /// <param name="currentPlayer">Текущий игрок</param>
         /// <param name="GameField">Строковое представление игрового поля</param>
         /// <param name="Pieces">Список фигур</param>
-        void Move(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
+        void ConsoleMove(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
             gameField.Update(Pieces, GameField, currentPlayer.Color);
 
@@ -166,23 +166,33 @@ namespace ChessLib
             var AvailableMoves = currentPlayer.MyPieces[(int)(chosenPiece - 1)].AvailableMoves(GameField);//список возможных ходов (список (int,int)-координата клетки)
 
             //выводим доступные ходы или сообщение о том, что их нет
+            counter = ShowAvailableMoves(counter, AvailableMoves);
+
+            var availableAttacks = currentPlayer.MyPieces[(int)(chosenPiece - 1)].AvailableKills(GameField);//спиксок фигур, которые можно съесть
+                                                                                                            //выводим список фигур для атаки или сообщение, что таковых нет
+            counter = ShowAvailableAttacks(counter, AvailableMoves, availableAttacks);
+
             if (AvailableMoves.Count == 0)
             {
-                view.Show("доступных ходов нет\n");
+                view.Show("Для выбранной фигуры доступных ходов нет!\n" +
+                    "Выберите другую фигуру");
+                ConsoleMove(currentPlayer, GameField, Pieces);
+                return;
             }
             else
             {
-                view.Show("Выберите ход\n");
-                foreach (var p in AvailableMoves)
-                {
-                    view.Show($"{counter} {alphabet[p.Item1]} {p.Item2 + 1} \n");
-                    counter++;
-                }
+                chosenMove = UserInput(AvailableMoves.Count);//переменная служит для выбора хода
             }
 
+            CheckIfPieceWasKilled(Pieces, chosenMove, AvailableMoves);
 
-            var availableKills = currentPlayer.MyPieces[(int)(chosenPiece - 1)].AvailableKills(GameField);//спиксок фигур, которые можно съесть
-            //выводим список фигур для атаки или сообщение, что таковых нет
+            //Устанавливает новую позицию выбранной фигуре
+            ChangePositionOfCurrentPiece(currentPlayer, chosenPiece, chosenMove, AvailableMoves);
+
+        }
+
+        private int ShowAvailableAttacks(int counter, List<(int, int)> AvailableMoves, List<(int, int)> availableKills)
+        {
             if (availableKills.Count == 0)
             {
                 view.Show("Съесть никого нельзя\n");
@@ -200,25 +210,31 @@ namespace ChessLib
 
             }
 
+            return counter;
+        }
 
-
+        private int ShowAvailableMoves(int counter, List<(int, int)> AvailableMoves)
+        {
             if (AvailableMoves.Count == 0)
             {
-                view.Show("Для выбранной фигуры доступных ходов нет!\n" +
-                    "Выберите другую фигуру");
-                Move(currentPlayer, GameField, Pieces);
-                return;
+                view.Show("доступных ходов нет\n");
             }
             else
             {
-                chosenMove = UserInput(AvailableMoves.Count);//переменная служит для выбора хода
+                view.Show("Выберите ход\n");
+                foreach (var p in AvailableMoves)
+                {
+                    view.Show($"{counter} {alphabet[p.Item1]} {p.Item2 + 1} \n");
+                    counter++;
+                }
             }
 
-            CheckIfPieceWasKilled(Pieces, chosenMove, AvailableMoves);
+            return counter;
+        }
 
-            //Устанавливает новую позицию выбранной фигуре
-            currentPlayer.MyPieces[(int)(chosenPiece - 1)].Position = AvailableMoves[(int)(chosenMove - 1)];
-
+        private static void ChangePositionOfCurrentPiece(Player currentPlayer, uint chosenPiece, uint chosenMove, List<(int, int)> AvailableMoves)
+        {
+            currentPlayer.MyPieces[(int)(chosenPiece - 1)].ChangePosition(AvailableMoves[(int)(chosenMove - 1)]);
         }
 
         private static void CheckIfPieceWasKilled(List<IPiece> Pieces, uint chosenMove, List<(int, int)> AvailableMoves)
@@ -344,7 +360,7 @@ namespace ChessLib
             view.Visualize(GameFieldString, CurrentPlayer);
 
             //ход 
-            Move(players[CurrentPlayer % 2], GameFieldString, Pieces);
+            ConsoleMove(players[CurrentPlayer % 2], GameFieldString, Pieces);
 
             RemoveDeadPieces(Pieces);
             Console.Clear();
@@ -368,7 +384,7 @@ namespace ChessLib
 
             Pieces = new List<IPiece>();
             //Создаем шахматные фигуры и устанавливаем первоначальные позиции
-            Pieces = GetPieces();
+            Pieces = GetPiecesStartPosition();
 
             gameField = new GameField();
 
@@ -390,7 +406,7 @@ namespace ChessLib
 
             Pieces = new List<IPiece>();
             //Создаем шахматные фигуры и устанавливаем первоначальные позиции
-            Pieces = GetPieces();
+            Pieces = GetPiecesStartPosition();
 
             gameField = new GameField();
 

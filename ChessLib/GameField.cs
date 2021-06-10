@@ -33,10 +33,7 @@ namespace ChessLib
             return AllPossibleMoves.Contains(cell);
         }
 
-        //public bool GetCheckStatusAfterMove(List<IPiece> pieces, IPiece CurrentPiece, (int,int) Move )
-        //{
 
-        //}
         /// <summary>
         /// Узнаем свободна ли клетка
         /// </summary>
@@ -60,7 +57,6 @@ namespace ChessLib
                     if (this[i, j].isAtacked && this[i, j].Piece is King)
                     {
 
-
                         return true;
 
                     }
@@ -71,7 +67,7 @@ namespace ChessLib
 
         public void Update(List<IPiece> pieces, string[,] gameFiled, PieceColor curretnPlayer)
         {
-            var oppositePices = pieces.Where(piece => piece.Color != curretnPlayer).ToList();
+            var enemyPices = pieces.Where(piece => piece.Color != curretnPlayer).ToList();
             for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 8; j++)
@@ -91,7 +87,7 @@ namespace ChessLib
                 this[i, j].isFilled = true;
                 this[i, j].Piece = piece;
 
-                GetAtackStatus(oppositePices, (i, j), gameFiled);
+                GetAtackStatus(enemyPices, (i, j), gameFiled);
             }
         }
 
