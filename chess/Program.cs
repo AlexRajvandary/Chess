@@ -22,8 +22,6 @@ namespace chess
 
             } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
 
-
-
         }
     }
 }
