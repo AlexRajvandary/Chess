@@ -88,7 +88,7 @@ namespace ChessBoard
                 ChosePiece(CurrentCell, PreviousActiveCell);
                 //Игрок хочет атаковать
                 ValidAttacks = Attack(CurrentCell, ValidAttacks, PreviousActiveCell);
-                  
+
                 //Игрок хочет сделать ход
                 ValidMoves = Move(CurrentCell, ValidMoves, PreviousActiveCell);
 
@@ -145,6 +145,7 @@ namespace ChessBoard
                 King king = (King)game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
 
                 ValidAttacks = king.AvailableKills(game.GetGameField(Pieces));
+
                 //Проверяем атакована ли клетка, на которую собирается пойти король
                 var AvailableAttacksForKingInCheck = ValidAttacks.FindAll(x => game.gameField.GetAtackStatus(Pieces.Where(x => x.Color != king.Color).ToList(), x, GetGameFieldString()));
                 foreach (var removedMoves in AvailableAttacksForKingInCheck)
@@ -156,40 +157,26 @@ namespace ChessBoard
 
                     king.IsMoved = true;
 
-                    CurrentCell.State = PreviousActiveCell.State;
-                    PreviousActiveCell.Active = false;
-                    PreviousActiveCell.State = State.Empty;
-                    game.CheckIfPieceWasKilled((PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical), (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical), GetGameFieldString(), Pieces);
+                    AttackView(CurrentCell, PreviousActiveCell);
 
-                    CurrentPlayer++;
-                    if (CurrentPlayer >= 2)
-                    {
-                        CurrentPlayer -= 2;
-                    }
-                    var enemyPieces = Pieces.Where(p => p.Color != king.Color && p is Pawn);
+                    AttackModel(CurrentCell, PreviousActiveCell);
 
-                    foreach (var EnemyPawn in enemyPieces)
-                    {
-                        ((Pawn)EnemyPawn).EnPassantAvailable = false;
-                    }
+                    ChangePlayer();
+
+                    ChangeEnPassentStatusForEnimiesPawns(king);
+
                     MainWindow.AddNewMove(CurrentCell.Position.ToString());
 
                 }
                 else
                 {
-                    string info = "";
-                    foreach (var i in ValidAttacks)
-                    {
-                        info += $"/t{"ABCDEFGH"[i.Item1]}{i.Item2 + 1}/n";
-                    }
-                    MessageBox.Show($"Король не может атаковать клетку {CurrentCell.Position.ToString()}: \n{info}");
-
+                    IncorrectKingAttackMessage(CurrentCell, ValidAttacks);
                 }
             }
 
-
             return ValidAttacks;
         }
+
         /// <summary>
         /// Ход королем под шахом
         /// </summary>
@@ -219,12 +206,9 @@ namespace ChessBoard
 
                     king.IsMoved = true;
 
+                    MoveView(CurrentCell, PreviousActiveCell);
 
-                    PreviousActiveCell.Active = false;
-                    CurrentCell.State = PreviousActiveCell.State;
-                    PreviousActiveCell.State = State.Empty;
-                    game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.Position = (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical);//переставляем фигуру в модели
-
+                    MoveModel(CurrentCell, PreviousActiveCell);
                     CurrentPlayer++;
                     if (CurrentPlayer >= 2)
                     {
@@ -239,16 +223,10 @@ namespace ChessBoard
 
                     MainWindow.AddNewMove(CurrentCell.Position.ToString());
 
-
                 }
                 else
                 {
-                    string info = "";
-                    foreach (var move in ValidMoves)
-                    {
-                        info += $"\t{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
-                    }
-                    MessageBox.Show($"Король не может пойти на клетку: {CurrentCell.Position}\n\t Доступные ходы: \n{info}");
+                    IncorrectKingMoveMessage(CurrentCell, ValidMoves);
 
                 }
             }
@@ -256,6 +234,28 @@ namespace ChessBoard
 
             return ValidMoves;
         }
+
+        #region Incorrect move of king message
+        private static void IncorrectKingMoveMessage(Cell CurrentCell, List<(int, int)> ValidMoves)
+        {
+            string info = "";
+            foreach (var move in ValidMoves)
+            {
+                info += $"\t{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
+            }
+            MessageBox.Show($"Король не может пойти на клетку: {CurrentCell.Position}\n\t Доступные ходы: \n{info}");
+        }
+        private static void IncorrectKingAttackMessage(Cell CurrentCell, List<(int, int)> ValidAttacks)
+        {
+            string info = "";
+            foreach (var i in ValidAttacks)
+            {
+                info += $"/t{"ABCDEFGH"[i.Item1]}{i.Item2 + 1}/n";
+            }
+            MessageBox.Show($"Король не может атаковать клетку {CurrentCell.Position.ToString()}: \n{info}");
+        }
+        #endregion
+
         /// <summary>
         /// проверет выбрал ли игрок правильную фигуру
         /// </summary>

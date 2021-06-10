@@ -126,7 +126,7 @@ namespace ChessLib
                 myPieces = "kbnpqr";
             }
         }
-        public void ChangePosition((int,int) Position)
+        public void ChangePosition((int, int) Position)
         {
             this.Position = Position;
         }
