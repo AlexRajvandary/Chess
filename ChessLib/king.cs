@@ -140,7 +140,10 @@ namespace ChessLib
 
 
         }
-
+        public void ChangePosition((int, int) NewPosition)
+        {
+            Position = NewPosition;
+        }
 
         /// <summary>
         /// Условия для проверки доступных клеток для хода/атаки в 8-ми направлениях

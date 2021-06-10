@@ -32,6 +32,11 @@ namespace ChessLib
             this[cell.Item1, cell.Item2].isAtacked = AllPossibleMoves.Contains(cell);
             return AllPossibleMoves.Contains(cell);
         }
+
+        //public bool GetCheckStatusAfterMove(List<IPiece> pieces, IPiece CurrentPiece, (int,int) Move )
+        //{
+
+        //}
         /// <summary>
         /// Узнаем свободна ли клетка
         /// </summary>

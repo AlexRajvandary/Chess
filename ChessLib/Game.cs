@@ -328,7 +328,7 @@ namespace ChessLib
         /// Убираем убитые фигуры
         /// </summary>
         /// <param name="pieces"></param>
-        public void Update(List<IPiece> pieces)
+        public void RemoveDeadPieces(List<IPiece> pieces)
         {
             pieces.RemoveAll(x => x.IsDead == true);
         }
@@ -346,7 +346,7 @@ namespace ChessLib
             //ход 
             Move(players[CurrentPlayer % 2], GameFieldString, Pieces);
 
-            Update(Pieces);
+            RemoveDeadPieces(Pieces);
             Console.Clear();
             GameFieldString = GetGameField(Pieces);
             view.Visualize(GameFieldString, CurrentPlayer);

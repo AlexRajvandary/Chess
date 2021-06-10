@@ -143,7 +143,10 @@ namespace ChessLib
                 myPieces = "kbnpqr";
             }
         }
-
+        public void ChangePosition((int, int) NewPosition)
+        {
+            Position = NewPosition;
+        }
         public Rook((int, int) Position, PieceColor color)
         {
             this.Position = Position;
