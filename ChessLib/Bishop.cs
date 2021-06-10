@@ -126,6 +126,10 @@ namespace ChessLib
                 myPieces = "kbnpqr";
             }
         }
+        public void ChangePosition((int,int) Position)
+        {
+            this.Position = Position;
+        }
 
         public Bishop((int, int) startPosition, PieceColor Color)
         {

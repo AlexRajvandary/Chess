@@ -155,6 +155,11 @@ namespace ChessLib
 
         }
 
+        public void ChangePosition((int, int) Position)
+        {
+            this.Position = Position;
+        }
+
         public Pawn(PieceColor color, (int, int) position)
         {
             Color = color;

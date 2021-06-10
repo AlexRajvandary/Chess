@@ -135,6 +135,11 @@ namespace ChessLib
             }
         }
 
+        public void ChangePosition((int, int) Position)
+        {
+            this.Position = Position;
+        }
+
         public Queen(PieceColor color, (int, int) startPos)
         {
             Position = startPos;

@@ -31,6 +31,11 @@ namespace ChessLib
         /// <returns></returns>
         public List<(int, int)> AvailableMoves(string[,] GameField);
         /// <summary>
+        /// Меняет позицию фигуры
+        /// </summary>
+        /// <param name="Position">Позиция, на которую меняем</param>
+        public void ChangePosition((int, int) Position);
+        /// <summary>
         /// Проверяет какие фигуры можно съесть
         /// </summary>
         /// <param name="player"></param>

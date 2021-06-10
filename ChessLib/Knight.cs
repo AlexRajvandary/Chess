@@ -107,6 +107,10 @@ namespace ChessLib
                 pieces = "KBNPQR";
             }
         }
+        public void ChangePosition((int, int) Position)
+        {
+            this.Position = Position;
+        }
 
         /// <summary>
         /// Ищем вражеские фигуры, доступные для атаки
