@@ -316,15 +316,7 @@ namespace ChessBoard
                     IsCastlingAvailable(ValidMoves, ChosenPiece, out ShortCastleAvailble, out LongCastleAvailable, EnemyPieces, MyRooks);
 
                 }
-                /*нужно запретить фигуре двигаться, если при следующем ходе она откроет короля для шаха
-                 код ниже частично это решает, но решает не корректно: он просто запрещает фигуре двигаться если на нее кто-то нападает (это правильно только в некоторых случаях)*/
-                //else
-                //{
-                //    if(game.gameField.GetAtackStatus(EnemyPieces,piece.Position, GetGameFieldString())){
-                //        MessageBox.Show("Если мы здесь, значит мы не можем сделать ход изза шаха");
-                //        ValidMoves.Clear();
-                //    }
-                //}
+               
 
                 if (ChosenPiece is Pawn)
                 {
