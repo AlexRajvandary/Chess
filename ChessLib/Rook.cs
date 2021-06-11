@@ -81,7 +81,7 @@ namespace ChessLib
 
         public override string ToString()
         {
-            return "r";
+            return Color == PieceColor.White ? "R" : "r";
         }
         /// <summary>
         /// Ищет вражеские фигуры для атаки
@@ -147,6 +147,12 @@ namespace ChessLib
         {
             Position = NewPosition;
         }
+
+        public object Clone()
+        {
+            return new Rook(Position,Color);
+        }
+
         public Rook((int, int) Position, PieceColor color)
         {
             this.Position = Position;

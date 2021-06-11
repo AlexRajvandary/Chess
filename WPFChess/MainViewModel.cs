@@ -86,6 +86,8 @@ namespace ChessBoard
                 game.gameField.Update(Pieces, GetGameFieldString(), Players[CurrentPlayer % 2].Color);
 
                 ChosePiece(CurrentCell, PreviousActiveCell);
+
+
                 //Игрок хочет атаковать
                 ValidAttacks = Attack(CurrentCell, ValidAttacks, PreviousActiveCell);
 
@@ -304,6 +306,8 @@ namespace ChessBoard
 
                 var MyRooks = new List<Rook>();
 
+
+               
                 //Если выбранная фигура Король, то из доступных ходов нужно убрать, те которые атакованы вражескими фигурами, чтобы не было шаха
                 if (ChosenPiece is King)
                 {
@@ -316,7 +320,6 @@ namespace ChessBoard
                     IsCastlingAvailable(ValidMoves, ChosenPiece, out ShortCastleAvailble, out LongCastleAvailable, EnemyPieces, MyRooks);
 
                 }
-               
 
                 if (ChosenPiece is Pawn)
                 {
@@ -328,7 +331,13 @@ namespace ChessBoard
                     }
 
                 }
+            
+                bool IsCurrentMoveInvalid = game.gameField.GetCheckStatusAfterMove(Pieces, ChosenPiece, (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical), Players[CurrentPlayer]);
 
+                if (IsCurrentMoveInvalid)
+                {
+                    ValidMoves.RemoveAll(move => game.gameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.AvailableMoves(GetGameFieldString()).Contains(move));
+                }
 
                 if (IsMoveValid(CurrentCell, ValidMoves))
                 {
@@ -365,10 +374,11 @@ namespace ChessBoard
 
                         //Добавляем сделанный ход на listview в главном окне
                         MainWindow.AddNewMove(CurrentCell.Position.ToString());
+                        MoveModel(CurrentCell, PreviousActiveCell);
                         //Переставляем фигуру во view
                         MoveView(CurrentCell, PreviousActiveCell);
                         //переставляем фигуру в модели
-                        MoveModel(CurrentCell, PreviousActiveCell);
+
 
                     }
                     ChangePieceProperties(CurrentCell, ChosenPiece);
@@ -382,6 +392,7 @@ namespace ChessBoard
                 else
                 {
                     IncorrectMoveMessage(CurrentCell, ValidMoves);
+                  
                 }
 
             }
@@ -421,6 +432,13 @@ namespace ChessBoard
                     //Атаковать короля нельзя, поэтому атака короля - недоступный ход, который мы убираем из доступных ходов
                     var InvalidAttacks = ValidAttacks.FindAll(x => game.gameField[x.Item1, x.Item2].Piece is King);
                     RermoveIvalidAttacks(ValidAttacks, InvalidAttacks);
+
+                    bool IsCurrentMoveInvalid = game.gameField.GetCheckStatusAfterMove(Pieces, ChosenPiece, (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical), Players[CurrentPlayer]);
+
+                    if (IsCurrentMoveInvalid)
+                    {
+                        ValidAttacks.Remove((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
+                    }
 
                     if (IsAttackValid(CurrentCell, ValidAttacks))
                     {

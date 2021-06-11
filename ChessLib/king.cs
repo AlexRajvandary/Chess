@@ -103,7 +103,7 @@ namespace ChessLib
         }
         public override string ToString()
         {
-            return "k";
+            return Color == PieceColor.White ? "K" : "k";
         }
         private string pieces;
         public List<(int, int)> AvailableKills(string[,] GameField)
@@ -143,6 +143,11 @@ namespace ChessLib
         public void ChangePosition((int, int) NewPosition)
         {
             Position = NewPosition;
+        }
+
+        public object Clone()
+        {
+            return new King(this.Position, this.Color);
         }
 
         /// <summary>

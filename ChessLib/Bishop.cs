@@ -59,7 +59,7 @@ namespace ChessLib
 
         public override string ToString()
         {
-            return "b";
+            return Color == PieceColor.White ? "B" : "b";
         }
 
         /// <summary>
@@ -129,6 +129,11 @@ namespace ChessLib
         public void ChangePosition((int, int) Position)
         {
             this.Position = Position;
+        }
+
+        public object Clone()
+        {
+            return new Bishop(this.Position,this.Color);
         }
 
         public Bishop((int, int) startPosition, PieceColor Color)

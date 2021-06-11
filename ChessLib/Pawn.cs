@@ -53,7 +53,7 @@ namespace ChessLib
 
         public override string ToString()
         {
-            return "p";
+            return Color == PieceColor.White ? "P" : "p"; ;
         }
 
         /// <summary>
@@ -158,6 +158,11 @@ namespace ChessLib
         public void ChangePosition((int, int) Position)
         {
             this.Position = Position;
+        }
+
+        public object Clone()
+        {
+            return new Pawn(Color, Position);
         }
 
         public Pawn(PieceColor color, (int, int) position)

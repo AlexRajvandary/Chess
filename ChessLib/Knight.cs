@@ -71,7 +71,7 @@ namespace ChessLib
         }
         public override string ToString()
         {
-            return "n";
+            return Color == PieceColor.White ? "N" : "n"; ;
         }
         /// <summary>
         /// Вражеские фигуры
@@ -130,6 +130,11 @@ namespace ChessLib
                 }
 
             }
+        }
+
+        public object Clone()
+        {
+            return new Knight(Position,Color);
         }
     }
 }
