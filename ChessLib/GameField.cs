@@ -36,7 +36,7 @@ namespace ChessLib
         /// Узнаем будет ли шах нашему королю после текущего хода
         /// </summary>
         /// <param name="Pieces">Все фигуры</param>
-        /// <param name="ChosenPiece">Фигура,выбранная для хода</param>
+        /// <param name="ChosenPiece">Фигура, выбранная для хода</param>
         /// <param name="DestinationCell">Клетка назначения</param>
         /// <param name="CurrentPlayer">Текущий игрок</param>
         /// <returns></returns>
