@@ -150,7 +150,7 @@ namespace ChessLib
 
         public object Clone()
         {
-            return new Rook(Position,Color);
+            return new Rook(Position, Color);
         }
 
         public Rook((int, int) Position, PieceColor color)

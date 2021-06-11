@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ChessLib
 {
@@ -11,7 +11,7 @@ namespace ChessLib
         White,
         Black
     }
-    public interface IPiece: ICloneable
+    public interface IPiece : ICloneable
     {
         /// <summary>
         /// Является ли фигура убитой

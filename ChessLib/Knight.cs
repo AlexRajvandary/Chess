@@ -134,7 +134,7 @@ namespace ChessLib
 
         public object Clone()
         {
-            return new Knight(Position,Color);
+            return new Knight(Position, Color);
         }
     }
 }

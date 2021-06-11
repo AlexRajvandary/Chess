@@ -142,7 +142,7 @@ namespace ChessLib
 
         public object Clone()
         {
-            return new Queen(Color,Position);
+            return new Queen(Color, Position);
         }
 
         public Queen(PieceColor color, (int, int) startPos)

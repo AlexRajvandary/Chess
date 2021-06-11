@@ -133,7 +133,7 @@ namespace ChessLib
 
         public object Clone()
         {
-            return new Bishop(this.Position,this.Color);
+            return new Bishop(this.Position, this.Color);
         }
 
         public Bishop((int, int) startPosition, PieceColor Color)

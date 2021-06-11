@@ -307,7 +307,7 @@ namespace ChessBoard
                 var MyRooks = new List<Rook>();
 
 
-               
+
                 //Если выбранная фигура Король, то из доступных ходов нужно убрать, те которые атакованы вражескими фигурами, чтобы не было шаха
                 if (ChosenPiece is King)
                 {
@@ -331,7 +331,7 @@ namespace ChessBoard
                     }
 
                 }
-            
+
                 bool IsCurrentMoveInvalid = game.gameField.GetCheckStatusAfterMove(Pieces, ChosenPiece, (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical), Players[CurrentPlayer]);
 
                 if (IsCurrentMoveInvalid)
@@ -392,7 +392,7 @@ namespace ChessBoard
                 else
                 {
                     IncorrectMoveMessage(CurrentCell, ValidMoves);
-                  
+
                 }
 
             }
