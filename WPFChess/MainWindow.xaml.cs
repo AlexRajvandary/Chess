@@ -8,14 +8,9 @@
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel(this);
+            DataContext = new MainViewModel();
         }
-        public void AddNewMove(string Move)
-        {
-            ((MainViewModel)DataContext).playerMoves.Add(Move);
-            this.MovesList.Items.Add(Move);
-
-        }
+      
 
     }
 }

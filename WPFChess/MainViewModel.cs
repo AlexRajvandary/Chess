@@ -1,5 +1,6 @@
 ﻿using ChessLib;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -9,25 +10,38 @@ namespace ChessBoard
     public class MainViewModel : NotifyPropertyChanged
     {
         private const int LongCastleVerticalPosition = 2;
+
         private const int ShortCastleVerticalPosition = 6;
+
         int CurrentPlayer;
+
         private Board _board = new Board();
+
         private ICommand _newGameCommand;
 
         private ICommand _cellCommand;
+
         List<Player> Players;
 
+        List<string> Colors = new List<string>() { "Белые", "Черные" };
+
         private Game game;
+
         private List<IPiece> Pieces;
 
-        public List<string> playerMoves;
+        public ObservableCollection<string> Moves;
 
-        public IEnumerable<string> PlayersMoves
+        public ObservableCollection<string> playerMoves;
+
+        public ObservableCollection<string> PlayersMoves
         {
-            get
+            get => playerMoves;
+            set
             {
-                return playerMoves;
+                playerMoves = value;
+                OnPropertyChanged();
             }
+           
         }
         public IEnumerable<char> Numbers => "87654321";
         public IEnumerable<char> Letters => "ABCDEFGH";
@@ -41,7 +55,6 @@ namespace ChessBoard
 
                 OnPropertyChanged();
 
-
             }
         }
         /// <summary>
@@ -50,6 +63,8 @@ namespace ChessBoard
         public ICommand NewGameCommand => _newGameCommand ??= new RelayCommand(parameter =>
         {
             game = new Game();
+            playerMoves = new ObservableCollection<string>();
+            Moves = new ObservableCollection<string>();
             SetupBoard();
         });
 
@@ -167,7 +182,10 @@ namespace ChessBoard
 
                     ChangeEnPassentStatusForEnimiesPawns(king);
 
-                    MainWindow.AddNewMove(CurrentCell.Position.ToString());
+                    
+                    //MainWindow.AddNewMove(CurrentCell.Position.ToString());
+                    Moves.Add($"{Players[CurrentPlayer].Color} {CurrentCell.Position}");
+                    PlayersMoves = Moves;
 
                 }
                 else
@@ -223,7 +241,9 @@ namespace ChessBoard
                         ((Pawn)EnemyPawn).EnPassantAvailable = false;
                     }
 
-                    MainWindow.AddNewMove(CurrentCell.Position.ToString());
+                    
+                    Moves.Add($"{Colors[CurrentPlayer]} {CurrentCell.Position}");
+                    PlayersMoves = Moves;
 
                 }
                 else
@@ -349,7 +369,9 @@ namespace ChessBoard
                         ShortCastleView(PreviousActiveCell, ChosenPiece);
 
                         //Добавляем сделанный ход на listview в главном окне
-                        MainWindow.AddNewMove($"Короткая рокировка {ChosenPiece.Color}");
+                        //MainWindow.AddNewMove($"Короткая рокировка {ChosenPiece.Color}");
+                        Moves.Add($"{ChosenPiece} 0-0");
+                        PlayersMoves = Moves;
                     }
                     else if (LongCastlingIntention(CurrentCell, ChosenPiece, LongCastleAvailable))
                     {
@@ -359,7 +381,10 @@ namespace ChessBoard
                         LongCastleView(PreviousActiveCell, ChosenPiece);
 
                         //Добавляем сделанный ход на listview в главном окне
-                        MainWindow.AddNewMove($"Длинная рокировка {ChosenPiece.Color}");
+                        //MainWindow.AddNewMove($"Длинная рокировка {ChosenPiece.Color}");
+                        Moves.Add($"{ChosenPiece} 0-0-0");
+                        PlayersMoves = Moves;
+
                     }
                     else if (EnemyPieces.Where(x => x.Position.Item2 == ChosenPiece.Position.Item2).Where(x => x is Pawn).ToList().Count > 0 && ChosenPiece is Pawn)
                     {
@@ -373,11 +398,14 @@ namespace ChessBoard
                     {
 
                         //Добавляем сделанный ход на listview в главном окне
-                        MainWindow.AddNewMove(CurrentCell.Position.ToString());
+                        //MainWindow.AddNewMove(CurrentCell.Position.ToString());
                         MoveModel(CurrentCell, PreviousActiveCell);
                         //Переставляем фигуру во view
                         MoveView(CurrentCell, PreviousActiveCell);
                         //переставляем фигуру в модели
+
+                        Moves.Add($"{ChosenPiece} {CurrentCell.Position}");
+                        PlayersMoves = Moves;
 
 
                     }
@@ -446,8 +474,9 @@ namespace ChessBoard
                         AttackModel(CurrentCell, PreviousActiveCell);
                         ChangePlayer();
 
-                        MainWindow.AddNewMove(CurrentCell.Position.ToString());
 
+                        Moves.Add($"{ChosenPiece} {CurrentCell.Position}");
+                        PlayersMoves = Moves;
                     }
                     else
                     {
@@ -739,13 +768,13 @@ namespace ChessBoard
             board[7, 6] = State.WhiteKnight;
             board[7, 7] = State.WhiteRook;
             Board = board;
-            playerMoves = new List<string>();
+            playerMoves = new ObservableCollection<string>();
         }
-        public MainWindow MainWindow;
-        public MainViewModel(MainWindow mainWindow)
+       
+        public MainViewModel()
         {
-
-            MainWindow = mainWindow;
+            
+            
         }
         private string[,] GetGameFieldString()
         {

@@ -116,7 +116,7 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <ListView x:Name="MovesList" Grid.Row="4" Grid.Column="1" Height="100" ItemsSource ="{Binding PlayersMoves}">
+        <ListView x:Name="MovesList" Grid.Row="4" Grid.Column="1" Height="100" ItemsSource ="{Binding PlayersMoves, NotifyOnSourceUpdated=True}">
             <ListView.View>
                 <GridView>
                     <GridViewColumn>Ход</GridViewColumn>
