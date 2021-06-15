@@ -6,7 +6,7 @@
 ### Console
 ![img](images/chessConsolePlay.gif)
 ## Структура проекта
-- **Chess/ChessBoard**
+- **Chess/WPFChess**
     - WPF проект (MVVM)
 - **Chess/ChessLib**
     - Библиотека классов. Здесь реализована логика движения фигур.
