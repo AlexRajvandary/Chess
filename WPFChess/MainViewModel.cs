@@ -1,6 +1,8 @@
 ﻿using ChessLib;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -29,7 +31,9 @@ namespace ChessBoard
 
         private ObservableCollection<string> _moves;
 
-        public ObservableCollection<string> _playerMoves;
+        private ObservableCollection<string> _playerMoves;
+
+        private string pathOfFenFile = "fen.txt";
 
         public ObservableCollection<string> PlayersMoves
         {
@@ -61,7 +65,7 @@ namespace ChessBoard
             _game = new Game();
             _playerMoves = new ObservableCollection<string>();
             _moves = new ObservableCollection<string>();
-
+            File.WriteAllText(pathOfFenFile, $"{DateTime.Now.ToString()}\n");
             Fen.GameField = _game.GameField;
 
             SetupBoard();
@@ -110,7 +114,7 @@ namespace ChessBoard
 
                 CheckMessage();
 
-                MessageBox.Show(Fen.GetFenFromTheGameField());
+                File.AppendAllText(pathOfFenFile, $"{Fen.GetFenFromTheGameField()}\n");
             }
 
         }, parameter => parameter is Cell cell && (Board.Any(x => x.Active) || cell.State != State.Empty));

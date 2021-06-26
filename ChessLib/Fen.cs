@@ -8,6 +8,10 @@ namespace ChessLib
 
         public static int CurrentPlayer { get; set; }
 
+        /// <summary>
+        /// генерирует описание текущего состояния игровой доски в FEN нотации
+        /// </summary>
+        /// <returns>строковое представление доски в FEN нотации</returns>
         public static string GetFenFromTheGameField()
         {
             StringBuilder fenStr = new StringBuilder();
