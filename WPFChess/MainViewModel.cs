@@ -63,7 +63,7 @@ namespace ChessBoard
             _moves = new ObservableCollection<string>();
 
             Fen.GameField = _game.GameField;
-         
+
             SetupBoard();
         });
 
@@ -814,7 +814,7 @@ namespace ChessBoard
 
         public MainViewModel()
         {
-            
+
 
         }
         private string[,] GetGameFieldString()

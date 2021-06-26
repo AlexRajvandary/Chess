@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace ChessLib
 {
@@ -11,39 +7,55 @@ namespace ChessLib
         public static GameField GameField { get; set; }
 
         public static int CurrentPlayer { get; set; }
-      
+
         public static string GetFenFromTheGameField()
         {
             StringBuilder fenStr = new StringBuilder();
 
-            for (int i = 0; i < 8; i++)
+            for (int row = 0; row < 8; row++)
             {
 
                 int numberOfEmptyCells = 0;
 
-                for (int j = 0; j < 8; j++)
+                for (int col = 0; col < 8; col++)
                 {
-                    if (GameField[j,i].isFilled)
+                    if (GameField[col, row].isFilled)
                     {
                         numberOfEmptyCells = 0;
 
-                        fenStr.Append(GameField[j,i].Piece);
+                        fenStr.Append(GameField[col, row].Piece);
                     }
                     else
                     {
                         numberOfEmptyCells++;
 
-                        if(j == 7 || GameField[j + 1,i].isFilled)
+                        if (col == 7 || GameField[col + 1, row].isFilled)
                         {
                             fenStr.Append($"{numberOfEmptyCells}");
                         }
-                       
+
                     }
-                   
+
                 }
-              fenStr.Append("/");
+                NextLine(fenStr, row);
+
             }
-            if(CurrentPlayer == 0)
+            AddCurrentPlayerStatus(fenStr);
+
+            return fenStr.ToString();
+        }
+
+        private static void NextLine(StringBuilder fenStr, int i)
+        {
+            if (i < 7)
+            {
+                fenStr.Append("/");
+            }
+        }
+
+        private static void AddCurrentPlayerStatus(StringBuilder fenStr)
+        {
+            if (CurrentPlayer == 0)
             {
                 fenStr.Append(" w");
             }
@@ -51,9 +63,6 @@ namespace ChessLib
             {
                 fenStr.Append(" b");
             }
-          
-
-            return fenStr.ToString();
         }
     }
 }
