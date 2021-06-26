@@ -14,7 +14,7 @@ namespace ChessLib
         /// Для визуализации
         /// </summary>
         IView view;
-        public GameField gameField;
+        public GameField GameField { get; set; }
 
         /// <summary>
         /// Игровое поле
@@ -139,10 +139,10 @@ namespace ChessLib
         /// <param name="Pieces">Список фигур</param>
         void ConsoleMove(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
-            gameField.Update(Pieces, GameField, currentPlayer.Color);
+            this.GameField.Update(Pieces, GameField, currentPlayer.Color);
 
             ///Если королю стоит шах, то нужно убрать короляв безопасное место
-            if (gameField.IsCheck())
+            if (this.GameField.IsCheck())
             {
                 view.Show("У вас шах!");
 
@@ -305,7 +305,7 @@ namespace ChessLib
 
             AvailableKingMoves.AddRange(currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].AvailableKills(GameField));
 
-            var ValidMoves = AvailableKingMoves?.Where(move => !gameField.GetAtackStatus(Pieces, move, GameField)).ToList();
+            var ValidMoves = AvailableKingMoves?.Where(move => !this.GameField.GetAtackStatus(Pieces, move, GameField)).ToList();
 
 
 
@@ -386,7 +386,7 @@ namespace ChessLib
             //Создаем шахматные фигуры и устанавливаем первоначальные позиции
             Pieces = GetPiecesStartPosition();
 
-            gameField = new GameField();
+            GameField = new GameField();
 
             //Игрок с белыми фигурами
             Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
@@ -408,7 +408,7 @@ namespace ChessLib
             //Создаем шахматные фигуры и устанавливаем первоначальные позиции
             Pieces = GetPiecesStartPosition();
 
-            gameField = new GameField();
+            GameField = new GameField();
 
             //переменная служит для очереди игроков
             CurrentPlayer = 0;

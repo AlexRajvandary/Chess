@@ -113,7 +113,7 @@ namespace ChessLib
         }
 
         /// <summary>
-        /// Копируем элементы списка в новый список (Элементы создаются новые и они никак не связаны с оригиналами)
+        /// Копируем элементы списка фигур в новый список (Элементы создаются новые и они никак не связаны с оригиналами)
         /// </summary>
         /// <param name="pieces">Исходный список фигур</param>
         /// <returns>Клон исходного списка</returns>
@@ -171,6 +171,10 @@ namespace ChessLib
             }
             return StringFromGameField;
         }
+        //public string GetFENFromGamefield()
+        //{
+        //    return Fen.GetFenFromTheGameField();
+        //}
 
         /// <summary>
         /// Узнаем свободна ли клетка
