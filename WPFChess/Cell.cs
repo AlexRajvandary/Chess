@@ -61,7 +61,7 @@
         /// <returns></returns>
         public override string ToString()
         {
-            return $"{"ABCDEFGH"[this.Horizontal]}{this.Vertical + 1}";
+            return $"{"ABCDEFGH"[Horizontal]}{Vertical + 1}";
         }
         public Position(int Horizontal, int Vertical)
         {

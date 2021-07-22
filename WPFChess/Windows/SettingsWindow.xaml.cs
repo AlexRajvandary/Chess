@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace ChessBoard.Windows
 {
     /// <summary>
-    /// Interaction logic for Window1.xaml
+    /// Interaction logic for SettingsWindow.xaml
     /// </summary>
-    public partial class MenuWindow : Window
+    public partial class SettingsWindow : Window
     {
-        public MenuWindow()
+        public SettingsWindow()
         {
             InitializeComponent();
         }
