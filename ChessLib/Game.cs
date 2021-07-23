@@ -14,7 +14,7 @@ namespace ChessLib
         /// Для визуализации
         /// </summary>
         IView view;
-        public GameField gameField;
+        public GameField GameField { get; set; }
 
         /// <summary>
         /// Игровое поле
@@ -30,9 +30,8 @@ namespace ChessLib
         public List<IPiece> Pieces;
 
         public List<Player> players;
+
         public bool isGameOver;
-
-
 
         /// <summary>
         /// Пользовательский ввод
@@ -50,6 +49,7 @@ namespace ChessLib
 
             return chosenElement;
         }
+
         /// <summary>
         /// Устанавливает начальные позиции фигурам
         /// </summary>
@@ -107,6 +107,7 @@ namespace ChessLib
             }
             Console.WriteLine("Конец игры");
         }
+
         /// <summary>
         /// Получаем строковое представление игровой доски из позиций фигур
         /// </summary>
@@ -131,6 +132,7 @@ namespace ChessLib
             }
             return GameField;
         }
+
         /// <summary>
         /// Выбор фигуры и выбор хода
         /// </summary>
@@ -139,10 +141,10 @@ namespace ChessLib
         /// <param name="Pieces">Список фигур</param>
         void ConsoleMove(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
         {
-            gameField.Update(Pieces, GameField, currentPlayer.Color);
+            this.GameField.Update(Pieces, GameField, currentPlayer.Color);
 
             ///Если королю стоит шах, то нужно убрать короляв безопасное место
-            if (gameField.IsCheck())
+            if (this.GameField.IsCheck())
             {
                 view.Show("У вас шах!");
 
@@ -196,7 +198,6 @@ namespace ChessLib
             if (availableKills.Count == 0)
             {
                 view.Show("Съесть никого нельзя\n");
-
             }
             else
             {
@@ -207,9 +208,7 @@ namespace ChessLib
                     view.Show(counter + " " + alphabet[piece.Item1] + $"{piece.Item2 + 1}");
                     counter++;
                 }
-
             }
-
             return counter;
         }
 
@@ -228,7 +227,6 @@ namespace ChessLib
                     counter++;
                 }
             }
-
             return counter;
         }
 
@@ -291,8 +289,6 @@ namespace ChessLib
             return chosenPiece;
         }
 
-
-
         /// <summary>
         /// Ход, когда поставили шах королю. Если ходов у короля нет, то мат. Метод реализует выбор доступного хода для короля, если доступные ходы есть.
         /// </summary>
@@ -305,7 +301,7 @@ namespace ChessLib
 
             AvailableKingMoves.AddRange(currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].AvailableKills(GameField));
 
-            var ValidMoves = AvailableKingMoves?.Where(move => !gameField.GetAtackStatus(Pieces, move, GameField)).ToList();
+            var ValidMoves = AvailableKingMoves?.Where(move => !this.GameField.GetAtackStatus(Pieces, move, GameField)).ToList();
 
 
 
@@ -374,7 +370,6 @@ namespace ChessLib
 
         }
 
-
         public Game()
         {
             //хз
@@ -386,7 +381,7 @@ namespace ChessLib
             //Создаем шахматные фигуры и устанавливаем первоначальные позиции
             Pieces = GetPiecesStartPosition();
 
-            gameField = new GameField();
+            GameField = new GameField();
 
             //Игрок с белыми фигурами
             Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
@@ -399,6 +394,7 @@ namespace ChessLib
                 player2
             };
         }
+
         public Game(IView view)
         {
 
@@ -408,7 +404,7 @@ namespace ChessLib
             //Создаем шахматные фигуры и устанавливаем первоначальные позиции
             Pieces = GetPiecesStartPosition();
 
-            gameField = new GameField();
+            GameField = new GameField();
 
             //переменная служит для очереди игроков
             CurrentPlayer = 0;

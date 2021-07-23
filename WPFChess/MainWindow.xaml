@@ -12,9 +12,10 @@
     <Window.Resources>
         <local:CellColorConverter x:Key="CellColorConverter"/>
     </Window.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -25,10 +26,16 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Horizontal" Grid.Column="1" Margin="-5,0">
-            <Button Content="New Game" Margin="5" Padding="10,5" Command="{Binding NewGameCommand}"/>
-
-        </StackPanel>
+        <Menu Height="25" VerticalAlignment="Top" Grid.ColumnSpan="012">
+            <MenuItem Header="Game">
+                <MenuItem Header="New Game" Command="{Binding NewGameCommand}"/>
+                <MenuItem Header="Load Game"/>
+                <MenuItem Header="Save Game"/>
+            </MenuItem>
+            <MenuItem Header="Setting"></MenuItem>
+            <MenuItem Header="About" ></MenuItem>
+        </Menu>
+      
         <ItemsControl Grid.Row="2" ItemsSource="{Binding Numbers}" Width="21">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
