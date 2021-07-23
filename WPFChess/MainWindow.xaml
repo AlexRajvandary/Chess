@@ -31,11 +31,9 @@
                 <MenuItem Header="New Game" Command="{Binding NewGameCommand}"/>
                 <MenuItem Header="Load Game"/>
                 <MenuItem Header="Save Game"/>
-              
             </MenuItem>
             <MenuItem Header="Setting"></MenuItem>
             <MenuItem Header="About" ></MenuItem>
-            
         </Menu>
       
         <ItemsControl Grid.Row="2" ItemsSource="{Binding Numbers}" Width="21">

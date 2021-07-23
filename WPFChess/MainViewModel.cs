@@ -56,7 +56,6 @@ namespace ChessBoard
                 _board = value;
 
                 OnPropertyChanged();
-
             }
         }
 
@@ -95,6 +94,8 @@ namespace ChessBoard
 
                 //ход королем под шахом
                 ValidMoves = KingMoveCheck(CurrentCell, ValidMoves, PreviousActiveCell);
+
+                MoveInCheck(CurrentCell, ValidMoves, PreviousActiveCell);
 
                 UpdateModel();
             }
@@ -155,7 +156,7 @@ namespace ChessBoard
             if (CurrentCell.State != State.Empty && PreviousActiveCell is null)
             {
 
-                MessageBox.Show("Шах! Необходимо переставить короля!");
+                //MessageBox.Show("Шах! Необходимо переставить короля!");
 
                 if (_game.GameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece is King)
                 {
@@ -163,11 +164,7 @@ namespace ChessBoard
                     CurrentCell.Active = !CurrentCell.Active;
 
                 }
-                else
-                {
-                    MessageBox.Show("Выбирите короля!");
-
-                }
+                CurrentCell.Active = !CurrentCell.Active;
             }
         }
         /// <summary>
@@ -179,7 +176,7 @@ namespace ChessBoard
         /// <returns></returns>
         private List<(int, int)> KingAttackCheck(Cell CurrentCell, List<(int, int)> ValidAttacks, Cell PreviousActiveCell)
         {
-            if (CurrentCell.State != State.Empty && PreviousActiveCell != null)
+            if (CurrentCell.State != State.Empty && PreviousActiveCell != null && (CurrentCell.State == State.BlackKing || CurrentCell.State == State.WhiteKing))
             {
 
                 CurrentCell.Active = true;
@@ -222,6 +219,43 @@ namespace ChessBoard
             return ValidAttacks;
         }
 
+        private void MoveInCheck (Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
+        {
+            if(CurrentCell.State == State.Empty && PreviousActiveCell != null && !(PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
+            {
+                CurrentCell.Active = true;
+                PreviousActiveCell.Active = false;
+                IPiece chosenPiese = _game.GameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
+
+                ValidMoves = chosenPiese.AvailableMoves(_game.GetGameField(_pieces));
+
+                var AvailableMovesIfKingInCheck = ValidMoves.FindAll(x => _game.GameField.GetCheckStatusAfterMove(_pieces,chosenPiese, x , _players[_currentPlayer]));
+                foreach (var removedMoves in AvailableMovesIfKingInCheck)
+                {
+                    ValidMoves.Remove(removedMoves);
+                }
+                if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
+                {
+                    MoveView(CurrentCell, PreviousActiveCell);
+
+                    MoveModel(CurrentCell, PreviousActiveCell);
+
+                    ChangePlayer();
+
+                    MakeEnPassentUnavailableForAllPawns();
+
+
+                    //MainWindow.AddNewMove(CurrentCell.Position.ToString());
+                    _moves.Add($"{_players[_currentPlayer].Color} {CurrentCell.Position}");
+                    PlayersMoves = _moves;
+                }
+                else
+                {
+                    IncorrectMoveMessage(CurrentCell, ValidMoves);
+                }
+            }
+        }
+
         /// <summary>
         /// Ход королем под шахом
         /// </summary>
@@ -231,7 +265,7 @@ namespace ChessBoard
         /// <returns></returns>
         private List<(int, int)> KingMoveCheck(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
         {
-            if (CurrentCell.State == State.Empty && PreviousActiveCell != null)
+            if (CurrentCell.State == State.Empty && PreviousActiveCell != null && (CurrentCell.State == State.WhiteKing || CurrentCell.State == State.BlackKing))
             {
 
                 CurrentCell.Active = true;

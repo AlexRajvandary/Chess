@@ -32,6 +32,41 @@ namespace ChessLib
             this[cell.Item1, cell.Item2].isAtacked = AllPossibleMoves.Contains(cell);
             return AllPossibleMoves.Contains(cell);
         }
+        public static bool GetCheckStatusAfterMove(List<IPiece> pieces,IPiece chosenPiece, (int,int) destinationCell)
+        {
+            pieces.Find(piece => piece == chosenPiece).Position = destinationCell;
+
+            Cell[,] board = new Cell[8, 8];
+
+            for(int i = 0; i < 8; i++)
+            {
+                for(int j = 0; j < 8; j++)
+                {
+                    board[i, j] = new Cell();
+                }
+            }
+
+            foreach(var piece in pieces)
+            {
+                board[piece.Position.Item1, piece.Position.Item2].isFilled = true;
+                board[piece.Position.Item1, piece.Position.Item2].Piece = piece;
+            }
+            
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    if (board[i,j].isAtacked && board[i, j].Piece is King)
+                    {
+
+                        return true;
+
+                    }
+                }
+            }
+            return false;
+
+        }
         /// <summary>
         /// Узнаем будет ли шах нашему королю после текущего хода
         /// </summary>
@@ -111,7 +146,7 @@ namespace ChessLib
 
             return FieldAfterMove;
         }
-
+     
         /// <summary>
         /// Копируем элементы списка фигур в новый список (Элементы создаются новые и они никак не связаны с оригиналами)
         /// </summary>

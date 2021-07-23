@@ -30,9 +30,8 @@ namespace ChessLib
         public List<IPiece> Pieces;
 
         public List<Player> players;
+
         public bool isGameOver;
-
-
 
         /// <summary>
         /// Пользовательский ввод
@@ -50,6 +49,7 @@ namespace ChessLib
 
             return chosenElement;
         }
+
         /// <summary>
         /// Устанавливает начальные позиции фигурам
         /// </summary>
@@ -107,6 +107,7 @@ namespace ChessLib
             }
             Console.WriteLine("Конец игры");
         }
+
         /// <summary>
         /// Получаем строковое представление игровой доски из позиций фигур
         /// </summary>
@@ -131,6 +132,7 @@ namespace ChessLib
             }
             return GameField;
         }
+
         /// <summary>
         /// Выбор фигуры и выбор хода
         /// </summary>
@@ -196,7 +198,6 @@ namespace ChessLib
             if (availableKills.Count == 0)
             {
                 view.Show("Съесть никого нельзя\n");
-
             }
             else
             {
@@ -207,9 +208,7 @@ namespace ChessLib
                     view.Show(counter + " " + alphabet[piece.Item1] + $"{piece.Item2 + 1}");
                     counter++;
                 }
-
             }
-
             return counter;
         }
 
@@ -228,7 +227,6 @@ namespace ChessLib
                     counter++;
                 }
             }
-
             return counter;
         }
 
@@ -290,8 +288,6 @@ namespace ChessLib
             chosenPiece = UserInput(currentPlayer.MyPieces.Count);
             return chosenPiece;
         }
-
-
 
         /// <summary>
         /// Ход, когда поставили шах королю. Если ходов у короля нет, то мат. Метод реализует выбор доступного хода для короля, если доступные ходы есть.
@@ -374,7 +370,6 @@ namespace ChessLib
 
         }
 
-
         public Game()
         {
             //хз
@@ -399,6 +394,7 @@ namespace ChessLib
                 player2
             };
         }
+
         public Game(IView view)
         {
 
