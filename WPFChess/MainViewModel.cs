@@ -87,15 +87,17 @@ namespace ChessBoard
             {
                 UpdateModel();
 
-                IsKingWasChosed(CurrentCell, PreviousActiveCell);
+                ChosePiece(CurrentCell, PreviousActiveCell);
 
                 //атака королем под шахом
-                ValidAttacks = KingAttackCheck(CurrentCell, ValidAttacks, PreviousActiveCell);
+                KingAttackCheck(CurrentCell, ValidAttacks, PreviousActiveCell);
 
                 //ход королем под шахом
-                ValidMoves = KingMoveCheck(CurrentCell, ValidMoves, PreviousActiveCell);
+                KingMoveCheck(CurrentCell, ValidMoves, PreviousActiveCell);
 
                 MoveInCheck(CurrentCell, ValidMoves, PreviousActiveCell);
+
+                AttackInCheck(CurrentCell, ValidMoves, PreviousActiveCell);
 
                 UpdateModel();
             }
@@ -143,30 +145,6 @@ namespace ChessBoard
             _game.GameField.Update(_pieces, GetGameFieldString(), _players[_currentPlayer % 2].Color);
         }
         #endregion
-
-
-
-        /// <summary>
-        /// Выбран ли король (при шахе)
-        /// </summary>
-        /// <param name="CurrentCell">Текущая клетка</param>
-        /// <param name="PreviousActiveCell">предыдущая клетка</param>
-        private void IsKingWasChosed(Cell CurrentCell, Cell PreviousActiveCell)
-        {
-            if (CurrentCell.State != State.Empty && PreviousActiveCell is null)
-            {
-
-                //MessageBox.Show("Шах! Необходимо переставить короля!");
-
-                if (_game.GameField[CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical].Piece is King)
-                {
-
-                    CurrentCell.Active = !CurrentCell.Active;
-
-                }
-                CurrentCell.Active = !CurrentCell.Active;
-            }
-        }
         /// <summary>
         /// Атака королем под шахом
         /// </summary>
@@ -174,9 +152,9 @@ namespace ChessBoard
         /// <param name="ValidAttacks">Доступные клетки для атаки</param>
         /// <param name="PreviousActiveCell">Предыдущая клетка</param>
         /// <returns></returns>
-        private List<(int, int)> KingAttackCheck(Cell CurrentCell, List<(int, int)> ValidAttacks, Cell PreviousActiveCell)
+        private void KingAttackCheck(Cell CurrentCell, List<(int, int)> ValidAttacks, Cell PreviousActiveCell)
         {
-            if (CurrentCell.State != State.Empty && PreviousActiveCell != null && (CurrentCell.State == State.BlackKing || CurrentCell.State == State.WhiteKing))
+            if (CurrentCell.State != State.Empty && PreviousActiveCell != null && (PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
             {
 
                 CurrentCell.Active = true;
@@ -215,16 +193,52 @@ namespace ChessBoard
                     IncorrectKingAttackMessage(CurrentCell, ValidAttacks);
                 }
             }
-
-            return ValidAttacks;
         }
 
+        private void AttackInCheck(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
+        {
+            if (CurrentCell.State != State.Empty && PreviousActiveCell != null && !(PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
+            {
+                IPiece chosenPiese = _game.GameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
+
+                ValidMoves = chosenPiese.AvailableKills(_game.GetGameField(_pieces));
+
+                var AvailableKillsIfKingInCheck = ValidMoves.FindAll(x => !_game.GameField.GetCheckStatusAfterMove(_pieces, chosenPiese, x, _players[_currentPlayer]));
+
+                foreach (var removedMoves in AvailableKillsIfKingInCheck)
+                {
+                    ValidMoves.Remove(removedMoves);
+                }
+                if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
+                {
+
+                    CurrentCell.Active = true;
+                    PreviousActiveCell.Active = false;
+
+                    AttackView(CurrentCell, PreviousActiveCell);
+
+                    AttackModel(CurrentCell, PreviousActiveCell);
+
+                    ChangePlayer();
+
+                    MakeEnPassentUnavailableForAllPawns();
+
+
+                    //MainWindow.AddNewMove(CurrentCell.Position.ToString());
+                    _moves.Add($"{_players[_currentPlayer].Color} {CurrentCell.Position}");
+                    PlayersMoves = _moves;
+                }
+                else
+                {
+                    IncorrectMoveMessage(CurrentCell, ValidMoves);
+                }
+            }
+        }
         private void MoveInCheck (Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
         {
             if(CurrentCell.State == State.Empty && PreviousActiveCell != null && !(PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
             {
-                CurrentCell.Active = true;
-                PreviousActiveCell.Active = false;
+               
                 IPiece chosenPiese = _game.GameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
 
                 ValidMoves = chosenPiese.AvailableMoves(_game.GetGameField(_pieces));
@@ -236,6 +250,10 @@ namespace ChessBoard
                 }
                 if (ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical)))
                 {
+
+                    CurrentCell.Active = true;
+                    PreviousActiveCell.Active = false;
+
                     MoveView(CurrentCell, PreviousActiveCell);
 
                     MoveModel(CurrentCell, PreviousActiveCell);
@@ -263,9 +281,9 @@ namespace ChessBoard
         /// <param name="ValidMoves">Доступные клетки для хода</param>
         /// <param name="PreviousActiveCell">Предыдущая клетка</param>
         /// <returns></returns>
-        private List<(int, int)> KingMoveCheck(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
+        private void KingMoveCheck(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
         {
-            if (CurrentCell.State == State.Empty && PreviousActiveCell != null && (CurrentCell.State == State.WhiteKing || CurrentCell.State == State.BlackKing))
+            if (CurrentCell.State == State.Empty && PreviousActiveCell != null && (PreviousActiveCell.State == State.WhiteKing || PreviousActiveCell.State == State.BlackKing))
             {
 
                 CurrentCell.Active = true;
@@ -301,9 +319,6 @@ namespace ChessBoard
                     IncorrectKingMoveMessage(CurrentCell, ValidMoves);
                 }
             }
-
-
-            return ValidMoves;
         }
         /// <summary>
         ///  После любого хода, все вражеские пешки нельзя взять на проходе по правилам.
