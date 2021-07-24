@@ -81,13 +81,13 @@ namespace ChessLib
 
             var CopiedChosenPiece = ChosenPiece.Clone();
 
+            Cell[,] FieldAfterMove = GetFieldAfterMove(ChosenPiece, DestinationCell, CopiedPieces, CopiedChosenPiece);
+
             var EnemyPieces = CopiedPieces.Where(piece => piece.Color != CurrentPlayer.Color).ToList();
 
             var MyPieces = CopiedPieces.Where(piece => piece.Color == CurrentPlayer.Color).ToList();
 
             King MyKing = (King)MyPieces.Where(piece => piece is King).ToList()[0];
-
-            Cell[,] FieldAfterMove = GetFieldAfterMove(ChosenPiece, DestinationCell, CopiedPieces, CopiedChosenPiece);
 
             var AllAvalaibleAttacksOfEnemies = new List<(string, List<(int, int)>)>();
 
@@ -107,6 +107,22 @@ namespace ChessLib
             CloneOfTheField[ChosenPiece.Position.Item1, ChosenPiece.Position.Item2].isFilled = false;
 
             CloneOfTheField[ChosenPiece.Position.Item1, ChosenPiece.Position.Item2].Piece = null;
+
+            if (CloneOfTheField[DestinationCell.Item1, DestinationCell.Item2].isFilled)
+            {
+                CopiedPieces.Find(piece => piece.Position == DestinationCell).IsDead = true;
+
+                List<IPiece> updatedPieces = new List<IPiece>();
+
+                foreach (var piece in CopiedPieces)
+                {
+                    if (!piece.IsDead)
+                    {
+                        updatedPieces.Add(piece);
+                    }
+                }
+                CopiedPieces = updatedPieces;
+            }
 
             CopiedPieces.Find(piece => piece.Position == ((IPiece)CopiedChosenPiece).Position).ChangePosition(DestinationCell);
 
