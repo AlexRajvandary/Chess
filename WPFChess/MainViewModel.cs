@@ -197,7 +197,7 @@ namespace ChessBoard
 
         private void AttackInCheck(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
         {
-            if (CurrentCell.State != State.Empty && PreviousActiveCell != null && !(PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
+            if (CurrentCell.State != State.Empty && PreviousActiveCell != null && PreviousActiveCell?.State != State.Empty && !(PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
             {
                 IPiece chosenPiese = _game.GameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece;
 
