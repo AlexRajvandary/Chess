@@ -12,14 +12,14 @@
     <Window.Resources>
         <local:CellColorConverter x:Key="CellColorConverter"/>
     </Window.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="75"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -35,7 +35,7 @@
             <MenuItem Header="Setting"></MenuItem>
             <MenuItem Header="About" ></MenuItem>
         </Menu>
-      
+
         <ItemsControl Grid.Row="2" ItemsSource="{Binding Numbers}" Width="21">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -123,14 +123,7 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <ListView x:Name="MovesList" Grid.Row="4" Grid.Column="1" Height="100" ItemsSource ="{Binding PlayersMoves, NotifyOnSourceUpdated=True}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn>Ход</GridViewColumn>
-                    
-                </GridView>
-            </ListView.View>
-        </ListView>
        
+
     </Grid>
 </Window>
