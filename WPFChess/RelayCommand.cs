@@ -13,7 +13,11 @@ namespace ChessBoard
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
         }
-
+        /// <summary>
+        /// ввв
+        /// </summary>
+        /// <param name="execute"></param>
+        /// <param name="canExecute"></param>
         public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
         {
             _execute = execute;
