@@ -592,7 +592,15 @@ namespace ChessBoard
             MessageBox.Show($"Данная фигура не может пойти на клетку:{CurrentCell.Position}\nДоступные ходы: \n{info}");
         }
 
-
+        private static void IncorrectKingAttackMessage(Cell CurrentCell, List<(int, int)> ValidAttacks)
+        {
+            string info = "";
+            foreach (var i in ValidAttacks)
+            {
+                info += $"/t{"ABCDEFGH"[i.Item1]}{i.Item2 + 1}/n";
+            }
+            MessageBox.Show($"Король не может атаковать клетку {CurrentCell.Position}: \n{info}");
+        }
 
         private static void ChangePieceProperties(Cell CurrentCell, IPiece ChosenPiece)
         {
