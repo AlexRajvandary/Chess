@@ -1,6 +1,5 @@
 # Describtion
 
-![visitor badge](https://visitor-badge.glitch.me/badge?page_id=AlexRajvandary/Chess)
 ## Описание
 Простая игра Шахматы. Реализована как консольная версия, так и оконная версия игры (WPF)
 ### WPF
