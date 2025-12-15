@@ -602,6 +602,16 @@ namespace ChessBoard
             MessageBox.Show($"Король не может атаковать клетку {CurrentCell.Position}: \n{info}");
         }
 
+        private static void IncorrectKingMoveMessage(Cell CurrentCell, List<(int, int)> ValidMoves)
+        {
+            string info = "";
+            foreach (var move in ValidMoves)
+            {
+                info += $"\t{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
+            }
+            MessageBox.Show($"Король не может пойти на клетку {CurrentCell.Position}\nДоступные ходы: \n{info}");
+        }
+
         private static void ChangePieceProperties(Cell CurrentCell, IPiece ChosenPiece)
         {
             if (IfPawnMoved2StepsForward(CurrentCell, ChosenPiece))
