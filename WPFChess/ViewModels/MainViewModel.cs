@@ -45,53 +45,47 @@ namespace ChessBoard
 
         public ICommand CellCommand => cellCommand ??= new RelayCommand(parameter =>
         {
+            Cell currentCell = (Cell)parameter;
+            Cell previousActiveCell = Board.FirstOrDefault(x => x.Active);
 
-            Cell CurrentCell = (Cell)parameter;
-
-            Cell PreviousActiveCell = Board.FirstOrDefault(x => x.Active);
-
-            List<ChessLib.Position> ValidMoves = new();
-
-            List<ChessLib.Position> ValidAttacks = new();
-
-
-            if (IsCheck())
+            // Convert UI positions to chess positions
+            var currentPos = new ChessLib.Position(currentCell.Position.Horizontal, currentCell.Position.Vertical);
+            
+            if (previousActiveCell == null)
             {
-                UpdateModel();
-
-                ChosePiece(CurrentCell, PreviousActiveCell);
-
-                //атака королем под шахом
-                KingAttackCheck(CurrentCell, ValidAttacks, PreviousActiveCell);
-
-                //ход королем под шахом
-                KingMoveCheck(CurrentCell, ValidMoves, PreviousActiveCell);
-
-                MoveInCheck(CurrentCell, ValidMoves, PreviousActiveCell);
-
-                AttackInCheck(CurrentCell, ValidMoves, PreviousActiveCell);
-
-                UpdateModel();
+                // First click - select piece
+                SelectPiece(currentCell);
             }
             else
             {
-                UpdateModel();
-
-                ChosePiece(CurrentCell, PreviousActiveCell);
-
-                //Игрок хочет атаковать
-                ValidAttacks = Attack(CurrentCell, ValidAttacks, PreviousActiveCell);
-
-                //Игрок хочет сделать ход
-                ValidMoves = Move(CurrentCell, ValidMoves, PreviousActiveCell);
-
-                UpdateModel();
-
-                CheckMessage();
-
-                File.AppendAllText(pathOfFenFile, $"{Fen.GetFenFromTheGameField()}\n");
+                // Second click - make move
+                var fromPos = new ChessLib.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
+                
+                // Use Game API to make move
+                var result = game.MakeMove(fromPos, currentPos);
+                
+                if (result.IsValid)
+                {
+                    // Update UI based on game state
+                    UpdateViewFromGameState();
+                    
+                    if (result.IsCheck)
+                        MessageBox.Show("Check!");
+                    if (result.IsCheckmate)
+                        MessageBox.Show("Checkmate!");
+                    
+                    File.AppendAllText(pathOfFenFile, $"{Fen.GetFenFromTheGameField()}\n");
+                }
+                else
+                {
+                    // Show error message
+                    var validMoves = game.GetValidMoves(fromPos);
+                    IncorrectMoveMessage(currentCell, validMoves);
+                }
+                
+                // Clear selection
+                previousActiveCell.Active = false;
             }
-
         }, parameter => parameter is Cell cell && (Board.Any(x => x.Active) || cell.State != State.Empty));
 
         public ObservableCollection<string> PlayersMoves
@@ -120,26 +114,81 @@ namespace ChessBoard
             SetupBoard();
         });
 
-        private void CheckMessage()
+        /// <summary>
+        /// Selects a piece and shows valid moves
+        /// </summary>
+        private void SelectPiece(Cell cell)
         {
-            if (IsCheck())
+            var pos = new ChessLib.Position(cell.Position.Horizontal, cell.Position.Vertical);
+            var validMoves = game.GetValidMoves(pos);
+            
+            // Highlight valid moves on board
+            foreach (var move in validMoves)
             {
-                MessageBox.Show("Шах!");
+                var boardCell = Board.FirstOrDefault(c => c.Position.Horizontal == move.X && c.Position.Vertical == move.Y);
+                if (boardCell != null)
+                {
+                    // Mark cell as available for move (you may need to add a property for this)
+                }
             }
-        }
-
-        private bool IsCheck()
-        {
-            return game.GameField.IsCheck();
+            
+            cell.Active = true;
         }
 
         /// <summary>
-        /// Убирает убитые фигуры, обновяет доску
+        /// Updates the view based on current game state
         /// </summary>
-        private void UpdateModel()
+        private void UpdateViewFromGameState()
         {
-            game.RemoveDeadPieces(pieces);
-            game.GameField.Update(pieces, GetGameFieldString(), players[currentPlayer % 2].Color);
+            var state = game.GetState();
+            pieces = state.Pieces;
+            currentPlayer = game.CurrentPlayer;
+            
+            // Update board representation
+            UpdateBoardFromState(state);
+        }
+
+        /// <summary>
+        /// Updates board UI from game state
+        /// </summary>
+        private void UpdateBoardFromState(GameState state)
+        {
+            // Update board cells based on pieces
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    var piece = state.Pieces.FirstOrDefault(p => p.Position.X == j && p.Position.Y == i && !p.IsDead);
+                    if (piece != null)
+                    {
+                        // Convert piece to State enum and update board
+                        Board[7 - i, j] = GetStateFromPiece(piece);
+                    }
+                    else
+                    {
+                        Board[7 - i, j] = State.Empty;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converts IPiece to State enum
+        /// </summary>
+        private State GetStateFromPiece(IPiece piece)
+        {
+            bool isWhite = piece.Color == PieceColor.White;
+            
+            return piece switch
+            {
+                Pawn => isWhite ? State.WhitePawn : State.BlackPawn,
+                Rook => isWhite ? State.WhiteRook : State.BlackRook,
+                Knight => isWhite ? State.WhiteKnight : State.BlackKnight,
+                Bishop => isWhite ? State.WhiteBishop : State.BlackBishop,
+                Queen => isWhite ? State.WhiteQueen : State.BlackQueen,
+                King => isWhite ? State.WhiteKing : State.BlackKing,
+                _ => State.Empty
+            };
         }
         
         /// <summary>

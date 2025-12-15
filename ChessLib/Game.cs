@@ -3,29 +3,40 @@ using System.Linq;
 
 namespace ChessLib
 {
+    /// <summary>
+    /// Main game class - provides clean API for chess game logic
+    /// </summary>
     public class Game
     {
-        public GameField GameField { get; set; }
+        private readonly MoveValidator moveValidator;
+        private readonly MoveExecutor moveExecutor;
+
+        public GameField GameField { get; private set; }
 
         /// <summary>
-        /// Текущий игрок (0 - белые, 1 - черные)
+        /// Current player index (0 - white, 1 - black)
         /// </summary>
-        public int CurrentPlayer { get; set; }
+        public int CurrentPlayer { get; private set; }
 
         /// <summary>
-        /// Фигуры на доске
+        /// Pieces on the board
         /// </summary>
-        public List<IPiece> Pieces { get; set; }
+        public List<IPiece> Pieces { get; private set; }
 
         /// <summary>
-        /// Игроки
+        /// Players
         /// </summary>
-        public List<Player> players { get; set; }
+        public List<Player> Players { get; private set; }
 
         /// <summary>
-        /// Флаг окончания игры
+        /// Game over flag
         /// </summary>
-        public bool IsGameOver { get; set; }
+        public bool IsGameOver { get; private set; }
+
+        /// <summary>
+        /// Gets current player color
+        /// </summary>
+        public PieceColor CurrentPlayerColor => CurrentPlayer % 2 == 0 ? PieceColor.White : PieceColor.Black;
 
         /// <summary>
         /// Устанавливает начальные позиции фигурам
@@ -123,7 +134,7 @@ namespace ChessLib
         }
 
         /// <summary>
-        /// Инициализирует новую игру
+        /// Initializes a new game
         /// </summary>
         public Game()
         {
@@ -131,20 +142,224 @@ namespace ChessLib
             Pieces = new List<IPiece>();
             Pieces = GetPiecesStartPosition();
             GameField = new GameField();
+            moveValidator = new MoveValidator(GameField);
+            moveExecutor = new MoveExecutor(GameField);
 
-            // Игрок с белыми фигурами
+            // Player with white pieces
             Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
 
-            // Игрок с черными фигурами
+            // Player with black pieces
             Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");
             
-            players = new List<Player>
+            Players = new List<Player>
             {
                 player1,
                 player2
             };
 
             IsGameOver = false;
+        }
+
+        /// <summary>
+        /// Makes a move from one position to another
+        /// </summary>
+        public MoveResult MakeMove(Position from, Position to)
+        {
+            if (IsGameOver)
+                return MoveResult.Failure("Game is over");
+
+            var piece = Pieces.FirstOrDefault(p => p.Position == from && !p.IsDead);
+            if (piece == null)
+                return MoveResult.Failure("No piece at source position");
+
+            if (piece.Color != CurrentPlayerColor)
+                return MoveResult.Failure("Not your turn");
+
+            var gameFieldString = GetGameField(Pieces);
+
+            // Validate move
+            if (!moveValidator.IsValidMove(Pieces, piece, to, gameFieldString))
+                return MoveResult.Failure("Invalid move");
+
+            // Execute move
+            var result = moveExecutor.ExecuteMove(Pieces, piece, to, gameFieldString);
+            
+            // Remove dead pieces
+            moveExecutor.RemoveDeadPieces(Pieces);
+
+            // Update game field
+            UpdateGameField();
+
+            // Check for check/checkmate
+            SwitchPlayer();
+            var nextPlayerColor = CurrentPlayerColor;
+            result.IsCheck = IsCheck(nextPlayerColor);
+            result.IsCheckmate = result.IsCheck && IsCheckmate(nextPlayerColor);
+
+            if (result.IsCheckmate)
+            {
+                IsGameOver = true;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets all valid moves for a piece at the given position
+        /// </summary>
+        public List<Position> GetValidMoves(Position piecePosition)
+        {
+            var piece = Pieces.FirstOrDefault(p => p.Position == piecePosition && !p.IsDead);
+            if (piece == null)
+                return new List<Position>();
+
+            if (piece.Color != CurrentPlayerColor)
+                return new List<Position>();
+
+            var gameFieldString = GetGameField(Pieces);
+            var possibleMoves = piece.AvailableMoves(gameFieldString);
+            var possibleKills = piece.AvailableKills(gameFieldString);
+            var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
+
+            return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
+        }
+
+        /// <summary>
+        /// Gets all valid moves for a specific piece
+        /// </summary>
+        public List<Position> GetValidMovesForPiece(IPiece piece)
+        {
+            if (piece == null || piece.IsDead)
+                return new List<Position>();
+
+            if (piece.Color != CurrentPlayerColor)
+                return new List<Position>();
+
+            var gameFieldString = GetGameField(Pieces);
+            var possibleMoves = piece.AvailableMoves(gameFieldString);
+            var possibleKills = piece.AvailableKills(gameFieldString);
+            var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
+
+            return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
+        }
+
+        /// <summary>
+        /// Checks if a move is valid
+        /// </summary>
+        public bool IsValidMove(Position from, Position to)
+        {
+            var piece = Pieces.FirstOrDefault(p => p.Position == from && !p.IsDead);
+            if (piece == null)
+                return false;
+
+            if (piece.Color != CurrentPlayerColor)
+                return false;
+
+            var gameFieldString = GetGameField(Pieces);
+            return moveValidator.IsValidMove(Pieces, piece, to, gameFieldString);
+        }
+
+        /// <summary>
+        /// Checks if the specified color is in check
+        /// </summary>
+        public bool IsCheck(PieceColor color)
+        {
+            UpdateGameField();
+            var gameFieldString = GetGameField(Pieces);
+            var king = Pieces.FirstOrDefault(p => p is King && p.Color == color && !p.IsDead) as King;
+            if (king == null)
+                return false;
+
+            var enemyPieces = Pieces.Where(p => p.Color != color && !p.IsDead).ToList();
+            return GameField.GetAtackStatus(enemyPieces, king.Position, gameFieldString);
+        }
+
+        /// <summary>
+        /// Checks if the specified color is in checkmate
+        /// </summary>
+        public bool IsCheckmate(PieceColor color)
+        {
+            if (!IsCheck(color))
+                return false;
+
+            // Check if any piece can make a valid move
+            var playerPieces = Pieces.Where(p => p.Color == color && !p.IsDead).ToList();
+            var gameFieldString = GetGameField(Pieces);
+
+            foreach (var piece in playerPieces)
+            {
+                var possibleMoves = piece.AvailableMoves(gameFieldString);
+                var possibleKills = piece.AvailableKills(gameFieldString);
+                var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
+
+                foreach (var move in allPossibleMoves)
+                {
+                    if (moveValidator.IsValidMove(Pieces, piece, move, gameFieldString))
+                        return false; // Found a valid move, not checkmate
+                }
+            }
+
+            return true; // No valid moves found, it's checkmate
+        }
+
+        /// <summary>
+        /// Gets the current game state
+        /// </summary>
+        public GameState GetState()
+        {
+            var state = new GameState
+            {
+                CurrentPlayerColor = CurrentPlayerColor,
+                Pieces = Pieces.ToList(), // Create a copy
+                BoardRepresentation = GetGameField(Pieces),
+                IsCheck = IsCheck(CurrentPlayerColor),
+                IsCheckmate = IsCheckmate(CurrentPlayerColor),
+                IsGameOver = IsGameOver
+            };
+
+            if (state.IsCheckmate)
+            {
+                state.IsGameOver = true;
+                state.GameOverReason = $"{CurrentPlayerColor} is checkmated";
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Starts a new game
+        /// </summary>
+        public void StartNewGame()
+        {
+            CurrentPlayer = 0;
+            Pieces = GetPiecesStartPosition();
+            GameField = new GameField();
+            IsGameOver = false;
+
+            Players = new List<Player>
+            {
+                new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1"),
+                new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2")
+            };
+        }
+
+        /// <summary>
+        /// Updates the game field state
+        /// </summary>
+        private void UpdateGameField()
+        {
+            var gameFieldString = GetGameField(Pieces);
+            GameField.Update(Pieces, gameFieldString, CurrentPlayerColor);
+        }
+
+        /// <summary>
+        /// Switches to the next player
+        /// </summary>
+        private void SwitchPlayer()
+        {
+            CurrentPlayer++;
+            if (CurrentPlayer >= 2)
+                CurrentPlayer = 0;
         }
     }
 }
