@@ -107,31 +107,6 @@ namespace ChessLib
             return GameField;
         }
 
-        /// <summary>
-        /// Method for WPF version: checks if current move is an attack on a piece, if yes, assigns attacked status
-        /// </summary>
-        /// <param name="PiecePosition">Position of selected piece</param>
-        /// <param name="AttackedPosition">Move</param>
-        /// <param name="gameField">Game field</param>
-        /// <param name="pieces">Pieces</param>
-        public void CheckIfPieceWasKilled(Position PiecePosition, Position AttackedPosition, string[,] gameField, List<IPiece> pieces)
-        {
-            //Check if desired move is an attempt to capture a piece (if among pieces there is one already at position where current player wants to move, then current player captures that piece)
-            if (gameField[AttackedPosition.X, AttackedPosition.Y] != "")
-            {
-                pieces.Find(x => x.Position == AttackedPosition).IsDead = true;
-                pieces.Find(x => x.Position == PiecePosition).Position = AttackedPosition;
-            }
-        }
-
-        /// <summary>
-        /// Убираем убитые фигуры
-        /// </summary>
-        /// <param name="pieces"></param>
-        public void RemoveDeadPieces(List<IPiece> pieces)
-        {
-            pieces.RemoveAll(x => x.IsDead == true);
-        }
 
         /// <summary>
         /// Initializes a new game
