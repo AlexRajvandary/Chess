@@ -50,9 +50,9 @@ namespace ChessBoard
 
             Cell PreviousActiveCell = Board.FirstOrDefault(x => x.Active);
 
-            List<(int, int)> ValidMoves = new();
+            List<ChessLib.Position> ValidMoves = new();
 
-            List<(int, int)> ValidAttacks = new();
+            List<ChessLib.Position> ValidAttacks = new();
 
 
             if (IsCheck())
@@ -149,7 +149,7 @@ namespace ChessBoard
         /// <param name="ValidAttacks">Доступные клетки для атаки</param>
         /// <param name="PreviousActiveCell">Предыдущая клетка</param>
         /// <returns></returns>
-        private void KingAttackCheck(Cell CurrentCell, List<(int, int)> ValidAttacks, Cell PreviousActiveCell)
+        private void KingAttackCheck(Cell CurrentCell, List<ChessLib.Position> ValidAttacks, Cell PreviousActiveCell)
         {
             if (CurrentCell.State != State.Empty && PreviousActiveCell != null && (PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
             {
@@ -192,7 +192,7 @@ namespace ChessBoard
             }
         }
 
-        private void AttackInCheck(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
+        private void AttackInCheck(Cell CurrentCell, List<ChessLib.Position> ValidMoves, Cell PreviousActiveCell)
         {
             if (CurrentCell.State != State.Empty && PreviousActiveCell != null && PreviousActiveCell?.State != State.Empty && !(PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
             {
@@ -232,7 +232,7 @@ namespace ChessBoard
             }
         }
 
-        private void MoveInCheck (Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
+        private void MoveInCheck (Cell CurrentCell, List<ChessLib.Position> ValidMoves, Cell PreviousActiveCell)
         {
             if(CurrentCell.State == State.Empty && PreviousActiveCell != null && !(PreviousActiveCell.State == State.BlackKing || PreviousActiveCell.State == State.WhiteKing))
             {
@@ -279,7 +279,7 @@ namespace ChessBoard
         /// <param name="ValidMoves">Доступные клетки для хода</param>
         /// <param name="PreviousActiveCell">Предыдущая клетка</param>
         /// <returns></returns>
-        private void KingMoveCheck(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
+        private void KingMoveCheck(Cell CurrentCell, List<ChessLib.Position> ValidMoves, Cell PreviousActiveCell)
         {
             if (CurrentCell.State == State.Empty && PreviousActiveCell != null && (PreviousActiveCell.State == State.WhiteKing || PreviousActiveCell.State == State.BlackKing))
             {
@@ -367,7 +367,7 @@ namespace ChessBoard
         /// <param name="ValidMoves">Доступные клетки для хода</param>
         /// <param name="PreviousActiveCell">Предыдущая клетка</param>
         /// <returns></returns>
-        private List<(int, int)> Move(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell)
+        private List<ChessLib.Position> Move(Cell CurrentCell, List<ChessLib.Position> ValidMoves, Cell PreviousActiveCell)
         {
             if (IsPlayerGoingToEmptyCell(CurrentCell, PreviousActiveCell))
             {
@@ -414,7 +414,7 @@ namespace ChessBoard
                         moves.Add($"{ChosenPiece} 0-0-0");
                         PlayersMoves = moves;
                     }
-                    else if (EnemyPieces.Where(x => x.Position.Item2 == ChosenPiece.Position.Item2).Where(x => x is Pawn).ToList().Count > 0 && ChosenPiece is Pawn)
+                    else if (EnemyPieces.Where(x => x.Position.Y == ChosenPiece.Position.Y).Where(x => x is Pawn).ToList().Count > 0 && ChosenPiece is Pawn)
                     {
                         EnPassentView(CurrentCell, PreviousActiveCell, ChosenPiece);
 
@@ -452,7 +452,7 @@ namespace ChessBoard
             return CurrentCell.State == State.Empty && PreviousActiveCell != null;
         }
 
-        private void RemoveIncorrectMove(Cell CurrentCell, List<(int, int)> ValidMoves, Cell PreviousActiveCell, IPiece ChosenPiece)
+        private void RemoveIncorrectMove(Cell CurrentCell, List<ChessLib.Position> ValidMoves, Cell PreviousActiveCell, IPiece ChosenPiece)
         {
             if (IsCurrentMoveMakeCheckToOurKing(CurrentCell, ChosenPiece))
             {
@@ -460,7 +460,7 @@ namespace ChessBoard
             }
         }
 
-        private void IfPieceIsKingRemoveAttackedCells(List<(int, int)> ValidMoves, IPiece ChosenPiece, ref bool ShortCastleAvailble, ref bool LongCastleAvailable, List<IPiece> EnemyPieces, List<IPiece> MyPieces, ref List<Rook> MyRooks)
+        private void IfPieceIsKingRemoveAttackedCells(List<ChessLib.Position> ValidMoves, IPiece ChosenPiece, ref bool ShortCastleAvailble, ref bool LongCastleAvailable, List<IPiece> EnemyPieces, List<IPiece> MyPieces, ref List<Rook> MyRooks)
         {
             if (ChosenPiece is King)
             {
@@ -475,11 +475,11 @@ namespace ChessBoard
             }
         }
 
-        private List<(int, int)> IfChosenPieceIsPawnAddValidEnPassentMoves(List<(int, int)> ValidMoves, IPiece ChosenPiece, List<IPiece> EnemyPieces)
+        private List<ChessLib.Position> IfChosenPieceIsPawnAddValidEnPassentMoves(List<ChessLib.Position> ValidMoves, IPiece ChosenPiece, List<IPiece> EnemyPieces)
         {
             if (ChosenPiece is Pawn)
             {
-                var EnemyPawn = EnemyPieces.Where(x => x.Position.Item2 == ChosenPiece.Position.Item2).Where(x => x is Pawn).Cast<Pawn>().ToList();
+                var EnemyPawn = EnemyPieces.Where(x => x.Position.Y == ChosenPiece.Position.Y).Where(x => x is Pawn).Cast<Pawn>().ToList();
 
                 if (EnemyPawn != null)
                 {
@@ -492,7 +492,7 @@ namespace ChessBoard
             return ValidMoves;
         }
 
-        private List<(int, int)> FindsAttackedCells(List<(int, int)> ValidMoves, List<IPiece> EnemyPieces)
+        private List<ChessLib.Position> FindsAttackedCells(List<ChessLib.Position> ValidMoves, List<IPiece> EnemyPieces)
         {
             return ValidMoves.FindAll(cell => game.GameField.GetAtackStatus(EnemyPieces, cell, GetGameFieldString()));
         }
@@ -514,7 +514,7 @@ namespace ChessBoard
         /// <param name="ValidAttacks">Доступные клетки для атаки</param>>
         /// <param name="PreviousActiveCell">Предыдущая клетка</param>
         /// <returns></returns>
-        private List<(int, int)> Attack(Cell CurrentCell, List<(int, int)> ValidAttacks, Cell PreviousActiveCell)
+        private List<ChessLib.Position> Attack(Cell CurrentCell, List<ChessLib.Position> ValidAttacks, Cell PreviousActiveCell)
         {
             if (CurrentCell.State != State.Empty && PreviousActiveCell != null)
             {
@@ -536,11 +536,11 @@ namespace ChessBoard
                         RemoveInvalidMoves(ValidAttacks, InvalidMoves);
                     }
 
-                    //Атаковать короля нельзя, поэтому атака короля - недоступный ход, который мы убираем из доступных ходов
-                    var InvalidAttacks = ValidAttacks.FindAll(x => game.GameField[x.Item1, x.Item2].Piece is King);
+                    //Cannot attack king, so king attack is invalid move that we remove from available moves
+                    var InvalidAttacks = ValidAttacks.FindAll(x => game.GameField[x.X, x.Y].Piece is King);
                     RermoveIvalidAttacks(ValidAttacks, InvalidAttacks);
 
-                    bool IsCurrentMoveInvalid = game.GameField.GetCheckStatusAfterMove(pieces, ChosenPiece, (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical), players[currentPlayer]);
+                    bool IsCurrentMoveInvalid = game.GameField.GetCheckStatusAfterMove(pieces, ChosenPiece, new ChessLib.Position(CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical), players[currentPlayer]);
 
                     if (IsCurrentMoveInvalid)
                     {
@@ -582,32 +582,32 @@ namespace ChessBoard
         }
 
         
-        private static void IncorrectMoveMessage(Cell CurrentCell, List<(int, int)> ValidMoves)
+        private static void IncorrectMoveMessage(Cell CurrentCell, List<ChessLib.Position> ValidMoves)
         {
             string info = "";
             foreach (var move in ValidMoves)
             {
-                info += $"\t{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
+                info += $"\t{"ABCDEFGH"[move.X]}{move.Y + 1}\n";
             }
             MessageBox.Show($"Данная фигура не может пойти на клетку:{CurrentCell.Position}\nДоступные ходы: \n{info}");
         }
 
-        private static void IncorrectKingAttackMessage(Cell CurrentCell, List<(int, int)> ValidAttacks)
+        private static void IncorrectKingAttackMessage(Cell CurrentCell, List<ChessLib.Position> ValidAttacks)
         {
             string info = "";
             foreach (var i in ValidAttacks)
             {
-                info += $"/t{"ABCDEFGH"[i.Item1]}{i.Item2 + 1}/n";
+                info += $"/t{"ABCDEFGH"[i.X]}{i.Y + 1}/n";
             }
             MessageBox.Show($"Король не может атаковать клетку {CurrentCell.Position}: \n{info}");
         }
 
-        private static void IncorrectKingMoveMessage(Cell CurrentCell, List<(int, int)> ValidMoves)
+        private static void IncorrectKingMoveMessage(Cell CurrentCell, List<ChessLib.Position> ValidMoves)
         {
             string info = "";
             foreach (var move in ValidMoves)
             {
-                info += $"\t{"ABCDEFGH"[move.Item1]}{move.Item2 + 1}\n";
+                info += $"\t{"ABCDEFGH"[move.X]}{move.Y + 1}\n";
             }
             MessageBox.Show($"Король не может пойти на клетку {CurrentCell.Position}\nДоступные ходы: \n{info}");
         }
@@ -628,12 +628,12 @@ namespace ChessBoard
             }
         }
 
-        private static bool IsMoveValid(Cell CurrentCell, List<(int, int)> ValidMoves)
+        private static bool IsMoveValid(Cell CurrentCell, List<ChessLib.Position> ValidMoves)
         {
-            return ValidMoves.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
+            return ValidMoves.Contains(new ChessLib.Position(CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
         }
 
-        private List<(int, int)> AddAvailableEnPassentMoves(List<(int, int)> ValidMoves, IPiece ChosenPiece, List<Pawn> EnemyPawn)
+        private List<ChessLib.Position> AddAvailableEnPassentMoves(List<ChessLib.Position> ValidMoves, IPiece ChosenPiece, List<Pawn> EnemyPawn)
         {
             foreach (var pawn in EnemyPawn)
             {
@@ -646,7 +646,7 @@ namespace ChessBoard
 
         private void MoveModel(Cell CurrentCell, Cell PreviousActiveCell)
         {
-            game.GameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.ChangePosition((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
+            game.GameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.ChangePosition(new ChessLib.Position(CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
         }
 
         private static void MoveView(Cell CurrentCell, Cell PreviousActiveCell)
@@ -658,13 +658,17 @@ namespace ChessBoard
 
         private static bool IfPawnMoved2StepsForward(Cell CurrentCell, IPiece ChosenPiece)
         {
-            return ChosenPiece is Pawn &&
-                (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (((Pawn)ChosenPiece).StartPos.Item1 + ((Pawn)ChosenPiece).MoveDir[1].Item1, ((Pawn)ChosenPiece).StartPos.Item2 + ((Pawn)ChosenPiece).MoveDir[1].Item2);
+            if (ChosenPiece is Pawn pawn)
+            {
+                var targetPos = new ChessLib.Position(pawn.StartPos.X + pawn.MoveDir[1].X, pawn.StartPos.Y + pawn.MoveDir[1].Y);
+                return new ChessLib.Position(CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == targetPos;
+            }
+            return false;
         }
 
         private void EnPassentModel(Cell CurrentCell, Cell PreviousActiveCell)
         {
-            game.GameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.ChangePosition((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
+            game.GameField[PreviousActiveCell.Position.Horizontal, PreviousActiveCell.Position.Vertical].Piece.ChangePosition(new ChessLib.Position(CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
         }
 
         private void EnPassentView(Cell CurrentCell, Cell PreviousActiveCell, IPiece ChosenPiece)
@@ -673,10 +677,10 @@ namespace ChessBoard
             CurrentCell.State = PreviousActiveCell.State;
             PreviousActiveCell.State = State.Empty;
 
-            Board[7 - ChosenPiece.Position.Item2, CurrentCell.Position.Horizontal] = State.Empty;
+            Board[7 - ChosenPiece.Position.Y, CurrentCell.Position.Horizontal] = State.Empty;
         }
 
-        private static void RemoveCheckMoves(List<(int, int)> ValidMoves, List<(int, int)> InvalidMovesCheck)
+        private static void RemoveCheckMoves(List<ChessLib.Position> ValidMoves, List<ChessLib.Position> InvalidMovesCheck)
         {
             foreach (var move in InvalidMovesCheck)
             {
@@ -684,48 +688,48 @@ namespace ChessBoard
             }
         }
 
-        private void IsCastlingAvailable(List<(int, int)> ValidMoves, IPiece ChosenPiece, out bool ShortCastleAvailble, out bool LongCastleAvailable, List<IPiece> EnemyPieces, List<Rook> MyRooks)
+        private void IsCastlingAvailable(List<ChessLib.Position> ValidMoves, IPiece ChosenPiece, out bool ShortCastleAvailble, out bool LongCastleAvailable, List<IPiece> EnemyPieces, List<Rook> MyRooks)
         {
             ShortCastleAvailble = ((King)ChosenPiece).ShortCastling(MyRooks.Where(rook => rook.RookKind == RookKind.Royal).ToList()[0], game.GameField, EnemyPieces, GetGameFieldString());
             LongCastleAvailable = ((King)ChosenPiece).LongCastling(MyRooks.Where(rook => rook.RookKind == RookKind.Queen).ToList()[0], game.GameField, EnemyPieces, GetGameFieldString());
-            //Если рокировки доступны, то добавляем их в список доступных ходов
+            //If castling is available, add it to list of available moves
             if (ShortCastleAvailble)
             {
-                ValidMoves.Add((shortCastleVerticalPosition, ChosenPiece.Position.Item2));
+                ValidMoves.Add(new ChessLib.Position(shortCastleVerticalPosition, ChosenPiece.Position.Y));
             }
 
             if (LongCastleAvailable)
             {
-                ValidMoves.Add((longCastleVerticalPosition, ChosenPiece.Position.Item2));
+                ValidMoves.Add(new ChessLib.Position(longCastleVerticalPosition, ChosenPiece.Position.Y));
             }
         }
 
         private static void LongCastleModel(IPiece ChosenPiece, List<Rook> MyRooks)
         {
-            ((King)ChosenPiece).ChangePosition((2, ChosenPiece.Position.Item2));
+            ((King)ChosenPiece).ChangePosition(new ChessLib.Position(2, ChosenPiece.Position.Y));
 
             Rook MyQueenRook = MyRooks.Where(MyRook => MyRook.RookKind == RookKind.Queen).ToList()[0];
 
-            MyQueenRook.ChangePosition((3, MyQueenRook.Position.Item2));
+            MyQueenRook.ChangePosition(new ChessLib.Position(3, MyQueenRook.Position.Y));
         }
 
         private static void ShortCastleModel(IPiece ChosenPiece, List<Rook> MyRooks)
         {
-            ((King)ChosenPiece).ChangePosition((6, ChosenPiece.Position.Item2));
+            ((King)ChosenPiece).ChangePosition(new ChessLib.Position(6, ChosenPiece.Position.Y));
 
             Rook MyRoyalRook = MyRooks.Where(MyRook => MyRook.RookKind == RookKind.Royal).ToList()[0];
 
-            MyRoyalRook.ChangePosition((5, MyRoyalRook.Position.Item2));
+            MyRoyalRook.ChangePosition(new ChessLib.Position(5, MyRoyalRook.Position.Y));
         }
 
         private static bool LongCastlingIntention(Cell CurrentCell, IPiece piece, bool LongCastleAvailable)
         {
-            return LongCastleAvailable && piece is King && (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (longCastleVerticalPosition, piece.Position.Item2);
+            return LongCastleAvailable && piece is King && new ChessLib.Position(CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == new ChessLib.Position(longCastleVerticalPosition, piece.Position.Y);
         }
 
         private static bool ShortCastlingIntention(Cell CurrentCell, IPiece piece, bool ShortCastleAvailable)
         {
-            return ShortCastleAvailable && piece is King && (CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == (shortCastleVerticalPosition, piece.Position.Item2);
+            return ShortCastleAvailable && piece is King && new ChessLib.Position(CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical) == new ChessLib.Position(shortCastleVerticalPosition, piece.Position.Y);
         }
 
         /// <summary>
@@ -740,10 +744,10 @@ namespace ChessBoard
             Порядок по вертикали сверху вниз, то есть белый король находится на 7 строке у Board
             */
             PreviousActiveCell.Active = false;
-            Board[7 - piece.Position.Item2, 2] = PreviousActiveCell.State;
+            Board[7 - piece.Position.Y, 2] = PreviousActiveCell.State;
             PreviousActiveCell.State = State.Empty;
-            Board[7 - piece.Position.Item2, 3] = Board[7 - piece.Position.Item2, 0];
-            Board[7 - piece.Position.Item2, 0] = State.Empty;
+            Board[7 - piece.Position.Y, 3] = Board[7 - piece.Position.Y, 0];
+            Board[7 - piece.Position.Y, 0] = State.Empty;
         }
 
         /// <summary>
@@ -758,18 +762,18 @@ namespace ChessBoard
              Порядок по вертикали сверху вниз, то есть белый король находится на 7 строке у Board
             */
             PreviousActiveCell.Active = false;
-            Board[7 - piece.Position.Item2, 6] = PreviousActiveCell.State;
+            Board[7 - piece.Position.Y, 6] = PreviousActiveCell.State;
             PreviousActiveCell.State = State.Empty;
-            Board[7 - piece.Position.Item2, 5] = Board[7 - piece.Position.Item2, 7];
-            Board[7 - piece.Position.Item2, 7] = State.Empty;
+            Board[7 - piece.Position.Y, 5] = Board[7 - piece.Position.Y, 7];
+            Board[7 - piece.Position.Y, 7] = State.Empty;
         }
         
-        private static void IncorrectAttackMessage(List<(int, int)> ValidAttacks)
+        private static void IncorrectAttackMessage(List<ChessLib.Position> ValidAttacks)
         {
             string AttackInfo = "";
             foreach (var validAttack in ValidAttacks)
             {
-                AttackInfo += $"{"ABCDEFGH"[validAttack.Item1]}{validAttack.Item2 + 1}\n";
+                AttackInfo += $"{"ABCDEFGH"[validAttack.X]}{validAttack.Y + 1}\n";
             }
             MessageBox.Show($"Съесть нельзя! Доступные клетки для атаки\n:{AttackInfo}");
         }
@@ -787,12 +791,12 @@ namespace ChessBoard
             PreviousActiveCell.State = State.Empty;
         }
 
-        private static bool IsAttackValid(Cell CurrentCell, List<(int, int)> ValidAttacks)
+        private static bool IsAttackValid(Cell CurrentCell, List<ChessLib.Position> ValidAttacks)
         {
-            return ValidAttacks.Contains((CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
+            return ValidAttacks.Contains(new ChessLib.Position(CurrentCell.Position.Horizontal, CurrentCell.Position.Vertical));
         }
 
-        private static void RermoveIvalidAttacks(List<(int, int)> ValidAttacks, List<(int, int)> InvalidAttacks)
+        private static void RermoveIvalidAttacks(List<ChessLib.Position> ValidAttacks, List<ChessLib.Position> InvalidAttacks)
         {
             foreach (var move in InvalidAttacks)
             {
@@ -800,7 +804,7 @@ namespace ChessBoard
             }
         }
 
-        private static void RemoveInvalidMoves(List<(int, int)> ValidAttacks, List<(int, int)> InvalidMoves)
+        private static void RemoveInvalidMoves(List<ChessLib.Position> ValidAttacks, List<ChessLib.Position> InvalidMoves)
         {
             foreach (var move in InvalidMoves)
             {

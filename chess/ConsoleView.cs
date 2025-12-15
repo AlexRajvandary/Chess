@@ -1,66 +1,69 @@
-﻿using System;
+using ChessLib;
+using System;
 
-namespace ChessLib
+namespace chess
 {
     /// <summary>
-    /// Класс служит для визуализации игры в консоли
+    /// Class for visualizing the game in console
     /// </summary>
     public class ConsoleView : IView
     {
         /// <summary>
-        /// Цвет фона
+        /// Background color
         /// </summary>
         public ConsoleColor BackgroundColor { get; private set; }
 
         /// <summary>
-        /// Цвет символов
+        /// Foreground color
         /// </summary>
         public ConsoleColor ForegroundColor { get; private set; }
+        
         /// <summary>
-        /// Устанавливает цвет фона
+        /// Sets background color
         /// </summary>
         /// <param name="color"></param>
         public void SetBackgroundColor(ConsoleColor color)
         {
             BackgroundColor = color;
         }
+        
         /// <summary>
-        /// устанавливает цвет символов
+        /// Sets foreground color
         /// </summary>
         /// <param name="color"></param>
         public void SetForegroundColor(ConsoleColor color)
         {
             ForegroundColor = color;
         }
+        
         /// <summary>
-        /// Устанавливает цвета по умолчанию (Черный фон, серые символы)
+        /// Sets default colors (Black background, Gray foreground)
         /// </summary>
         public void SetDefaultColors()
         {
             BackgroundColor = ConsoleColor.Black;
             ForegroundColor = ConsoleColor.Gray;
         }
+        
         /// <summary>
-        /// Выводит на консоль передаваемую информацию
+        /// Outputs information to console
         /// </summary>
         /// <param name="msg"></param>
         public void Show(string msg)
         {
             Console.BackgroundColor = BackgroundColor;
             Console.ForegroundColor = ForegroundColor;
-
             Console.Write(msg);
-
-
         }
 
         string alphabet = "abcdefgh";
+        
         public void Visualize(string[,] gamefield, int CurrentPlayer)
         {
             Console.Clear();
             if (CurrentPlayer % 2 == 0)
             {
-                Show("Ход белых\n");
+                Show("White's turn\n");
 
                 for (int j = 0; j < 9; j++)
                 {
@@ -74,26 +77,26 @@ namespace ChessLib
                         else if (i == 0 && j > 0)
                         {
                             SetDefaultColors();
-                            // номер поля по вертикали
+                            // row number
                             Show(9 - j + " ");
                         }
                         else if (j == 0 && i > 0)
                         {
                             SetDefaultColors();
-                            // буква поля по горизонтали
+                            // column letter
                             Show(alphabet[i - 1].ToString().ToUpper() + " ");
                         }
                         else
                         {
                             if ((i + j) % 2 == 0)
                             {
-                                //Белая клетка и черным цветом красим обозначение фигуры
+                                // White cell with black piece symbol
                                 SetBackgroundColor(ConsoleColor.White);
                                 SetForegroundColor(ConsoleColor.Black);
                             }
                             else
                             {
-                                //Черная клетка и белым цветом красим обозначение фигуры
+                                // Black cell with white piece symbol
                                 SetBackgroundColor(ConsoleColor.Black);
                                 SetForegroundColor(ConsoleColor.White);
                             }
@@ -103,11 +106,10 @@ namespace ChessLib
                     }
                     Show("\n");
                 }
-
             }
             else
             {
-                Show("Ход черных\n");
+                Show("Black's turn\n");
 
                 for (int j = 0; j < 9; j++)
                 {
@@ -132,13 +134,13 @@ namespace ChessLib
                         {
                             if ((i + j) % 2 == 0)
                             {
-                                //Белая клетка и черным цветом красим обозначение фигуры
+                                // White cell with black piece symbol
                                 SetBackgroundColor(ConsoleColor.White);
                                 SetForegroundColor(ConsoleColor.Black);
                             }
                             else
                             {
-                                //Черная клетка и белым цветом красим обозначение фигуры
+                                // Black cell with white piece symbol
                                 SetBackgroundColor(ConsoleColor.Black);
                                 SetForegroundColor(ConsoleColor.White);
                             }
@@ -151,16 +153,16 @@ namespace ChessLib
             }
         }
 
-
         /// <summary>
-        /// Конструктор по умолчанию устанавливает дефолтные цвета
+        /// Default constructor sets default colors
         /// </summary>
         public ConsoleView()
         {
             SetDefaultColors();
         }
+        
         /// <summary>
-        /// Устанавливает желаемые цвета
+        /// Sets custom colors
         /// </summary>
         /// <param name="backgroundColor"></param>
         /// <param name="foregroundColor"></param>
@@ -171,3 +173,4 @@ namespace ChessLib
         }
     }
 }
+

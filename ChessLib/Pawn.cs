@@ -8,43 +8,48 @@ namespace ChessLib
     {
         public bool IsDead { get; set; }
         public PieceColor Color { get; set; }
-        public (int, int) Position { get; set; }
+        public Position Position { get; set; }
 
         /// <summary>
-        /// Стартовая позиция, нужна для проверки доступных ходов у пешки (если пешка в начальной позиции, то существует 2 варианта хода)
+        /// Starting position, needed to check available moves for pawn (if pawn is in starting position, there are 2 move options)
         /// </summary>
-        public (int, int) StartPos;
-        private Func<(int, int), bool> EndVerticalPos;
-        private readonly (int, int)[] DirectionsForMove = new (int, int)[] { (0, 1), (0, -1) };
+        public Position StartPos;
+        private Func<Position, bool> EndVerticalPos;
+        private readonly Position[] DirectionsForMove = new Position[] { new Position(0, 1), new Position(0, -1) };
 
-        public List<(int, int)> MoveDir { get; set; }
-        private List<(int, int)> EnemyMoveDir { get; set; }
+        public List<Position> MoveDir { get; set; }
+        private List<Position> EnemyMoveDir { get; set; }
         /// <summary>
-        /// проверяет все доступные ходы для текущей пешки
+        /// Checks all available moves for current pawn
         /// </summary>
         /// <param name="GameField"></param>
         /// <returns></returns>
-        public List<(int, int)> AvailableMoves(string[,] GameField)
+        public List<Position> AvailableMoves(string[,] GameField)
         {
-            var AvailableMovesList = new List<(int, int)>();
+            var AvailableMovesList = new List<Position>();
 
             if (this.Position == this.StartPos)
             {
-                if (GameField[Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2] == " ")
+                var move1 = new Position(Position.X + MoveDir[0].X, Position.Y + MoveDir[0].Y);
+                if (GameField[move1.X, move1.Y] == " ")
                 {
-                    AvailableMovesList.Add((Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2));
-                    if (GameField[Position.Item1 + MoveDir[1].Item1, Position.Item2 + MoveDir[1].Item2] == " ")
+                    AvailableMovesList.Add(move1);
+                    var move2 = new Position(Position.X + MoveDir[1].X, Position.Y + MoveDir[1].Y);
+                    if (GameField[move2.X, move2.Y] == " ")
                     {
-                        AvailableMovesList.Add((Position.Item1 + MoveDir[1].Item1, Position.Item2 + MoveDir[1].Item2));
+                        AvailableMovesList.Add(move2);
                     }
                 }
-
             }
             else
             {
-                if (EndVerticalPos(Position) && GameField[Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2] == " ")
+                if (EndVerticalPos(Position))
                 {
-                    AvailableMovesList.Add((Position.Item1 + MoveDir[0].Item1, Position.Item2 + MoveDir[0].Item2));
+                    var move = new Position(Position.X + MoveDir[0].X, Position.Y + MoveDir[0].Y);
+                    if (GameField[move.X, move.Y] == " ")
+                    {
+                        AvailableMovesList.Add(move);
+                    }
                 }
             }
             return AvailableMovesList;
@@ -57,47 +62,43 @@ namespace ChessLib
         }
 
         /// <summary>
-        /// Направления для атаки
+        /// Attack directions
         /// </summary>
-        private List<(int, int)> AttackDir { get; set; }
-
+        private List<Position> AttackDir { get; set; }
 
         /// <summary>
-        /// Условия для атаки
+        /// Attack conditions
         /// </summary>
         private Func<int, int, bool>[] Conditions { get; set; }
 
         /// <summary>
-        /// Ищет доступные для атаки вражеские фигуры
+        /// Finds available enemy pieces for attack
         /// </summary>
-        /// <param name="GameField">Игровое поле</param>
-        /// <returns>Возвращает список координат доступных для атаки фигур</returns>
-        public List<(int, int)> AvailableKills(string[,] GameField)
+        /// <param name="GameField">Game field</param>
+        /// <returns>Returns list of coordinates of pieces available for attack</returns>
+        public List<Position> AvailableKills(string[,] GameField)
         {
-            var AvailableKillsList = new List<(int, int)>();
+            var AvailableKillsList = new List<Position>();
 
             GetOppositeAndFriendPieces();
             for (int i = 0; i < 2; i++)
             {
-
-                if (Conditions[i](Position.Item1, Position.Item2))
+                if (Conditions[i](Position.X, Position.Y))
                 {
-
-                    if (GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2] != " " && pieces.Contains(GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2]))
+                    var attackPos = new Position(Position.X + AttackDir[i].X, Position.Y + AttackDir[i].Y);
+                    if (GameField[attackPos.X, attackPos.Y] != " " && pieces.Contains(GameField[attackPos.X, attackPos.Y]))
                     {
-                        AvailableKillsList.Add((Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2));
+                        AvailableKillsList.Add(attackPos);
                     }
                 }
-
             }
 
             return AvailableKillsList;
-
         }
 
-        public List<(int, int)> AvailableKills(string[,] GameField, Pawn EnemyPawn)
+        public List<Position> AvailableKills(string[,] GameField, Pawn EnemyPawn)
         {
-            var AvailableKillsList = new List<(int, int)>();
+            var AvailableKillsList = new List<Position>();
 
             GetOppositeAndFriendPieces();
             if (EnemyPawn is null)
@@ -108,35 +109,32 @@ namespace ChessLib
             {
                 for (int i = 0; i < 2; i++)
                 {
-
-                    if (Conditions[i](Position.Item1, Position.Item2))
+                    if (Conditions[i](Position.X, Position.Y))
                     {
-
-                        if (GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2] != " " && pieces.Contains(GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2]))
+                        var attackPos = new Position(Position.X + AttackDir[i].X, Position.Y + AttackDir[i].Y);
+                        if (GameField[attackPos.X, attackPos.Y] != " " && pieces.Contains(GameField[attackPos.X, attackPos.Y]))
                         {
-                            AvailableKillsList.Add((Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2));
+                            AvailableKillsList.Add(attackPos);
                         }
-                        else if (GameField[Position.Item1 + AttackDir[i].Item1, Position.Item2].ToLower() == "p" && AvailableEnPassent(EnemyPawn))
+                        else if (GameField[attackPos.X, Position.Y].ToLower() == "p" && AvailableEnPassent(EnemyPawn))
                         {
-                            AvailableKillsList.Add((Position.Item1 + AttackDir[i].Item1, Position.Item2 + AttackDir[i].Item2));
+                            AvailableKillsList.Add(attackPos);
                         }
                     }
-
                 }
             }
 
-
             return AvailableKillsList;
-
         }
         private string pieces;
 
         public bool AvailableEnPassent(Pawn EnemyPawn)
         {
-            bool IsEnemyPositionCorrect = EnemyPawn.Position == (EnemyPawn.StartPos.Item1 + EnemyMoveDir[1].Item1, EnemyPawn.StartPos.Item2 + EnemyMoveDir[1].Item2);
-            bool IsVerticalPositionCorrect = Position.Item2 == EnemyPawn.Position.Item2;
-            bool IsHorizontalposition1Correct = Position.Item1 == EnemyPawn.Position.Item1 + 1;
-            bool IsHorizontalposition2Correct = Position.Item1 == EnemyPawn.Position.Item1 - 1;
+            var enemyTargetPos = new Position(EnemyPawn.StartPos.X + EnemyMoveDir[1].X, EnemyPawn.StartPos.Y + EnemyMoveDir[1].Y);
+            bool IsEnemyPositionCorrect = EnemyPawn.Position == enemyTargetPos;
+            bool IsVerticalPositionCorrect = Position.Y == EnemyPawn.Position.Y;
+            bool IsHorizontalposition1Correct = Position.X == EnemyPawn.Position.X + 1;
+            bool IsHorizontalposition2Correct = Position.X == EnemyPawn.Position.X - 1;
             return EnemyPawn.EnPassantAvailable && IsEnemyPositionCorrect && (IsHorizontalposition1Correct || IsHorizontalposition2Correct) && IsVerticalPositionCorrect;
         }
 
@@ -155,9 +153,9 @@ namespace ChessLib
 
         }
 
-        public void ChangePosition((int, int) Position)
+        public void ChangePosition(Position position)
         {
-            this.Position = Position;
+            this.Position = position;
         }
 
         public object Clone()
@@ -165,34 +163,31 @@ namespace ChessLib
             return new Pawn(Color, Position);
         }
 
-        public Pawn(PieceColor color, (int, int) position)
+        public Pawn(PieceColor color, Position position)
         {
             Color = color;
             if (Color == PieceColor.White)
             {
-                MoveDir = new List<(int, int)> { (0, 1), (0, 2) };
-                EnemyMoveDir = new List<(int, int)> { (0, -1), (0, -2) };
-                AttackDir = new List<(int, int)> { (-1, 1), (1, 1) };
+                MoveDir = new List<Position> { new Position(0, 1), new Position(0, 2) };
+                EnemyMoveDir = new List<Position> { new Position(0, -1), new Position(0, -2) };
+                AttackDir = new List<Position> { new Position(-1, 1), new Position(1, 1) };
                 Conditions = new Func<int, int, bool>[] {
                     (x,y)=> x>0 && y<7,
                     (x,y)=> x<7 && y<7
                 };
-                EndVerticalPos = ((int, int) CurrentPosition) => CurrentPosition.Item2 < 7;
-
-
+                EndVerticalPos = (Position CurrentPosition) => CurrentPosition.Y < 7;
             }
             else
             {
-
-                MoveDir = new List<(int, int)> { (0, -1), (0, -2) };
-                EnemyMoveDir = new List<(int, int)> { (0, 1), (0, 2) };
-                AttackDir = new List<(int, int)> { (-1, -1), (1, -1) };
+                MoveDir = new List<Position> { new Position(0, -1), new Position(0, -2) };
+                EnemyMoveDir = new List<Position> { new Position(0, 1), new Position(0, 2) };
+                AttackDir = new List<Position> { new Position(-1, -1), new Position(1, -1) };
 
                 Conditions = new Func<int, int, bool>[] {
                      (x, y) => x > 0 && y > 0,
                      (x, y) => x < 7 && y > 0
                 };
-                EndVerticalPos = ((int, int) CurrentPosition) => CurrentPosition.Item2 > 0;
+                EndVerticalPos = (Position CurrentPosition) => CurrentPosition.Y > 0;
             }
             StartPos = position;
             Position = StartPos;

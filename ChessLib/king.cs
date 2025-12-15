@@ -7,33 +7,29 @@ namespace ChessLib
     {
 
         public PieceColor Color { get; set; }
-        public (int, int) Position { get; set; }
+        public Position Position { get; set; }
         public bool IsDead { get; set; }
 
         public bool IsMoved { get; set; }
-        private void AvailableMoveInOneDirection(string[,] GameField, List<(int, int)> AvailableMovesList, (int, int) Direction, Func<int, int, bool> Condition)
+        private void AvailableMoveInOneDirection(string[,] GameField, List<Position> AvailableMovesList, Position Direction, Func<int, int, bool> Condition)
         {
-            if (Condition(Position.Item1, Position.Item2))
+            if (Condition(Position.X, Position.Y))
             {
-                if (GameField[Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2] == " ")
+                var newPos = new Position(Position.X + Direction.X, Position.Y + Direction.Y);
+                if (GameField[newPos.X, newPos.Y] == " ")
                 {
-                    AvailableMovesList.Add((Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2));
+                    AvailableMovesList.Add(newPos);
                 }
-
             }
         }
-        public List<(int, int)> AvailableMoves(string[,] GameField)
+        public List<Position> AvailableMoves(string[,] GameField)
         {
-            var AvailableMovesList = new List<(int, int)>();
+            var AvailableMovesList = new List<Position>();
             for (int i = 0; i < 8; i++)
             {
                 AvailableMoveInOneDirection(GameField, AvailableMovesList, Directions[i], AttackConditions[i]);
             }
-
-
-
             return AvailableMovesList;
-
         }
         /// <summary>
         /// Короткая рокировка
@@ -49,43 +45,44 @@ namespace ChessLib
             {
                 bool isAttacked = false;
                 bool isFree = true;
-                for (int i = Position.Item1 + 1; i < 7; i++)
+                for (int i = Position.X + 1; i < 7; i++)
                 {
-                    if (gameField.GetAtackStatus(pieces, (i, Position.Item2), gameFieldStr))
+                    var checkPos = new Position(i, Position.Y);
+                    if (gameField.GetAtackStatus(pieces, checkPos, gameFieldStr))
                     {
                         isAttacked = true;
                     }
-                    if (!gameField.IsCellFree((i, Position.Item2), gameFieldStr))
+                    if (!gameField.IsCellFree(checkPos, gameFieldStr))
                     {
                         isFree = false;
                     }
-                    Console.WriteLine(" ");
                 }
                 return !isAttacked && isFree;
             }
             return false;
         }
         /// <summary>
-        /// Длинная рокировка, метод проверяет можно ли сделать рокировку
+        /// Long castling, checks if castling is possible
         /// </summary>
-        /// <param name="rook">Ладья, с которой рокируемся</param>
-        /// <param name="gameField">Игровое поле</param>
-        /// <param name="EnemyPieces">Вражеские фигуры</param>
+        /// <param name="rook">Rook to castle with</param>
+        /// <param name="gameField">Game field</param>
+        /// <param name="EnemyPieces">Enemy pieces</param>
         /// <param name="gameFieldStr"></param>
-        /// <returns>True - если рокировка возможна</returns>
+        /// <returns>True if castling is possible</returns>
         public bool LongCastling(Rook rook, GameField gameField, List<IPiece> EnemyPieces, string[,] gameFieldStr)
         {
             if (!IsMoved && !rook.IsMoved)
             {
                 bool isAttacked = false;
                 bool isFree = true;
-                for (int i = Position.Item1 - 1; i > 0; i--)
+                for (int i = Position.X - 1; i > 0; i--)
                 {
-                    if (gameField.GetAtackStatus(EnemyPieces, (i, Position.Item2), gameFieldStr))
+                    var checkPos = new Position(i, Position.Y);
+                    if (gameField.GetAtackStatus(EnemyPieces, checkPos, gameFieldStr))
                     {
                         isAttacked = true;
                     }
-                    if (!gameField.IsCellFree((i, Position.Item2), gameFieldStr))
+                    if (!gameField.IsCellFree(checkPos, gameFieldStr))
                     {
                         isFree = false;
                     }
@@ -94,9 +91,9 @@ namespace ChessLib
             }
             return false;
         }
-        public King((int, int) Position, PieceColor color)
+        public King(Position position, PieceColor color)
         {
-            this.Position = Position;
+            this.Position = position;
             Color = color;
             IsDead = false;
             IsMoved = false;
@@ -106,19 +103,20 @@ namespace ChessLib
             return Color == PieceColor.White ? "K" : "k";
         }
         private string pieces;
-        public List<(int, int)> AvailableKills(string[,] GameField)
+        public List<Position> AvailableKills(string[,] GameField)
         {
-            var AvailableKillsList = new List<(int, int)>();
+            var AvailableKillsList = new List<Position>();
 
             GetOppositeAndFriendPieces();
 
             for (int i = 0; i < 8; i++)
             {
-                if (AttackConditions[i](Position.Item1, Position.Item2))
+                if (AttackConditions[i](Position.X, Position.Y))
                 {
-                    if (pieces.Contains(GameField[Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2]))
+                    var attackPos = new Position(Position.X + Directions[i].X, Position.Y + Directions[i].Y);
+                    if (pieces.Contains(GameField[attackPos.X, attackPos.Y]))
                     {
-                        AvailableKillsList.Add((Position.Item1 + Directions[i].Item1, Position.Item2 + Directions[i].Item2));
+                        AvailableKillsList.Add(attackPos);
                     }
                 }
             }
@@ -140,9 +138,9 @@ namespace ChessLib
 
 
         }
-        public void ChangePosition((int, int) NewPosition)
+        public void ChangePosition(Position newPosition)
         {
-            Position = NewPosition;
+            Position = newPosition;
         }
 
         public object Clone()
@@ -151,7 +149,7 @@ namespace ChessLib
         }
 
         /// <summary>
-        /// Условия для проверки доступных клеток для хода/атаки в 8-ми направлениях
+        /// Conditions for checking available cells for move/attack in 8 directions
         /// </summary>
         private readonly Func<int, int, bool>[] AttackConditions = new Func<int, int, bool>[] {
             (int x, int y) => x < 7 && y < 7,
@@ -164,17 +162,17 @@ namespace ChessLib
             (int x, int y) => x < 7 && y > 0
          };
         /// <summary>
-        /// 8 направлений хода/атаки
+        /// 8 directions for move/attack
         /// </summary>
-        private readonly (int, int)[] Directions = new (int, int)[] {
-            (1, 1)  ,
-            (0, 1)  ,
-            (-1, 1) ,
-            (-1, 0) ,
-            (1, 0)  ,
-            (-1, -1),
-            (0, -1) ,
-            (1, -1)
+        private readonly Position[] Directions = new Position[] {
+            new Position(1, 1),
+            new Position(0, 1),
+            new Position(-1, 1),
+            new Position(-1, 0),
+            new Position(1, 0),
+            new Position(-1, -1),
+            new Position(0, -1),
+            new Position(1, -1)
         };
     }
 }

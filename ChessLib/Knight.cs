@@ -6,12 +6,14 @@ namespace ChessLib
     public class Knight : IPiece
     {
         public PieceColor Color { get; set; }
-        public (int, int) Position { get; set; }
+        public Position Position { get; set; }
         public bool IsDead { get; set; }
         /// <summary>
-        /// Направление для хода
+        /// Direction for move
         /// </summary>
-        private readonly (int, int)[] Directions = new (int, int)[] { (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2) };
+        private readonly Position[] Directions = new Position[] { 
+            new Position(1, 2), new Position(2, 1), new Position(2, -1), new Position(1, -2), 
+            new Position(-1, -2), new Position(-2, -1), new Position(-2, 1), new Position(-1, 2) };
 
         /*
          Чтобы узнать можно ли сходить на какую-то клетку, мы должны к текущему положению коня (к его координатам на поле) прибавить, например 2 вверх и 1 влево
@@ -34,14 +36,13 @@ namespace ChessLib
             (x, y) => x > 0 && y < 6
         };
         /// <summary>
-        /// Получает список доступных для хода клеток 
+        /// Gets list of available cells for move
         /// </summary>
-        /// <param name="GameField">Игровое поле</param>
-        /// <returns>Список доступных для хода клеток</returns>
-        public List<(int, int)> AvailableMoves(string[,] GameField)
+        /// <param name="GameField">Game field</param>
+        /// <returns>List of available cells for move</returns>
+        public List<Position> AvailableMoves(string[,] GameField)
         {
-            var AvailableMovesList = new List<(int, int)>();
-
+            var AvailableMovesList = new List<Position>();
 
             for (int i = 0; i < 8; i++)
             {
@@ -51,19 +52,19 @@ namespace ChessLib
             return AvailableMovesList;
         }
 
-        private void AvailableMoveInDirection((int, int) Direction, string[,] GameField, List<(int, int)> AvailableMovesList, Func<int, int, bool> Condition)
+        private void AvailableMoveInDirection(Position Direction, string[,] GameField, List<Position> AvailableMovesList, Func<int, int, bool> Condition)
         {
-            if (Condition(Position.Item1, Position.Item2))
+            if (Condition(Position.X, Position.Y))
             {
-                if (GameField[Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2] == " ")
+                var newPos = new Position(Position.X + Direction.X, Position.Y + Direction.Y);
+                if (GameField[newPos.X, newPos.Y] == " ")
                 {
-                    AvailableMovesList.Add((Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2));
+                    AvailableMovesList.Add(newPos);
                 }
-
             }
         }
 
-        public Knight((int, int) startPos, PieceColor color)
+        public Knight(Position startPos, PieceColor color)
         {
             Position = startPos;
             Color = color;
@@ -78,13 +79,13 @@ namespace ChessLib
         /// </summary>
         private string pieces;
         /// <summary>
-        /// 
+        /// Finds available enemy pieces for attack
         /// </summary>
         /// <param name="GameField"></param>
         /// <returns></returns>
-        public List<(int, int)> AvailableKills(string[,] GameField)
+        public List<Position> AvailableKills(string[,] GameField)
         {
-            var result = new List<(int, int)>();
+            var result = new List<Position>();
 
             SetOppositeAndFriendPieces();
 
@@ -107,28 +108,28 @@ namespace ChessLib
                 pieces = "KBNPQR";
             }
         }
-        public void ChangePosition((int, int) Position)
+        public void ChangePosition(Position position)
         {
-            this.Position = Position;
+            this.Position = position;
         }
 
         /// <summary>
-        /// Ищем вражеские фигуры, доступные для атаки
+        /// Search for enemy pieces available for attack
         /// </summary>
-        /// <param name="Direction">Направление</param>
-        /// <param name="GameField">Игровое поле</param>
-        /// <param name="AvailableKillsList">список координат вражеских фигур, доступных для атаки</param>
-        /// <param name="Condition">Условие</param>
-        private void AvailablekillsInOneDirection((int, int) Direction, string[,] GameField, List<(int, int)> AvailableKillsList, Func<int, int, bool> Condition)
+        /// <param name="Direction">Direction</param>
+        /// <param name="GameField">Game field</param>
+        /// <param name="AvailableKillsList">List of coordinates of enemy pieces available for attack</param>
+        /// <param name="Condition">Condition</param>
+        private void AvailablekillsInOneDirection(Position Direction, string[,] GameField, List<Position> AvailableKillsList, Func<int, int, bool> Condition)
         {
-            if (Condition(Position.Item1, Position.Item2))
+            if (Condition(Position.X, Position.Y))
             {
-                /*Если интересующая нас клетка не пустая И на ней вражеская фигура, то добавляем координаты этой клетки в список фигур, которые мы можем съесть*/
-                if (GameField[Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2] != null && pieces.Contains(GameField[Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2]))
+                var attackPos = new Position(Position.X + Direction.X, Position.Y + Direction.Y);
+                /*If the cell we're interested in is not empty AND has an enemy piece, add coordinates of this cell to list of pieces we can capture*/
+                if (GameField[attackPos.X, attackPos.Y] != null && pieces.Contains(GameField[attackPos.X, attackPos.Y]))
                 {
-                    AvailableKillsList.Add((Position.Item1 + Direction.Item1, Position.Item2 + Direction.Item2));
+                    AvailableKillsList.Add(attackPos);
                 }
-
             }
         }
 
