@@ -15,14 +15,11 @@ namespace ChessBoard
 
         private Board board;
         private ICommand cellCommand;
-        private int currentPlayer;
         
         private Game game;
         private ObservableCollection<string> moves;
         private ICommand newGameCommand;
-        private List<IPiece> pieces;
         private ObservableCollection<string> playerMoves;
-        private List<Player> players;
 
         public MainViewModel()
         {
@@ -137,8 +134,6 @@ namespace ChessBoard
         private void UpdateViewFromGameState()
         {
             var state = game.GetState();
-            pieces = state.Pieces;
-            currentPlayer = game.CurrentPlayer;
             
             // Update board representation
             UpdateBoardFromState(state);
