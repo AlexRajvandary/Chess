@@ -11,5 +11,10 @@ namespace ChessBoard.Windows
         {
             InitializeComponent();
         }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }

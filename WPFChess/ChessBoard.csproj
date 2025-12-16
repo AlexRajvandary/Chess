@@ -4,6 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <Version>1.0.0</Version>
     <ApplicationIcon>Images\Icon_Business_Set_00016_A_icon-icons.com_59848.ico</ApplicationIcon>
   </PropertyGroup>
@@ -14,7 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ChessLib\ChessLib.csproj" />
     <ProjectReference Include="..\ChessLib\ChessLib.csproj" />
   </ItemGroup>
 

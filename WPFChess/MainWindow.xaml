@@ -6,124 +6,177 @@
         xmlns:local="clr-namespace:ChessBoard"
         xmlns:controls="clr-namespace:ChessBoard.Controls"
         mc:Ignorable="d"
-        Title="Chess" SizeToContent="WidthAndHeight" ResizeMode="CanMinimize"
+        Title="Chess" Width="800" Height="700" MinWidth="600" MinHeight="500" ResizeMode="CanResize"
         d:DataContext="{d:DesignInstance local:MainViewModel, IsDesignTimeCreatable=True}"
         SnapsToDevicePixels="True">
     <Window.Resources>
         <local:CellColorConverter x:Key="CellColorConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="75"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <Menu Height="25" VerticalAlignment="Top" Grid.ColumnSpan="012">
+        <Menu Height="25" VerticalAlignment="Top" Grid.ColumnSpan="3">
             <MenuItem Header="Game">
                 <MenuItem Header="New Game" Command="{Binding NewGameCommand}"/>
                 <MenuItem Header="Load Game"/>
                 <MenuItem Header="Save Game"/>
             </MenuItem>
-            <MenuItem Header="Setting"></MenuItem>
-            <MenuItem Header="About" ></MenuItem>
+            <MenuItem Header="Settings" Command="{Binding OpenSettingsCommand}"/>
+            <MenuItem Header="About" Command="{Binding OpenAboutCommand}"/>
         </Menu>
 
-        <ItemsControl Grid.Row="2" ItemsSource="{Binding Numbers}" Width="21">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Grid Height="60">
-                        <TextBlock Padding="5,0" Text="{Binding}" VerticalAlignment="Center" TextAlignment="Center" FontSize="16"/>
-                    </Grid>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Letters}" Height="21">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Grid Width="60">
-                        <TextBlock Text="{Binding}" VerticalAlignment="Center" TextAlignment="Center" FontSize="16"/>
-                    </Grid>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
-        <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Board}" AlternationCount="64">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Button Width="60" Height="60" Command="{Binding DataContext.CellCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" >
-                        <Button.Style>
-                            <Style TargetType="{x:Type Button}">
-                                <Setter Property="OverridesDefaultStyle" Value="True"/>
-                                <Setter Property="Background" Value="Bisque"/>
-                                <Setter Property="BorderBrush" Value="{x:Null}"/>
-                                <Setter Property="BorderThickness" Value="2"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate>
-                                            <Border Background="{TemplateBinding Background}" >
-                                                <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
-                                                    <controls:ChessPiece Piece="{Binding State}" />
+        <!-- Chess Board with Labels -->
+        <Grid Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Top letters -->
+            <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="60">
+                            <TextBlock Text="{Binding}" VerticalAlignment="Center" TextAlignment="Center" FontSize="16"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            
+            <!-- Left numbers -->
+            <ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="60">
+                            <TextBlock Padding="5,0" Text="{Binding}" VerticalAlignment="Center" TextAlignment="Center" FontSize="16"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            
+            <!-- Chess Board -->
+            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Board}" AlternationCount="64">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Width="60" Height="60" Command="{Binding DataContext.CellCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" >
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}">
+                                    <Setter Property="OverridesDefaultStyle" Value="True"/>
+                                    <Setter Property="Background" Value="{Binding DataContext.LightSquareColor, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                    <Setter Property="BorderBrush" Value="{x:Null}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate>
+                                                <Border Background="{TemplateBinding Background}" >
+                                                    <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
+                                                        <controls:ChessPiece Piece="{Binding State}" />
+                                                    </Border>
                                                 </Border>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource CellColorConverter}}" Value="True">
-                                        <Setter Property="Background" Value="SandyBrown"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Active}" Value="True">
-                                        <Setter Property="BorderBrush" Value="Red"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Columns="8" Rows="8"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
-        <ItemsControl Grid.Row="3" Grid.Column="1"  ItemsSource="{Binding Letters}" Height="21" VerticalAlignment="Top">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Grid Width="60">
-                        <TextBlock Text="{Binding}" VerticalAlignment="Center" TextAlignment="Center" FontSize="16"/>
-                    </Grid>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
-
-        <ItemsControl Grid.Row="2" Grid.Column="2" ItemsSource="{Binding Numbers}" Width="21">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Grid Height="60">
-                        <TextBlock Padding="5,0" Text="{Binding}" VerticalAlignment="Center" TextAlignment="Center" FontSize="16"/>
-                    </Grid>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource CellColorConverter}}" Value="True">
+                                            <Setter Property="Background" Value="{Binding DataContext.DarkSquareColor, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Active}" Value="True">
+                                            <Setter Property="BorderBrush" Value="Red"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="8" Rows="8"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            
+            <!-- Right numbers -->
+            <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="60">
+                            <TextBlock Padding="5,0" Text="{Binding}" VerticalAlignment="Center" TextAlignment="Center" FontSize="16"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            
+            <!-- Bottom letters -->
+            <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="60">
+                            <TextBlock Text="{Binding}" VerticalAlignment="Center" TextAlignment="Center" FontSize="16"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </Grid>
        
+        <!-- Notation Display with Toggle -->
+        <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Background="LightGray" Padding="10" Margin="5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="150"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
+                    <TextBlock Text="View:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <Button Content="{Binding NotationToggleText}" Padding="10,5" 
+                            Command="{Binding ToggleNotationCommand}"/>
+                </StackPanel>
+                
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- FEN Notation -->
+                        <StackPanel Visibility="{Binding ShowFenNotation, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock Text="FEN Notation:" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <TextBlock Text="{Binding Fen}" FontFamily="Consolas" TextWrapping="Wrap" />
+                        </StackPanel>
+                        
+                        <!-- Move History -->
+                        <StackPanel Visibility="{Binding ShowMoveHistory, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock Text="Move History:" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <TextBlock Text="{Binding MoveHistory}" FontFamily="Consolas" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
 
     </Grid>
 </Window>

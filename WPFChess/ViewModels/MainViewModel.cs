@@ -5,7 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using ChessLib;
+using ChessBoard.Models;
+using ChessBoard.Windows;
+using ChessBoard.Services;
 
 namespace ChessBoard
 {
@@ -20,11 +24,68 @@ namespace ChessBoard
         private ObservableCollection<string> moves;
         private ICommand newGameCommand;
         private ObservableCollection<string> playerMoves;
+        private string fen;
+        private string moveHistory;
+        private bool showFenNotation = true;
+        private ICommand toggleNotationCommand;
+        private ICommand openAboutCommand;
+        private ICommand openSettingsCommand;
+        private Brush lightSquareColor;
+        private Brush darkSquareColor;
+        private readonly SoundService soundService;
 
         public MainViewModel()
         {
             Board = new Board();
+            // Initialize with default colors
+            LightSquareColor = new SolidColorBrush(Color.FromRgb(240, 217, 181)); // Bisque
+            DarkSquareColor = new SolidColorBrush(Color.FromRgb(181, 136, 99));   // SandyBrown
+            
+            // Initialize sound service
+            soundService = new SoundService();
         }
+
+        public Brush LightSquareColor
+        {
+            get => lightSquareColor;
+            set
+            {
+                lightSquareColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public Brush DarkSquareColor
+        {
+            get => darkSquareColor;
+            set
+            {
+                darkSquareColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ICommand OpenAboutCommand => openAboutCommand ??= new RelayCommand(parameter =>
+        {
+            var aboutWindow = new AboutWindow();
+            aboutWindow.ShowDialog();
+        });
+
+        public ICommand OpenSettingsCommand => openSettingsCommand ??= new RelayCommand(parameter =>
+        {
+            var settingsWindow = new SettingsWindow();
+            var settingsViewModel = new ViewModels.SettingsViewModel();
+            
+            // Subscribe to color scheme changes
+            settingsViewModel.OnColorSchemeChanged += (scheme) =>
+            {
+                LightSquareColor = scheme.LightSquareColor;
+                DarkSquareColor = scheme.DarkSquareColor;
+            };
+            
+            settingsWindow.DataContext = settingsViewModel;
+            settingsWindow.ShowDialog();
+        });
 
         public Board Board
         {
@@ -59,15 +120,23 @@ namespace ChessBoard
                 
                 if (result.IsValid)
                 {
+                    // Play move sound
+                    soundService.PlayMoveSound(result);
+                    
                     // Update UI based on game state
                     UpdateViewFromGameState();
                     
                     if (result.IsCheck)
                         MessageBox.Show("Check!");
                     if (result.IsCheckmate)
+                    {
                         MessageBox.Show("Checkmate!");
+                        soundService.PlayCheckmateSound();
+                    }
                     
-                    File.AppendAllText(pathOfFenFile, $"{Fen.GetFenFromTheGameField()}\n");
+                    // Save FEN notation
+                    var fen = game.GetFen();
+                    File.AppendAllText(pathOfFenFile, $"{fen}\n");
                 }
                 else
                 {
@@ -96,13 +165,58 @@ namespace ChessBoard
 
         public IEnumerable<char> Letters => "ABCDEFGH";
 
+        public string Fen
+        {
+            get => fen;
+            set
+            {
+                fen = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string MoveHistory
+        {
+            get => moveHistory;
+            set
+            {
+                moveHistory = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowFenNotation
+        {
+            get => showFenNotation;
+            set
+            {
+                showFenNotation = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ShowMoveHistory));
+                OnPropertyChanged(nameof(NotationToggleText));
+            }
+        }
+
+        public bool ShowMoveHistory => !showFenNotation;
+
+        public string NotationToggleText => showFenNotation ? "Show Moves" : "Show FEN";
+
+        public ICommand ToggleNotationCommand => toggleNotationCommand ??= new RelayCommand(parameter =>
+        {
+            ShowFenNotation = !ShowFenNotation;
+        });
+
         public ICommand NewGameCommand => newGameCommand ??= new RelayCommand(parameter =>
         {
             game = new Game();
             playerMoves = new ObservableCollection<string>();
             moves = new ObservableCollection<string>();
-            File.WriteAllText(pathOfFenFile, $"{DateTime.Now.ToString()}\n");
-            Fen.GameField = game.GameField;
+            var initialFen = game.GetFen();
+            File.WriteAllText(pathOfFenFile, $"{DateTime.Now.ToString()}\n{initialFen}\n");
+            
+            // Set initial FEN and move history
+            Fen = initialFen;
+            MoveHistory = "";
 
             SetupBoard();
         });
@@ -137,6 +251,10 @@ namespace ChessBoard
             
             // Update board representation
             UpdateBoardFromState(state);
+            
+            // Update FEN notation and move history
+            Fen = game.GetFen();
+            MoveHistory = game.GetMoveHistory();
         }
 
         /// <summary>

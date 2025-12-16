@@ -34,6 +34,11 @@ namespace ChessLib
         public bool IsGameOver { get; private set; }
 
         /// <summary>
+        /// Move history
+        /// </summary>
+        public List<MoveNotation> MoveHistory { get; private set; }
+
+        /// <summary>
         /// Gets current player color
         /// </summary>
         public PieceColor CurrentPlayerColor => CurrentPlayer % 2 == 0 ? PieceColor.White : PieceColor.Black;
@@ -119,6 +124,7 @@ namespace ChessLib
             GameField = new GameField();
             moveValidator = new MoveValidator(GameField);
             moveExecutor = new MoveExecutor(GameField);
+            MoveHistory = new List<MoveNotation>();
 
             // Player with white pieces
             Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
@@ -162,6 +168,18 @@ namespace ChessLib
             // Remove dead pieces
             moveExecutor.RemoveDeadPieces(Pieces);
 
+            // Record move in history
+            var moveNotation = new MoveNotation
+            {
+                From = from,
+                To = to,
+                Piece = piece,
+                MoveType = result.MoveType,
+                CapturedPiece = result.CapturedPiece,
+                PlayerColor = CurrentPlayerColor,
+                MoveNumber = (MoveHistory.Count / 2) + 1
+            };
+
             // Update game field
             UpdateGameField();
 
@@ -170,6 +188,12 @@ namespace ChessLib
             var nextPlayerColor = CurrentPlayerColor;
             result.IsCheck = IsCheck(nextPlayerColor);
             result.IsCheckmate = result.IsCheck && IsCheckmate(nextPlayerColor);
+
+            moveNotation.IsCheck = result.IsCheck;
+            moveNotation.IsCheckmate = result.IsCheckmate;
+
+            // Add to history
+            MoveHistory.Add(moveNotation);
 
             if (result.IsCheckmate)
             {
@@ -309,6 +333,7 @@ namespace ChessLib
             CurrentPlayer = 0;
             Pieces = GetPiecesStartPosition();
             GameField = new GameField();
+            MoveHistory = new List<MoveNotation>();
             IsGameOver = false;
 
             Players = new List<Player>
@@ -335,6 +360,22 @@ namespace ChessLib
             CurrentPlayer++;
             if (CurrentPlayer >= 2)
                 CurrentPlayer = 0;
+        }
+
+        /// <summary>
+        /// Gets FEN notation for current game state
+        /// </summary>
+        public string GetFen()
+        {
+            return Fen.GenerateFen(this);
+        }
+
+        /// <summary>
+        /// Gets move history in algebraic notation
+        /// </summary>
+        public string GetMoveHistory()
+        {
+            return AlgebraicNotation.FormatMoveHistory(MoveHistory, Pieces);
         }
     }
 }

@@ -41,8 +41,19 @@ namespace chess
         {
             var state = game.GetState();
             
-            // Display board
+            // Display board (using game.CurrentPlayer as required by IView interface)
             view.Visualize(state.BoardRepresentation, game.CurrentPlayer);
+
+            // Display move history
+            var moveHistory = game.GetMoveHistory();
+            if (!string.IsNullOrEmpty(moveHistory))
+            {
+                view.Show($"Moves: {moveHistory}\n\n");
+            }
+            
+            // Display FEN notation
+            var fen = game.GetFen();
+            view.Show($"FEN: {fen}\n\n");
 
             // Check for check/checkmate
             if (state.IsCheck)
@@ -56,59 +67,82 @@ namespace chess
                 return;
             }
 
-            // Execute move
-            ExecuteMove();
+            // Process player input and make move
+            ProcessPlayerInput();
 
             // Clear console and show result
             Console.Clear();
             state = game.GetState();
             view.Visualize(state.BoardRepresentation, game.CurrentPlayer);
+            
+            // Display updated move history
+            moveHistory = game.GetMoveHistory();
+            if (!string.IsNullOrEmpty(moveHistory))
+            {
+                view.Show($"Moves: {moveHistory}\n\n");
+            }
+            
+            // Display updated FEN
+            fen = game.GetFen();
+            view.Show($"FEN: {fen}\n\n");
+            
             view.Show("Press any key to continue...");
             Console.ReadLine();
         }
 
         /// <summary>
-        /// Executes a player move
+        /// Processes player input: selects piece, shows moves, gets destination, and makes move via Game API
         /// </summary>
-        private void ExecuteMove()
+        private void ProcessPlayerInput()
         {
-            var currentPlayer = game.Players[game.CurrentPlayer];
+            var state = game.GetState();
             
-            // Choose piece
+            // Get pieces of current player (UI logic - preparing data for display)
+            var currentPlayerPieces = state.Pieces
+                .Where(p => p.Color == state.CurrentPlayerColor && !p.IsDead)
+                .ToList();
+
+            if (currentPlayerPieces.Count == 0)
+            {
+                view.Show("No pieces available!\n");
+                return;
+            }
+
+            // Choose piece (UI logic - user input)
             int numOfElements = 1;
             int numOfElementsInLine = 1;
-            uint chosenPieceIndex = ChoosePiece(currentPlayer, ref numOfElements, ref numOfElementsInLine);
-            var chosenPiece = currentPlayer.MyPieces[(int)(chosenPieceIndex - 1)];
+            uint chosenPieceIndex = ChoosePiece(currentPlayerPieces, ref numOfElements, ref numOfElementsInLine);
+            var chosenPiece = currentPlayerPieces[(int)(chosenPieceIndex - 1)];
 
             // Get valid moves using Game API
-            var validMoves = game.GetValidMovesForPiece(chosenPiece);
+            var validMoves = game.GetValidMoves(chosenPiece.Position);
 
             if (validMoves.Count == 0)
             {
                 view.Show("No available moves for selected piece!\n" +
                     "Choose another piece\n");
-                ExecuteMove();
+                ProcessPlayerInput();
                 return;
             }
 
-            // Show available moves
+            // Show available moves (UI logic - display)
             int counter = ShowAvailableMoves(1, validMoves);
 
-            // Choose move
+            // Choose move (UI logic - user input)
             uint chosenMoveIndex = UserInput(validMoves.Count);
             var destination = validMoves[(int)(chosenMoveIndex - 1)];
 
-            // Execute move using Game API
+            // Execute move using Game API (business logic is in Game.MakeMove)
             var result = game.MakeMove(chosenPiece.Position, destination);
 
             if (!result.IsValid)
             {
                 view.Show($"Invalid move: {result.ErrorMessage}\n");
-                ExecuteMove();
+                ProcessPlayerInput();
                 return;
             }
 
-            // Show result
+            // Show result (UI logic - display)
             if (result.IsCheck)
                 view.Show("Check!\n");
             if (result.IsCheckmate)
@@ -132,12 +166,12 @@ namespace chess
         /// <summary>
         /// Выбор фигуры для хода
         /// </summary>
-        private uint ChoosePiece(Player currentPlayer, ref int numOfElements, ref int numOfElementsInLine)
+        private uint ChoosePiece(List<IPiece> currentPlayerPieces, ref int numOfElements, ref int numOfElementsInLine)
         {
             view.Show("Choose a piece\n");
 
             // Выводит список доступных фигур по 8 штук в строку
-            foreach (var piece in currentPlayer.MyPieces)
+            foreach (var piece in currentPlayerPieces)
             {
                 if (numOfElementsInLine > 8)
                 {
@@ -150,7 +184,7 @@ namespace chess
             }
             view.Show("\n");
 
-            return UserInput(currentPlayer.MyPieces.Count);
+            return UserInput(currentPlayerPieces.Count);
         }
 
         /// <summary>
