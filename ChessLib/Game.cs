@@ -1,54 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace ChessLib
 {
+    /// <summary>
+    /// Main game class - provides clean API for chess game logic
+    /// </summary>
     public class Game
     {
-        /// <summary>
-        /// Для подписи клеток
-        /// </summary>
-        string[] alphabet = new string[] { "a", "b", "c", "d", "e", "f", "g", "h" };
-        /// <summary>
-        /// Для визуализации
-        /// </summary>
-        IView view;
-        public GameField GameField { get; set; }
+        private readonly MoveValidator moveValidator;
+        private readonly MoveExecutor moveExecutor;
+
+        public GameField GameField { get; private set; }
 
         /// <summary>
-        /// Игровое поле
+        /// Current player index (0 - white, 1 - black)
         /// </summary>
-        string[,] GameFieldString;
-        /// <summary>
-        /// Текущий игрок
-        /// </summary>
-        public int CurrentPlayer;
-        /// <summary>
-        /// Фигуры
-        /// </summary>
-        public List<IPiece> Pieces;
-
-        public List<Player> players;
-
-        public bool isGameOver;
+        public int CurrentPlayer { get; private set; }
 
         /// <summary>
-        /// Пользовательский ввод
+        /// Pieces on the board
         /// </summary>
-        /// <param name="numberOfelements"></param>
-        /// <returns></returns>
-        uint UserInput(int numberOfelements)
-        {
-            uint chosenElement;
-            while (!uint.TryParse(Console.ReadLine(), out chosenElement) || !(chosenElement <= numberOfelements))
-            {
-                view.Show("Неверный ввод!\n" +
-                    "Повторите попытку");
-            }
+        public List<IPiece> Pieces { get; private set; }
 
-            return chosenElement;
-        }
+        /// <summary>
+        /// Players
+        /// </summary>
+        public List<Player> Players { get; private set; }
+
+        /// <summary>
+        /// Game over flag
+        /// </summary>
+        public bool IsGameOver { get; private set; }
+
+        /// <summary>
+        /// Move history
+        /// </summary>
+        public List<MoveNotation> MoveHistory { get; private set; }
+
+        /// <summary>
+        /// Gets current player color
+        /// </summary>
+        public PieceColor CurrentPlayerColor => CurrentPlayer % 2 == 0 ? PieceColor.White : PieceColor.Black;
 
         /// <summary>
         /// Устанавливает начальные позиции фигурам
@@ -57,55 +50,41 @@ namespace ChessLib
         public List<IPiece> GetPiecesStartPosition()
         {
             var Pieces = new List<IPiece>();
-            //Создаем пешки
+            //Create pawns
             for (int i = 0; i < 8; i++)
             {
-                var wPawn = new Pawn(PieceColor.White, (i, 1));
-                var bPawn = new Pawn(PieceColor.Black, (i, 6));
+                var wPawn = new Pawn(PieceColor.White, new Position(i, 1));
+                var bPawn = new Pawn(PieceColor.Black, new Position(i, 6));
                 Pieces.Add(wPawn);
                 Pieces.Add(bPawn);
             }
-            //создаем слонов
-            Pieces.Add(new Bishop((2, 0), PieceColor.White));
-            Pieces.Add(new Bishop((5, 0), PieceColor.White));
-            Pieces.Add(new Bishop((2, 7), PieceColor.Black));
-            Pieces.Add(new Bishop((5, 7), PieceColor.Black));
+            //create bishops
+            Pieces.Add(new Bishop(new Position(2, 0), PieceColor.White));
+            Pieces.Add(new Bishop(new Position(5, 0), PieceColor.White));
+            Pieces.Add(new Bishop(new Position(2, 7), PieceColor.Black));
+            Pieces.Add(new Bishop(new Position(5, 7), PieceColor.Black));
 
-            //создаем ладьи
-            Pieces.Add(new Rook((0, 0), PieceColor.White));
-            Pieces.Add(new Rook((7, 0), PieceColor.White));
-            Pieces.Add(new Rook((0, 7), PieceColor.Black));
-            Pieces.Add(new Rook((7, 7), PieceColor.Black));
+            //create rooks
+            Pieces.Add(new Rook(new Position(0, 0), PieceColor.White));
+            Pieces.Add(new Rook(new Position(7, 0), PieceColor.White));
+            Pieces.Add(new Rook(new Position(0, 7), PieceColor.Black));
+            Pieces.Add(new Rook(new Position(7, 7), PieceColor.Black));
 
-            //создаем коней
-            Pieces.Add(new Knight((1, 0), PieceColor.White));
-            Pieces.Add(new Knight((6, 0), PieceColor.White));
-            Pieces.Add(new Knight((1, 7), PieceColor.Black));
-            Pieces.Add(new Knight((6, 7), PieceColor.Black));
+            //create knights
+            Pieces.Add(new Knight(new Position(1, 0), PieceColor.White));
+            Pieces.Add(new Knight(new Position(6, 0), PieceColor.White));
+            Pieces.Add(new Knight(new Position(1, 7), PieceColor.Black));
+            Pieces.Add(new Knight(new Position(6, 7), PieceColor.Black));
 
-            //создаем ферзей
-            Pieces.Add(new Queen(PieceColor.Black, (3, 7)));
-            Pieces.Add(new Queen(PieceColor.White, (3, 0)));
+            //create queens
+            Pieces.Add(new Queen(PieceColor.Black, new Position(3, 7)));
+            Pieces.Add(new Queen(PieceColor.White, new Position(3, 0)));
 
-            //создаем королей
-            Pieces.Add(new King((4, 0), PieceColor.White));
-            Pieces.Add(new King((4, 7), PieceColor.Black));
+            //create kings
+            Pieces.Add(new King(new Position(4, 0), PieceColor.White));
+            Pieces.Add(new King(new Position(4, 7), PieceColor.Black));
 
             return Pieces;
-        }
-
-        /// <summary>
-        /// Игровой процесс, пока isGameOver - false, новый ход
-        /// </summary>
-        public void CreateNewGame()
-        {
-
-            while (!isGameOver)
-            {
-                GameProcess();
-                if (CurrentPlayer > 2) CurrentPlayer -= 2;
-            }
-            Console.WriteLine("Конец игры");
         }
 
         /// <summary>
@@ -118,7 +97,7 @@ namespace ChessLib
             string[,] GameField = new string[8, 8];
             foreach (var piece in pieces)
             {
-                GameField[piece.Position.Item1, piece.Position.Item2] = piece.Color == PieceColor.White ? piece.ToString().ToUpper() : piece.ToString();
+                GameField[piece.Position.X, piece.Position.Y] = piece.Color == PieceColor.White ? piece.ToString().ToUpper() : piece.ToString();
             }
             for (int i = 0; i < 8; i++)
             {
@@ -133,292 +112,270 @@ namespace ChessLib
             return GameField;
         }
 
-        /// <summary>
-        /// Выбор фигуры и выбор хода
-        /// </summary>
-        /// <param name="currentPlayer">Текущий игрок</param>
-        /// <param name="GameField">Строковое представление игрового поля</param>
-        /// <param name="Pieces">Список фигур</param>
-        void ConsoleMove(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
-        {
-            this.GameField.Update(Pieces, GameField, currentPlayer.Color);
-
-            ///Если королю стоит шах, то нужно убрать короляв безопасное место
-            if (this.GameField.IsCheck())
-            {
-                view.Show("У вас шах!");
-
-                MoveAfterCheck(currentPlayer, GameField, Pieces);
-
-
-                return;
-            }
-
-            int numOfElements = 1;//Для вывбора фигуры по номеру из списка фигур
-            int numOfElementsInLine = 1;//для отображения фигур по 8 в строке
-
-            uint chosenPiece = 0;//Считывает пользовательский ввод для выбора фигуры из предложенного списка
-            uint chosenMove = 0;//Считывает пользовательский ввод для выбора доступного хода из предложенного списка
-
-
-            chosenPiece = ChosePiece(currentPlayer, ref numOfElements, ref numOfElementsInLine);
-
-            int counter = 1;//счетчик
-
-            var AvailableMoves = currentPlayer.MyPieces[(int)(chosenPiece - 1)].AvailableMoves(GameField);//список возможных ходов (список (int,int)-координата клетки)
-
-            //выводим доступные ходы или сообщение о том, что их нет
-            counter = ShowAvailableMoves(counter, AvailableMoves);
-
-            var availableAttacks = currentPlayer.MyPieces[(int)(chosenPiece - 1)].AvailableKills(GameField);//спиксок фигур, которые можно съесть
-                                                                                                            //выводим список фигур для атаки или сообщение, что таковых нет
-            counter = ShowAvailableAttacks(counter, AvailableMoves, availableAttacks);
-
-            if (AvailableMoves.Count == 0)
-            {
-                view.Show("Для выбранной фигуры доступных ходов нет!\n" +
-                    "Выберите другую фигуру");
-                ConsoleMove(currentPlayer, GameField, Pieces);
-                return;
-            }
-            else
-            {
-                chosenMove = UserInput(AvailableMoves.Count);//переменная служит для выбора хода
-            }
-
-            CheckIfPieceWasKilled(Pieces, chosenMove, AvailableMoves);
-
-            //Устанавливает новую позицию выбранной фигуре
-            ChangePositionOfCurrentPiece(currentPlayer, chosenPiece, chosenMove, AvailableMoves);
-
-        }
-
-        private int ShowAvailableAttacks(int counter, List<(int, int)> AvailableMoves, List<(int, int)> availableKills)
-        {
-            if (availableKills.Count == 0)
-            {
-                view.Show("Съесть никого нельзя\n");
-            }
-            else
-            {
-                AvailableMoves.AddRange(availableKills);//список возможных ходов и убийств фигур противника (список (int,int)-координата клетки)
-                view.Show("можно съесть:\n");
-                foreach (var piece in availableKills)
-                {
-                    view.Show(counter + " " + alphabet[piece.Item1] + $"{piece.Item2 + 1}");
-                    counter++;
-                }
-            }
-            return counter;
-        }
-
-        private int ShowAvailableMoves(int counter, List<(int, int)> AvailableMoves)
-        {
-            if (AvailableMoves.Count == 0)
-            {
-                view.Show("доступных ходов нет\n");
-            }
-            else
-            {
-                view.Show("Выберите ход\n");
-                foreach (var p in AvailableMoves)
-                {
-                    view.Show($"{counter} {alphabet[p.Item1]} {p.Item2 + 1} \n");
-                    counter++;
-                }
-            }
-            return counter;
-        }
-
-        private static void ChangePositionOfCurrentPiece(Player currentPlayer, uint chosenPiece, uint chosenMove, List<(int, int)> AvailableMoves)
-        {
-            currentPlayer.MyPieces[(int)(chosenPiece - 1)].ChangePosition(AvailableMoves[(int)(chosenMove - 1)]);
-        }
-
-        private static void CheckIfPieceWasKilled(List<IPiece> Pieces, uint chosenMove, List<(int, int)> AvailableMoves)
-        {
-            //Проверка не является ли желаемый ход попыткой съесть фигуру (если среди фигур есть та, которая уже находиться на позиции, на которую текущий игрок собирается пойти, то текущий игрок съедает эту фигуру)
-            if (Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]) != null)
-            {
-                Pieces.Find(x => x.Position == AvailableMoves[(int)(chosenMove - 1)]).IsDead = true;
-            }
-        }
-        /// <summary>
-        /// Метод для wpf-версии: проверяет, является ли текущей ход атакой на фигуру, если да, то присваеваем ей статус атакованной
-        /// </summary>
-        /// <param name="PiecePosition">Позиция выбранной фигуры</param>
-        /// <param name="AttackedPosition">Ход</param>
-        /// <param name="gameField">Игровое поле</param>
-        /// <param name="pieces">Фигуры</param>
-        public void CheckIfPieceWasKilled((int, int) PiecePosition, (int, int) AttackedPosition, string[,] gameField, List<IPiece> pieces)
-        {
-            //Проверка не является ли желаемый ход попыткой съесть фигуру (если среди фигур есть та, которая уже находиться на позиции, на которую текущий игрок собирается пойти, то текущий игрок съедает эту фигуру)
-            if (gameField[AttackedPosition.Item1, AttackedPosition.Item2] != "")
-            {
-                pieces.Find(x => x.Position == AttackedPosition).IsDead = true;
-                pieces.Find(x => x.Position == PiecePosition).Position = AttackedPosition;
-            }
-        }
 
         /// <summary>
-        /// Выбор фигуры для хода
+        /// Initializes a new game
         /// </summary>
-        /// <param name="currentPlayer"></param>
-        /// <param name="numOfElements"></param>
-        /// <param name="numOfElementsInLine"></param>
-        /// <returns></returns>
-        private uint ChosePiece(Player currentPlayer, ref int numOfElements, ref int numOfElementsInLine)
-        {
-            uint chosenPiece;
-            view.Show("Выберите фигуру\n");
-
-            //Выводит список доступных фигур по 8 штук в строку
-            foreach (var piece in currentPlayer.MyPieces)
-            {
-                if (numOfElementsInLine > 8)
-                {
-                    view.Show("\n");
-                    numOfElementsInLine = 1;
-                }
-                view.Show($"{numOfElements}.  {piece}" + "\t");
-                numOfElements++;
-                numOfElementsInLine++;
-            }
-
-            chosenPiece = UserInput(currentPlayer.MyPieces.Count);
-            return chosenPiece;
-        }
-
-        /// <summary>
-        /// Ход, когда поставили шах королю. Если ходов у короля нет, то мат. Метод реализует выбор доступного хода для короля, если доступные ходы есть.
-        /// </summary>
-        /// <param name="currentPlayer"></param>
-        /// <param name="GameField"></param>
-        /// <param name="Pieces"></param>
-        void MoveAfterCheck(Player currentPlayer, string[,] GameField, List<IPiece> Pieces)
-        {
-            List<(int, int)> AvailableKingMoves = currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].AvailableMoves(GameField);
-
-            AvailableKingMoves.AddRange(currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].AvailableKills(GameField));
-
-            var ValidMoves = AvailableKingMoves?.Where(move => !this.GameField.GetAtackStatus(Pieces, move, GameField)).ToList();
-
-
-
-            int counter = 1;
-            if (ValidMoves.Count() != 0)
-            {
-                foreach (var moves in ValidMoves)
-                {
-                    view.Show($"{counter}. {"ABCDEFGH"[moves.Item1]} {moves.Item2 + 1}");
-                    counter += 1;
-                }
-
-                int chosenMove = (int)UserInput(ValidMoves.Count());
-
-                if (Pieces.Find(x => x.Position == ValidMoves[chosenMove - 1]) != null)
-                {
-                    Pieces.Find(x => x.Position == ValidMoves[chosenMove - 1]).IsDead = true;
-                }
-
-                isGameOver = false;
-
-                currentPlayer.MyPieces[currentPlayer.MyPieces.Count - 1].Position = ValidMoves[chosenMove - 1];
-            }
-            else
-            {
-                Console.WriteLine("Шах и мат!");
-                Console.ReadLine();
-
-                isGameOver = true;
-            }
-
-
-
-        }
-        /// <summary>
-        /// Убираем убитые фигуры
-        /// </summary>
-        /// <param name="pieces"></param>
-        public void RemoveDeadPieces(List<IPiece> pieces)
-        {
-            pieces.RemoveAll(x => x.IsDead == true);
-        }
-        /// <summary>
-        /// Один ход (Отрисовка доски, изменение позицицй фигур, выбор хода и т.д.)
-        /// </summary>
-        void GameProcess()
-        {
-            //получаем фигуры на доске, у каждой фигуры записаны текущее местоположение на доске
-            GameFieldString = GetGameField(Pieces);
-
-            //отрисовываем доску
-            view.Visualize(GameFieldString, CurrentPlayer);
-
-            //ход 
-            ConsoleMove(players[CurrentPlayer % 2], GameFieldString, Pieces);
-
-            RemoveDeadPieces(Pieces);
-            Console.Clear();
-            GameFieldString = GetGameField(Pieces);
-            view.Visualize(GameFieldString, CurrentPlayer);
-            view.Show("Любую клавишу для продолжения...");
-            Console.ReadLine();
-            //меняем текущего игрока
-            CurrentPlayer++;
-
-
-        }
-
         public Game()
         {
-            //хз
-
-            //переменная служит для очереди игроков
             CurrentPlayer = 0;
-
             Pieces = new List<IPiece>();
-            //Создаем шахматные фигуры и устанавливаем первоначальные позиции
             Pieces = GetPiecesStartPosition();
-
             GameField = new GameField();
+            moveValidator = new MoveValidator(GameField);
+            moveExecutor = new MoveExecutor(GameField);
+            MoveHistory = new List<MoveNotation>();
 
-            //Игрок с белыми фигурами
+            // Player with white pieces
             Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
 
-            //Игрок с черными фигурами
+            // Player with black pieces
             Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");
-            players = new List<Player>
+            
+            Players = new List<Player>
             {
                 player1,
                 player2
             };
+
+            IsGameOver = false;
         }
 
-        public Game(IView view)
+        /// <summary>
+        /// Makes a move from one position to another
+        /// </summary>
+        public MoveResult MakeMove(Position from, Position to)
         {
+            if (IsGameOver)
+                return MoveResult.Failure("Game is over");
 
-            this.view = view;
+            var piece = Pieces.FirstOrDefault(p => p.Position == from && !p.IsDead);
+            if (piece == null)
+                return MoveResult.Failure("No piece at source position");
 
-            Pieces = new List<IPiece>();
-            //Создаем шахматные фигуры и устанавливаем первоначальные позиции
-            Pieces = GetPiecesStartPosition();
+            if (piece.Color != CurrentPlayerColor)
+                return MoveResult.Failure("Not your turn");
 
-            GameField = new GameField();
+            var gameFieldString = GetGameField(Pieces);
 
-            //переменная служит для очереди игроков
+            // Validate move
+            if (!moveValidator.IsValidMove(Pieces, piece, to, gameFieldString))
+                return MoveResult.Failure("Invalid move");
+
+            // Execute move
+            var result = moveExecutor.ExecuteMove(Pieces, piece, to, gameFieldString);
+            
+            // Remove dead pieces
+            moveExecutor.RemoveDeadPieces(Pieces);
+
+            // Record move in history
+            var moveNotation = new MoveNotation
+            {
+                From = from,
+                To = to,
+                Piece = piece,
+                MoveType = result.MoveType,
+                CapturedPiece = result.CapturedPiece,
+                PlayerColor = CurrentPlayerColor,
+                MoveNumber = (MoveHistory.Count / 2) + 1
+            };
+
+            // Update game field
+            UpdateGameField();
+
+            // Check for check/checkmate
+            SwitchPlayer();
+            var nextPlayerColor = CurrentPlayerColor;
+            result.IsCheck = IsCheck(nextPlayerColor);
+            result.IsCheckmate = result.IsCheck && IsCheckmate(nextPlayerColor);
+
+            moveNotation.IsCheck = result.IsCheck;
+            moveNotation.IsCheckmate = result.IsCheckmate;
+
+            // Add to history
+            MoveHistory.Add(moveNotation);
+
+            if (result.IsCheckmate)
+            {
+                IsGameOver = true;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets all valid moves for a piece at the given position
+        /// </summary>
+        public List<Position> GetValidMoves(Position piecePosition)
+        {
+            var piece = Pieces.FirstOrDefault(p => p.Position == piecePosition && !p.IsDead);
+            if (piece == null)
+                return new List<Position>();
+
+            if (piece.Color != CurrentPlayerColor)
+                return new List<Position>();
+
+            var gameFieldString = GetGameField(Pieces);
+            var possibleMoves = piece.AvailableMoves(gameFieldString);
+            var possibleKills = piece.AvailableKills(gameFieldString);
+            var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
+
+            return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
+        }
+
+        /// <summary>
+        /// Gets all valid moves for a specific piece
+        /// </summary>
+        public List<Position> GetValidMovesForPiece(IPiece piece)
+        {
+            if (piece == null || piece.IsDead)
+                return new List<Position>();
+
+            if (piece.Color != CurrentPlayerColor)
+                return new List<Position>();
+
+            var gameFieldString = GetGameField(Pieces);
+            var possibleMoves = piece.AvailableMoves(gameFieldString);
+            var possibleKills = piece.AvailableKills(gameFieldString);
+            var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
+
+            return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
+        }
+
+        /// <summary>
+        /// Checks if a move is valid
+        /// </summary>
+        public bool IsValidMove(Position from, Position to)
+        {
+            var piece = Pieces.FirstOrDefault(p => p.Position == from && !p.IsDead);
+            if (piece == null)
+                return false;
+
+            if (piece.Color != CurrentPlayerColor)
+                return false;
+
+            var gameFieldString = GetGameField(Pieces);
+            return moveValidator.IsValidMove(Pieces, piece, to, gameFieldString);
+        }
+
+        /// <summary>
+        /// Checks if the specified color is in check
+        /// </summary>
+        public bool IsCheck(PieceColor color)
+        {
+            UpdateGameField();
+            var gameFieldString = GetGameField(Pieces);
+            var king = Pieces.FirstOrDefault(p => p is King && p.Color == color && !p.IsDead) as King;
+            if (king == null)
+                return false;
+
+            var enemyPieces = Pieces.Where(p => p.Color != color && !p.IsDead).ToList();
+            return GameField.GetAtackStatus(enemyPieces, king.Position, gameFieldString);
+        }
+
+        /// <summary>
+        /// Checks if the specified color is in checkmate
+        /// </summary>
+        public bool IsCheckmate(PieceColor color)
+        {
+            if (!IsCheck(color))
+                return false;
+
+            // Check if any piece can make a valid move
+            var playerPieces = Pieces.Where(p => p.Color == color && !p.IsDead).ToList();
+            var gameFieldString = GetGameField(Pieces);
+
+            foreach (var piece in playerPieces)
+            {
+                var possibleMoves = piece.AvailableMoves(gameFieldString);
+                var possibleKills = piece.AvailableKills(gameFieldString);
+                var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
+
+                foreach (var move in allPossibleMoves)
+                {
+                    if (moveValidator.IsValidMove(Pieces, piece, move, gameFieldString))
+                        return false; // Found a valid move, not checkmate
+                }
+            }
+
+            return true; // No valid moves found, it's checkmate
+        }
+
+        /// <summary>
+        /// Gets the current game state
+        /// </summary>
+        public GameState GetState()
+        {
+            var state = new GameState
+            {
+                CurrentPlayerColor = CurrentPlayerColor,
+                Pieces = Pieces.ToList(), // Create a copy
+                BoardRepresentation = GetGameField(Pieces),
+                IsCheck = IsCheck(CurrentPlayerColor),
+                IsCheckmate = IsCheckmate(CurrentPlayerColor),
+                IsGameOver = IsGameOver
+            };
+
+            if (state.IsCheckmate)
+            {
+                state.IsGameOver = true;
+                state.GameOverReason = $"{CurrentPlayerColor} is checkmated";
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Starts a new game
+        /// </summary>
+        public void StartNewGame()
+        {
             CurrentPlayer = 0;
+            Pieces = GetPiecesStartPosition();
+            GameField = new GameField();
+            MoveHistory = new List<MoveNotation>();
+            IsGameOver = false;
 
-            //Игрок с белыми фигурами
-            Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
+            Players = new List<Player>
+            {
+                new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1"),
+                new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2")
+            };
+        }
 
-            //Игрок с черными фигурами
-            Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");
-            players = new List<Player>();
-            players.Add(player1);
-            players.Add(player2);
+        /// <summary>
+        /// Updates the game field state
+        /// </summary>
+        private void UpdateGameField()
+        {
+            var gameFieldString = GetGameField(Pieces);
+            GameField.Update(Pieces, gameFieldString, CurrentPlayerColor);
+        }
 
-            isGameOver = false;
+        /// <summary>
+        /// Switches to the next player
+        /// </summary>
+        private void SwitchPlayer()
+        {
+            CurrentPlayer++;
+            if (CurrentPlayer >= 2)
+                CurrentPlayer = 0;
+        }
+
+        /// <summary>
+        /// Gets FEN notation for current game state
+        /// </summary>
+        public string GetFen()
+        {
+            return Fen.GenerateFen(this);
+        }
+
+        /// <summary>
+        /// Gets move history in algebraic notation
+        /// </summary>
+        public string GetMoveHistory()
+        {
+            return AlgebraicNotation.FormatMoveHistory(MoveHistory, Pieces);
         }
     }
 }

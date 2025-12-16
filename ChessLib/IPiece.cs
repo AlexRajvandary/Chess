@@ -3,14 +3,6 @@ using System.Collections.Generic;
 
 namespace ChessLib
 {
-    /// <summary>
-    /// Цвет фигур
-    /// </summary>
-    public enum PieceColor
-    {
-        White,
-        Black
-    }
     public interface IPiece : ICloneable
     {
         /// <summary>
@@ -22,26 +14,25 @@ namespace ChessLib
         /// </summary>
         public PieceColor Color { get; set; }
         /// <summary>
-        /// Позиция на доске
+        /// Position on the board
         /// </summary>
-        public (int, int) Position { get; set; }
+        public Position Position { get; set; }
         /// <summary>
-        /// Доступные клетки для хода
+        /// Available cells for move
         /// </summary>
         /// <param name="GameField"></param>
         /// <returns></returns>
-        public List<(int, int)> AvailableMoves(string[,] GameField);
+        public List<Position> AvailableMoves(string[,] GameField);
         /// <summary>
-        /// Меняет позицию фигуры
+        /// Changes piece position
         /// </summary>
-        /// <param name="Position">Позиция, на которую меняем</param>
-        public void ChangePosition((int, int) Position);
+        /// <param name="position">New position</param>
+        public void ChangePosition(Position position);
         /// <summary>
-        /// Проверяет какие фигуры можно съесть
+        /// Checks which pieces can be captured
         /// </summary>
-        /// <param name="player"></param>
+        /// <param name="GameField"></param>
         /// <returns></returns>
-        public List<(int, int)> AvailableKills(string[,] GameField);
-
+        public List<Position> AvailableKills(string[,] GameField);
     }
 }

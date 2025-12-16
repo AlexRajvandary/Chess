@@ -3,6 +3,7 @@
 ## Описание
 Простая игра Шахматы. Реализована как консольная версия, так и оконная версия игры (WPF)
 ### WPF
+![img](images/wpfChessNew.gif)
 ![img](images/chessPlay.gif)
 ### Console
 ![img](images/chessConsolePlay.gif)

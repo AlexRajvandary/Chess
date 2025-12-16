@@ -5,23 +5,22 @@ namespace chess
 {
     class Program
     {
-
         static void Main(string[] args)
         {
             do
             {
                 Console.Clear();
 
-                Game game = new Game(new ConsoleView());
+                Game game = new Game();
+                IView view = new ConsoleView();
+                var controller = new ConsoleGameController(game, view);
 
-                game.CreateNewGame();
+                controller.StartGame();
 
-                Console.WriteLine("Для выхода нажмите escape");
-
-                Console.WriteLine("Или любую клавишу для того, чтобы начать игру заново");
+                Console.WriteLine("Press Escape to exit");
+                Console.WriteLine("Or press any key to start a new game");
 
             } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
-
         }
     }
 }

@@ -1,72 +1,163 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 
 namespace ChessLib
 {
+    /// <summary>
+    /// FEN (Forsyth-Edwards Notation) notation generator
+    /// </summary>
     public static class Fen
     {
-        public static GameField GameField { get; set; }
+        /// <summary>
+        /// Converts piece to FEN character
+        /// </summary>
+        private static char GetPieceChar(IPiece piece)
+        {
+            if (piece == null || piece.IsDead)
+                return ' ';
 
-        public static int CurrentPlayer { get; set; }
+            char pieceChar = piece switch
+            {
+                Pawn => 'p',
+                Rook => 'r',
+                Knight => 'n',
+                Bishop => 'b',
+                Queen => 'q',
+                King => 'k',
+                _ => ' '
+            };
+
+            return piece.Color == PieceColor.White ? char.ToUpper(pieceChar) : pieceChar;
+        }
 
         /// <summary>
-        /// генерирует описание текущего состояния игровой доски в FEN нотации
+        /// Generates FEN notation from game state
+        /// Format: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         /// </summary>
-        /// <returns>строковое представление доски в FEN нотации</returns>
-        public static string GetFenFromTheGameField()
+        public static string GenerateFen(Game game)
         {
-            StringBuilder fenStr = new StringBuilder();
+            var state = game.GetState();
+            var fen = new StringBuilder();
 
-            for (int row = 0; row < 8; row++)
+            // 1. Piece placement (ranks 8 to 1, from top to bottom)
+            for (int row = 7; row >= 0; row--)
             {
-
-                int numberOfEmptyCells = 0;
+                int emptyCount = 0;
 
                 for (int col = 0; col < 8; col++)
                 {
-                    if (GameField[col, row].isFilled)
+                    var piece = state.Pieces.FirstOrDefault(p => p.Position.X == col && p.Position.Y == row && !p.IsDead);
+                    
+                    if (piece != null)
                     {
-                        numberOfEmptyCells = 0;
-
-                        fenStr.Append(GameField[col, row].Piece);
+                        if (emptyCount > 0)
+                        {
+                            fen.Append(emptyCount);
+                            emptyCount = 0;
+                        }
+                        fen.Append(GetPieceChar(piece));
                     }
                     else
                     {
-                        numberOfEmptyCells++;
-
-                        if (col == 7 || GameField[col + 1, row].isFilled)
-                        {
-                            fenStr.Append($"{numberOfEmptyCells}");
-                        }
-
+                        emptyCount++;
                     }
-
                 }
-                NextLine(fenStr, row);
 
+                if (emptyCount > 0)
+                {
+                    fen.Append(emptyCount);
+                }
+
+                if (row > 0)
+                {
+                    fen.Append('/');
+                }
             }
-            AddCurrentPlayerStatus(fenStr);
 
-            return fenStr.ToString();
+            // 2. Active color
+            fen.Append(' ');
+            fen.Append(state.CurrentPlayerColor == PieceColor.White ? 'w' : 'b');
+
+            // 3. Castling rights
+            fen.Append(' ');
+            string castling = GetCastlingRights(state.Pieces);
+            fen.Append(castling);
+
+            // 4. En passant target square
+            fen.Append(' ');
+            string enPassant = GetEnPassantSquare(state.Pieces, state.CurrentPlayerColor);
+            fen.Append(enPassant);
+
+            // 5. Halfmove clock (for 50-move rule) - simplified to 0 for now
+            fen.Append(" 0");
+
+            // 6. Fullmove number - simplified to 1 for now
+            fen.Append(" 1");
+
+            return fen.ToString();
         }
 
-        private static void NextLine(StringBuilder fenStr, int i)
+        /// <summary>
+        /// Gets castling rights in FEN format (KQkq or -)
+        /// </summary>
+        private static string GetCastlingRights(System.Collections.Generic.List<IPiece> pieces)
         {
-            if (i < 7)
+            var castling = new StringBuilder();
+
+            // White king and rooks
+            var whiteKing = pieces.FirstOrDefault(p => p is King && p.Color == PieceColor.White && !p.IsDead) as King;
+            if (whiteKing != null && !whiteKing.IsMoved)
             {
-                fenStr.Append("/");
+                var whiteRooks = pieces.Where(p => p is Rook && p.Color == PieceColor.White && !p.IsDead).Cast<Rook>().ToList();
+                var kingsideRook = whiteRooks.FirstOrDefault(r => r.RookKind == RookKind.Royal && !r.IsMoved);
+                var queensideRook = whiteRooks.FirstOrDefault(r => r.RookKind == RookKind.Queen && !r.IsMoved);
+
+                if (kingsideRook != null)
+                    castling.Append('K');
+                if (queensideRook != null)
+                    castling.Append('Q');
             }
+
+            // Black king and rooks
+            var blackKing = pieces.FirstOrDefault(p => p is King && p.Color == PieceColor.Black && !p.IsDead) as King;
+            if (blackKing != null && !blackKing.IsMoved)
+            {
+                var blackRooks = pieces.Where(p => p is Rook && p.Color == PieceColor.Black && !p.IsDead).Cast<Rook>().ToList();
+                var kingsideRook = blackRooks.FirstOrDefault(r => r.RookKind == RookKind.Royal && !r.IsMoved);
+                var queensideRook = blackRooks.FirstOrDefault(r => r.RookKind == RookKind.Queen && !r.IsMoved);
+
+                if (kingsideRook != null)
+                    castling.Append('k');
+                if (queensideRook != null)
+                    castling.Append('q');
+            }
+
+            return castling.Length > 0 ? castling.ToString() : "-";
         }
 
-        private static void AddCurrentPlayerStatus(StringBuilder fenStr)
+        /// <summary>
+        /// Gets en passant target square in FEN format
+        /// </summary>
+        private static string GetEnPassantSquare(System.Collections.Generic.List<IPiece> pieces, PieceColor currentPlayerColor)
         {
-            if (CurrentPlayer == 0)
-            {
-                fenStr.Append(" w");
-            }
-            else
-            {
-                fenStr.Append(" b");
-            }
+            // Find pawn that can be captured en passant (opposite color, EnPassantAvailable = true)
+            // The en passant target square is the square the pawn would move to if captured
+            var enemyColor = currentPlayerColor == PieceColor.White ? PieceColor.Black : PieceColor.White;
+            var enemyPawns = pieces.Where(p => p is Pawn && p.Color == enemyColor && !p.IsDead).Cast<Pawn>();
+
+            var enPassantPawn = enemyPawns.FirstOrDefault(p => p.EnPassantAvailable);
+            if (enPassantPawn == null)
+                return "-";
+
+            // En passant target square is the square the pawn would move to if captured
+            // For white pawns (on rank 4, moved from rank 2), target is rank 3 (Y=2)
+            // For black pawns (on rank 3, moved from rank 6), target is rank 4 (Y=3)
+            // The target square is horizontally adjacent to the pawn, one rank forward from the pawn's starting position
+            int targetY = enemyColor == PieceColor.White ? enPassantPawn.Position.Y - 1 : enPassantPawn.Position.Y + 1;
+            char file = (char)('a' + enPassantPawn.Position.X);
+            char rank = (char)('1' + targetY);
+
+            return $"{file}{rank}";
         }
     }
 }

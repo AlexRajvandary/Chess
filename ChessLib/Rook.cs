@@ -22,17 +22,17 @@ namespace ChessLib
         public RookKind RookKind { get; }
         public bool IsMoved { get; set; }
         public PieceColor Color { get; set; }
-        public (int, int) Position { get; set; }
+        public Position Position { get; set; }
         public bool IsDead { get; set; }
 
-        /*направление поиска фигуры 
-         *         (будет прибавлять первую координату к первой координате позиции фигуры
-         *          и вторую ко второй по двумерному массиву (игрового поля))
+        /*Direction for piece search
+         * (will add first coordinate to first coordinate of piece position
+         *  and second to second in two-dimensional array (game field))
          */
-        private readonly (int, int) North = (0, 1);
-        private readonly (int, int) South = (0, -1);
-        private readonly (int, int) West = (1, 0);
-        private readonly (int, int) East = (-1, 0);
+        private readonly Position North = new Position(0, 1);
+        private readonly Position South = new Position(0, -1);
+        private readonly Position West = new Position(1, 0);
+        private readonly Position East = new Position(-1, 0);
 
         //условия для поиска фигуры в массиве(игровом поле)
         private readonly Func<int, int, bool> NorthCondition = (int i, int j) => j < 8;
@@ -41,41 +41,40 @@ namespace ChessLib
         private readonly Func<int, int, bool> EastCondition = (int i, int j) => i > -1;
 
         /// <summary>
-        /// Проверяет доступные для ладьи ходы в 4 направлениях
+        /// Checks available moves for rook in 4 directions
         /// </summary>
         /// <param name="GameField"></param>
-        /// <returns>Список координат доступных для хода клеток</returns>
-        public List<(int, int)> AvailableMoves(string[,] GameField)
+        /// <returns>List of coordinates of available cells for move</returns>
+        public List<Position> AvailableMoves(string[,] GameField)
         {
-
-            var AvailableMovesList = new List<(int, int)>();
-            //Север
+            var AvailableMovesList = new List<Position>();
+            //North
             AvailableMovesInDirection(North, GameField, AvailableMovesList, NorthCondition);
-            //Юг
+            //South
             AvailableMovesInDirection(South, GameField, AvailableMovesList, SouthCondition);
-            //Запад
+            //West
             AvailableMovesInDirection(West, GameField, AvailableMovesList, WestCondition);
-            //восток
+            //East
             AvailableMovesInDirection(East, GameField, AvailableMovesList, EastCondition);
             return AvailableMovesList;
         }
         /// <summary>
-        /// Ищет доступные клетки для хода
+        /// Finds available cells for move
         /// </summary>
-        /// <param name="Direction">Направление поиска</param>
-        /// <param name="GameField">Игровое поле</param>
-        /// <param name="AvailableMovesList">Список доступных ходов (сюда добавляются вновь найденные доступные клетки для хода(координаты))</param>
-        /// <param name="Condition">условие для цикла (зависит от направления)</param>
-        private void AvailableMovesInDirection((int, int) Direction, string[,] GameField, List<(int, int)> AvailableMovesList, Func<int, int, bool> Condition)
+        /// <param name="Direction">Search direction</param>
+        /// <param name="GameField">Game field</param>
+        /// <param name="AvailableMovesList">List of available moves (newly found available cells are added here)</param>
+        /// <param name="Condition">Condition for loop (depends on direction)</param>
+        private void AvailableMovesInDirection(Position Direction, string[,] GameField, List<Position> AvailableMovesList, Func<int, int, bool> Condition)
         {
-            for (int j = Position.Item2 + Direction.Item2, i = Position.Item1 + Direction.Item1; Condition(i, j); j += Direction.Item2, i += Direction.Item1)
+            for (int j = Position.Y + Direction.Y, i = Position.X + Direction.X; Condition(i, j); j += Direction.Y, i += Direction.X)
             {
-                //если клетка не пустая, то пойти на нее нельзя
+                //if cell is not empty, cannot move there
                 if (GameField[i, j] != " ")
                 {
                     break;
                 }
-                AvailableMovesList.Add((i, j));
+                AvailableMovesList.Add(new Position(i, j));
             }
         }
 
@@ -84,46 +83,46 @@ namespace ChessLib
             return Color == PieceColor.White ? "R" : "r";
         }
         /// <summary>
-        /// Ищет вражеские фигуры для атаки
+        /// Finds enemy pieces for attack
         /// </summary>
-        /// <param name="direction">Направление поиска (пара чисел прибавляется к координатам фигуры)</param>
-        /// <param name="GameField">Игровое поле</param>
-        /// <param name="AvailableKillsList">Список вражеских фигур для атаки, куда добавляются вновь найденные вражеские фигуры</param>
-        /// <param name="Condition">Условие для цикла for (разное в зависимости от направления поиска)</param>
-        private void AvailableKillsInDirection((int, int) direction, string[,] GameField, List<(int, int)> AvailableKillsList, Func<int, int, bool> Condition)
+        /// <param name="direction">Search direction (pair of numbers added to piece coordinates)</param>
+        /// <param name="GameField">Game field</param>
+        /// <param name="AvailableKillsList">List of enemy pieces for attack, where newly found enemy pieces are added</param>
+        /// <param name="Condition">Condition for for loop (varies depending on search direction)</param>
+        private void AvailableKillsInDirection(Position direction, string[,] GameField, List<Position> AvailableKillsList, Func<int, int, bool> Condition)
         {
-            for (int i = Position.Item1 + direction.Item1, j = Position.Item2 + direction.Item2; Condition(i, j); i += direction.Item1, j += direction.Item2)
+            for (int i = Position.X + direction.X, j = Position.Y + direction.Y; Condition(i, j); i += direction.X, j += direction.Y)
             {
-                ///если уперлись в свою фигуру, то съесть никого нельзя
+                //if hit own piece, cannot capture anyone
                 if (myPieces.Contains(GameField[i, j]))
                 {
                     break;
                 }
                 else if (pieces.Contains(GameField[i, j]))
                 {
-                    AvailableKillsList.Add((i, j));
+                    AvailableKillsList.Add(new Position(i, j));
                     break;
                 }
             }
         }
         /// <summary>
-        /// Поиск вражеских фигур для атаки
+        /// Search for enemy pieces for attack
         /// </summary>
-        /// <param name="GameField">игровое поле</param>
-        /// <returns>Список координат вражеских фигур для атаки</returns>
-        public List<(int, int)> AvailableKills(string[,] GameField)
+        /// <param name="GameField">Game field</param>
+        /// <returns>List of coordinates of enemy pieces for attack</returns>
+        public List<Position> AvailableKills(string[,] GameField)
         {
-            var AvailableKillsList = new List<(int, int)>();
+            var AvailableKillsList = new List<Position>();
 
             SetOppositeAndFreindlyPieces();
 
-            //Север
+            //North
             AvailableKillsInDirection(North, GameField, AvailableKillsList, NorthCondition);
-            //Юг
+            //South
             AvailableKillsInDirection(South, GameField, AvailableKillsList, SouthCondition);
-            //Запад
+            //West
             AvailableKillsInDirection(West, GameField, AvailableKillsList, WestCondition);
-            //восток
+            //East
             AvailableKillsInDirection(East, GameField, AvailableKillsList, EastCondition);
             return AvailableKillsList;
         }
@@ -143,9 +142,9 @@ namespace ChessLib
                 myPieces = "kbnpqr";
             }
         }
-        public void ChangePosition((int, int) NewPosition)
+        public void ChangePosition(Position newPosition)
         {
-            Position = NewPosition;
+            Position = newPosition;
         }
 
         public object Clone()
@@ -153,14 +152,14 @@ namespace ChessLib
             return new Rook(Position, Color);
         }
 
-        public Rook((int, int) Position, PieceColor color)
+        public Rook(Position position, PieceColor color)
         {
-            this.Position = Position;
+            this.Position = position;
             Color = color;
             IsDead = false;
             IsMoved = false;
 
-            if (Position.Item1 == 0)
+            if (position.X == 0)
             {
                 RookKind = RookKind.Queen;
             }

@@ -5,8 +5,96 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChessBoard.Windows"
         mc:Ignorable="d"
-        Title="AboutWindow" Height="450" Width="800">
-    <Grid>
+        Title="About Chess" Height="500" Width="600" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
         
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#2C3E50" Padding="20">
+            <StackPanel>
+                <TextBlock Text="♟️ Chess Application" FontSize="28" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="Version 1.0" FontSize="14" Foreground="#ECF0F1" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30">
+            <StackPanel>
+                <TextBlock Text="About This Project" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                
+                <TextBlock TextWrapping="Wrap" LineHeight="28" FontSize="14" Margin="0,0,0,20">
+                    <Run Text="This chess application was started in 2021 as a learning project by a beginner developer. "/>
+                    <Run Text="After a couple of years, I returned to complete and improve it, applying new knowledge and best practices."/>
+                </TextBlock>
+
+                <TextBlock Text="Development Journey" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                
+                <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13" Margin="0,0,0,15">
+                    <Run Text="• Started: 2021 - Initial development as a beginner project"/>
+                    <LineBreak/>
+                    <Run Text="• Returned: 2023-2024 - Refactoring and completion"/>
+                    <LineBreak/>
+                    <Run Text="• Focus: Clean architecture, separation of concerns, and modern .NET practices"/>
+                </TextBlock>
+
+                <TextBlock Text="Features" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                
+                <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13" Margin="0,0,0,15">
+                    <Run Text="• Full chess game logic with all standard rules"/>
+                    <LineBreak/>
+                    <Run Text="• FEN notation support"/>
+                    <LineBreak/>
+                    <Run Text="• Algebraic move notation"/>
+                    <LineBreak/>
+                    <Run Text="• Multiple color schemes"/>
+                    <LineBreak/>
+                    <Run Text="• Both WPF and Console interfaces"/>
+                </TextBlock>
+
+                <TextBlock Text="Technology Stack" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                
+                <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13">
+                    <Run Text="• .NET 8"/>
+                    <LineBreak/>
+                    <Run Text="• WPF for desktop UI"/>
+                    <LineBreak/>
+                    <Run Text="• MVVM pattern"/>
+                    <LineBreak/>
+                    <Run Text="• Clean architecture principles"/>
+                </TextBlock>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#34495E" Padding="15">
+            <Button Content="Close" HorizontalAlignment="Center" Padding="20,8" 
+                    Click="CloseButton_Click" Background="#3498DB" Foreground="White" 
+                    BorderThickness="0" FontSize="14" Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" 
+                                            CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#2980B9"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Border>
     </Grid>
 </Window>

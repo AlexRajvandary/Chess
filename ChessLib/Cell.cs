@@ -3,6 +3,7 @@
     public class Cell
     {
         private IPiece piece;
+
         public bool isAtacked { get; set; }
 
         public bool isFilled { get; set; }

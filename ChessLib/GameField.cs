@@ -16,23 +16,23 @@ namespace ChessLib
 
         }
         /// <summary>
-        /// Узнаем атакована ли клетка
+        /// Checks if cell is attacked
         /// </summary>
         /// <param name="pieces"></param>
         /// <param name="cell"></param>
         /// <param name="gameField"></param>
-        public bool GetAtackStatus(List<IPiece> pieces, (int, int) cell, string[,] gameField)
+        public bool GetAtackStatus(List<IPiece> pieces, Position cell, string[,] gameField)
         {
-            var AllPossibleMoves = new List<(int, int)>();
+            var AllPossibleMoves = new List<Position>();
             foreach (var piece in pieces)
             {
                 AllPossibleMoves.AddRange(piece.AvailableMoves(gameField));
                 AllPossibleMoves.AddRange(piece.AvailableKills(gameField));
             }
-            this[cell.Item1, cell.Item2].isAtacked = AllPossibleMoves.Contains(cell);
+            this[cell.X, cell.Y].isAtacked = AllPossibleMoves.Contains(cell);
             return AllPossibleMoves.Contains(cell);
         }
-        public static bool GetCheckStatusAfterMove(List<IPiece> pieces,IPiece chosenPiece, (int,int) destinationCell)
+        public static bool GetCheckStatusAfterMove(List<IPiece> pieces, IPiece chosenPiece, Position destinationCell)
         {
             pieces.Find(piece => piece == chosenPiece).Position = destinationCell;
 
@@ -48,8 +48,8 @@ namespace ChessLib
 
             foreach(var piece in pieces)
             {
-                board[piece.Position.Item1, piece.Position.Item2].isFilled = true;
-                board[piece.Position.Item1, piece.Position.Item2].Piece = piece;
+                board[piece.Position.X, piece.Position.Y].isFilled = true;
+                board[piece.Position.X, piece.Position.Y].Piece = piece;
             }
             
             for (int i = 0; i < 8; i++)
@@ -58,24 +58,21 @@ namespace ChessLib
                 {
                     if (board[i,j].isAtacked && board[i, j].Piece is King)
                     {
-
                         return true;
-
                     }
                 }
             }
             return false;
-
         }
         /// <summary>
-        /// Узнаем будет ли шах нашему королю после текущего хода
+        /// Checks if our king will be in check after current move
         /// </summary>
-        /// <param name="Pieces">Все фигуры</param>
-        /// <param name="ChosenPiece">Фигура, выбранная для хода</param>
-        /// <param name="DestinationCell">Клетка назначения</param>
-        /// <param name="CurrentPlayer">Текущий игрок</param>
+        /// <param name="Pieces">All pieces</param>
+        /// <param name="ChosenPiece">Piece chosen for move</param>
+        /// <param name="DestinationCell">Destination cell</param>
+        /// <param name="CurrentPlayer">Current player</param>
         /// <returns></returns>
-        public bool GetCheckStatusAfterMove(List<IPiece> Pieces, IPiece ChosenPiece, (int, int) DestinationCell, Player CurrentPlayer)
+        public bool GetCheckStatusAfterMove(List<IPiece> Pieces, IPiece ChosenPiece, Position DestinationCell, Player CurrentPlayer)
         {
             List<IPiece> CopiedPieces = HardCloningOfTheList(Pieces);
 
@@ -89,7 +86,7 @@ namespace ChessLib
 
             King MyKing = (King)MyPieces.Where(piece => piece is King).ToList()[0];
 
-            var AllAvalaibleAttacksOfEnemies = new List<(string, List<(int, int)>)>();
+            var AllAvalaibleAttacksOfEnemies = new List<(string, List<Position>)>();
 
             foreach (var EnemyPiece in EnemyPieces)
             {
@@ -97,18 +94,17 @@ namespace ChessLib
             }
 
             return AllAvalaibleAttacksOfEnemies.Select(x => x.Item2).ToList().SelectMany(a => a).ToList().Contains(MyKing.Position);
-
         }
 
-        private Cell[,] GetFieldAfterMove(IPiece ChosenPiece, (int, int) DestinationCell, List<IPiece> CopiedPieces, object CopiedChosenPiece)
+        private Cell[,] GetFieldAfterMove(IPiece ChosenPiece, Position DestinationCell, List<IPiece> CopiedPieces, object CopiedChosenPiece)
         {
             Cell[,] CloneOfTheField = HardCloningOfTheField();
 
-            CloneOfTheField[ChosenPiece.Position.Item1, ChosenPiece.Position.Item2].isFilled = false;
+            CloneOfTheField[ChosenPiece.Position.X, ChosenPiece.Position.Y].isFilled = false;
 
-            CloneOfTheField[ChosenPiece.Position.Item1, ChosenPiece.Position.Item2].Piece = null;
+            CloneOfTheField[ChosenPiece.Position.X, ChosenPiece.Position.Y].Piece = null;
 
-            if (CloneOfTheField[DestinationCell.Item1, DestinationCell.Item2].isFilled)
+            if (CloneOfTheField[DestinationCell.X, DestinationCell.Y].isFilled)
             {
                 CopiedPieces.Find(piece => piece.Position == DestinationCell).IsDead = true;
 
@@ -126,9 +122,9 @@ namespace ChessLib
 
             CopiedPieces.Find(piece => piece.Position == ((IPiece)CopiedChosenPiece).Position).ChangePosition(DestinationCell);
 
-            CloneOfTheField[DestinationCell.Item1, DestinationCell.Item2].isFilled = true;
+            CloneOfTheField[DestinationCell.X, DestinationCell.Y].isFilled = true;
 
-            CloneOfTheField[DestinationCell.Item1, DestinationCell.Item2].Piece = (IPiece)CopiedChosenPiece;
+            CloneOfTheField[DestinationCell.X, DestinationCell.Y].Piece = (IPiece)CopiedChosenPiece;
 
             return CloneOfTheField;
         }
@@ -228,14 +224,14 @@ namespace ChessLib
         //}
 
         /// <summary>
-        /// Узнаем свободна ли клетка
+        /// Checks if cell is free
         /// </summary>
         /// <param name="Cell"></param>
         /// <param name="gameField"></param>
         /// <returns></returns>
-        public bool IsCellFree((int, int) Cell, string[,] gameField)
+        public bool IsCellFree(Position Cell, string[,] gameField)
         {
-            return gameField[Cell.Item1, Cell.Item2] == " ";
+            return gameField[Cell.X, Cell.Y] == " ";
         }
         /// <summary>
         /// Если клетка атакована и на ней король, то шах
@@ -274,13 +270,13 @@ namespace ChessLib
 
             foreach (var piece in pieces)
             {
-                int i = piece.Position.Item1;
-                int j = piece.Position.Item2;
+                int i = piece.Position.X;
+                int j = piece.Position.Y;
 
                 this[i, j].isFilled = true;
                 this[i, j].Piece = piece;
 
-                GetAtackStatus(enemyPices, (i, j), gameFiled);
+                GetAtackStatus(enemyPices, piece.Position, gameFiled);
             }
         }
 
