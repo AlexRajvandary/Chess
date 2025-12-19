@@ -14,6 +14,8 @@
     <Window.Resources>
         <converters:CellColorConverter x:Key="CellColorConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:ColorSchemeEqualityConverter x:Key="ColorSchemeEqualityConverter"/>
+        <converters:PanelPositionConverter x:Key="PanelPositionConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -179,6 +181,166 @@
                 </ScrollViewer>
             </Grid>
         </Border>
+
+        <!-- Settings Panel Overlay -->
+        <Grid Grid.RowSpan="5" Grid.ColumnSpan="3" 
+              Background="#80000000" 
+              Visibility="{Binding IsSettingsPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+              MouseDown="SettingsOverlay_MouseDown">
+            <Border x:Name="SettingsPanel" 
+                    Width="400" 
+                    HorizontalAlignment="{Binding SettingsPanelAlignment}" 
+                    Background="#F5F5F5"
+                    MouseDown="SettingsPanel_MouseDown">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="Black" Opacity="0.5"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="#2C3E50" Padding="20">
+                        <Grid>
+                            <TextBlock Text="⚙️ Settings" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                            <Button HorizontalAlignment="Right" 
+                                    Command="{Binding CloseSettingsCommand}"
+                                    Background="Transparent" 
+                                    BorderThickness="0" 
+                                    Foreground="White" 
+                                    FontSize="20" 
+                                    Padding="10"
+                                    Cursor="Hand"
+                                    Content="✕"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+                        <StackPanel DataContext="{Binding SettingsViewModel}">
+                            <!-- Panel Position -->
+                            <TextBlock Text="📍 Panel Position" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Choose where the settings panel appears" FontSize="12" Margin="0,0,0,10" Foreground="#555"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <StackPanel>
+                                    <RadioButton Content="Left" IsChecked="{Binding PanelPosition, Converter={StaticResource PanelPositionConverter}, ConverterParameter=Left}" 
+                                                GroupName="PanelPosition" Margin="0,0,0,5" FontSize="13"/>
+                                    <RadioButton Content="Right" IsChecked="{Binding PanelPosition, Converter={StaticResource PanelPositionConverter}, ConverterParameter=Right}" 
+                                                GroupName="PanelPosition" FontSize="13"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <TextBlock Text="🎨 Color Scheme" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Choose a color scheme for the chess board" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            
+                            <!-- Custom Color Scheme Section -->
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <TextBlock Text="🎨 Custom Colors" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <TextBlock Text="Light:" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                            <Border Background="{Binding CustomLightColor}" BorderBrush="#CCC" BorderThickness="1" 
+                                                    Height="40" CornerRadius="3"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="Choose" Padding="10,5" 
+                                                Command="{Binding SelectCustomLightColorCommand}" 
+                                                Background="#3498DB" Foreground="White" 
+                                                BorderThickness="0" FontSize="11" Cursor="Hand" 
+                                                VerticalAlignment="Bottom" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="2" Margin="10,0,10,0">
+                                            <TextBlock Text="Dark:" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                            <Border Background="{Binding CustomDarkColor}" BorderBrush="#CCC" BorderThickness="1" 
+                                                    Height="40" CornerRadius="3"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="3" Content="Choose" Padding="10,5" 
+                                                Command="{Binding SelectCustomDarkColorCommand}" 
+                                                Background="#3498DB" Foreground="White" 
+                                                BorderThickness="0" FontSize="11" Cursor="Hand" 
+                                                VerticalAlignment="Bottom"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Color Schemes Grid -->
+                            <ItemsControl ItemsSource="{Binding ColorSchemes}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" Rows="5"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton GroupName="ColorSchemes" Margin="5" 
+                                                    Tag="{Binding}"
+                                                    Checked="ColorSchemeRadioButton_Checked">
+                                            <RadioButton.IsChecked>
+                                                <MultiBinding Converter="{StaticResource ColorSchemeEqualityConverter}">
+                                                    <Binding Path="DataContext.SettingsViewModel.SelectedColorScheme" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                    <Binding Path="Tag" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
+                                                </MultiBinding>
+                                            </RadioButton.IsChecked>
+                                            <RadioButton.Content>
+                                                <Border Padding="10" Background="White" 
+                                                        BorderThickness="2" BorderBrush="#DDD" CornerRadius="5"
+                                                        Cursor="Hand">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                                    <Setter Property="BorderBrush" Value="#3498DB"/>
+                                                                    <Setter Property="BorderThickness" Value="3"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Icon}" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                                        <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                                                        <TextBlock Text="{Binding Description}" FontSize="10" TextWrapping="Wrap" 
+                                                                   HorizontalAlignment="Center" Foreground="#666" TextAlignment="Center" Margin="0,0,0,8"/>
+                                                        <Grid Height="30" Margin="0,3,0,0">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="{Binding LightSquareColor}" 
+                                                                    BorderBrush="#CCC" BorderThickness="1" Margin="0,0,1,0"/>
+                                                            <Border Grid.Column="1" Background="{Binding DarkSquareColor}" 
+                                                                    BorderBrush="#CCC" BorderThickness="1" Margin="1,0,0,0"/>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </RadioButton.Content>
+                                            <RadioButton.Style>
+                                                <Style TargetType="RadioButton">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="RadioButton">
+                                                                <ContentPresenter/>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </RadioButton.Style>
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
 
     </Grid>
 </Window>

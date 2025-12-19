@@ -31,9 +31,13 @@ namespace ChessWPF.ViewModels
         private ICommand toggleNotationCommand;
         private ICommand openAboutCommand;
         private ICommand openSettingsCommand;
+        private ICommand closeSettingsCommand;
         private Brush lightSquareColor;
         private Brush darkSquareColor;
         private readonly SoundService soundService;
+        private SettingsViewModel settingsViewModel;
+        private bool isSettingsPanelVisible;
+        private System.Windows.HorizontalAlignment settingsPanelAlignment = System.Windows.HorizontalAlignment.Left;
 
         public MainViewModel()
         {
@@ -45,6 +49,20 @@ namespace ChessWPF.ViewModels
             
             // Initialize sound service
             soundService = new SoundService();
+            
+            // Initialize settings view model
+            settingsViewModel = new SettingsViewModel();
+            settingsViewModel.OnColorSchemeChanged += (scheme) =>
+            {
+                LightSquareColor = scheme.LightSquareColor;
+                DarkSquareColor = scheme.DarkSquareColor;
+            };
+            settingsViewModel.OnPanelPositionChanged += (position) =>
+            {
+                SettingsPanelAlignment = position == ViewModels.PanelPosition.Left 
+                    ? System.Windows.HorizontalAlignment.Left 
+                    : System.Windows.HorizontalAlignment.Right;
+            };
         }
 
         public Brush LightSquareColor
@@ -75,18 +93,43 @@ namespace ChessWPF.ViewModels
 
         public ICommand OpenSettingsCommand => openSettingsCommand ??= new RelayCommand(parameter =>
         {
-            var settingsWindow = new SettingsWindow();
-            var settingsViewModel = new SettingsViewModel();
-            
-            settingsViewModel.OnColorSchemeChanged += (scheme) =>
-            {
-                LightSquareColor = scheme.LightSquareColor;
-                DarkSquareColor = scheme.DarkSquareColor;
-            };
-            
-            settingsWindow.DataContext = settingsViewModel;
-            settingsWindow.ShowDialog();
+            IsSettingsPanelVisible = true;
         });
+
+        public ICommand CloseSettingsCommand => closeSettingsCommand ??= new RelayCommand(parameter =>
+        {
+            IsSettingsPanelVisible = false;
+        });
+
+        public SettingsViewModel SettingsViewModel
+        {
+            get => settingsViewModel;
+            set
+            {
+                settingsViewModel = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsSettingsPanelVisible
+        {
+            get => isSettingsPanelVisible;
+            set
+            {
+                isSettingsPanelVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public System.Windows.HorizontalAlignment SettingsPanelAlignment
+        {
+            get => settingsPanelAlignment;
+            set
+            {
+                settingsPanelAlignment = value;
+                OnPropertyChanged();
+            }
+        }
 
         public BoardViewModel Board
         {

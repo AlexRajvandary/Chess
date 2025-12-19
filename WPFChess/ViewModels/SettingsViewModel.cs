@@ -8,6 +8,12 @@ using ChessWPF.Commands;
 
 namespace ChessWPF.ViewModels
 {
+    public enum PanelPosition
+    {
+        Left,
+        Right
+    }
+
     public class SettingsViewModel : NotifyPropertyChanged
     {
         private ColorScheme selectedColorScheme;
@@ -15,6 +21,7 @@ namespace ChessWPF.ViewModels
         private Color customDarkColor;
         private bool isUpdatingCustomScheme = false;
         private bool isUpdatingFromSelection = false;
+        private PanelPosition panelPosition = PanelPosition.Left;
 
         public ObservableCollection<ColorScheme> ColorSchemes { get; set; }
 
@@ -94,6 +101,20 @@ namespace ChessWPF.ViewModels
         public ICommand SelectCustomDarkColorCommand { get; }
 
         public event System.Action<ColorScheme> OnColorSchemeChanged;
+        public event System.Action<PanelPosition> OnPanelPositionChanged;
+
+        public PanelPosition PanelPosition
+        {
+            get => panelPosition;
+            set
+            {
+                if (panelPosition == value) return;
+                
+                panelPosition = value;
+                OnPropertyChanged();
+                OnPanelPositionChanged?.Invoke(value);
+            }
+        }
 
         public SettingsViewModel()
         {
