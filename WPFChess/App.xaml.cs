@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace ChessBoard
+namespace ChessWPF
 {
     /// <summary>
     /// Interaction logic for App.xaml

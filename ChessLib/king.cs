@@ -5,12 +5,21 @@ namespace ChessLib
 {
     public class King : IPiece
     {
+        private string pieces;
+
+        public King(Position position, PieceColor color)
+        {
+            this.Position = position;
+            Color = color;
+            IsDead = false;
+            IsMoved = false;
+        }
 
         public PieceColor Color { get; set; }
         public Position Position { get; set; }
         public bool IsDead { get; set; }
-
         public bool IsMoved { get; set; }
+
         private void AvailableMoveInOneDirection(string[,] GameField, List<Position> AvailableMovesList, Position Direction, Func<int, int, bool> Condition)
         {
             if (Condition(Position.X, Position.Y))
@@ -22,6 +31,7 @@ namespace ChessLib
                 }
             }
         }
+
         public List<Position> AvailableMoves(string[,] GameField)
         {
             var AvailableMovesList = new List<Position>();
@@ -29,16 +39,10 @@ namespace ChessLib
             {
                 AvailableMoveInOneDirection(GameField, AvailableMovesList, Directions[i], AttackConditions[i]);
             }
+
             return AvailableMovesList;
         }
-        /// <summary>
-        /// Короткая рокировка
-        /// </summary>
-        /// <param name="rook">Ладья, с которой рокеруемся</param>
-        /// <param name="gameField">игровое поле</param>
-        /// <param name="pieces">Вражеские фигуры</param>
-        /// <param name="gameFieldStr">Игровое поле в строковом представлении</param>
-        /// <returns></returns>
+      
         public bool ShortCastling(Rook rook, GameField gameField, List<IPiece> pieces, string[,] gameFieldStr)
         {
             if (!IsMoved && !rook.IsMoved)
@@ -52,23 +56,19 @@ namespace ChessLib
                     {
                         isAttacked = true;
                     }
+
                     if (!gameField.IsCellFree(checkPos, gameFieldStr))
                     {
                         isFree = false;
                     }
                 }
+
                 return !isAttacked && isFree;
             }
+
             return false;
         }
-        /// <summary>
-        /// Long castling, checks if castling is possible
-        /// </summary>
-        /// <param name="rook">Rook to castle with</param>
-        /// <param name="gameField">Game field</param>
-        /// <param name="EnemyPieces">Enemy pieces</param>
-        /// <param name="gameFieldStr"></param>
-        /// <returns>True if castling is possible</returns>
+       
         public bool LongCastling(Rook rook, GameField gameField, List<IPiece> EnemyPieces, string[,] gameFieldStr)
         {
             if (!IsMoved && !rook.IsMoved)
@@ -82,27 +82,24 @@ namespace ChessLib
                     {
                         isAttacked = true;
                     }
+
                     if (!gameField.IsCellFree(checkPos, gameFieldStr))
                     {
                         isFree = false;
                     }
                 }
+
                 return !isAttacked && isFree;
             }
+
             return false;
         }
-        public King(Position position, PieceColor color)
-        {
-            this.Position = position;
-            Color = color;
-            IsDead = false;
-            IsMoved = false;
-        }
+      
         public override string ToString()
         {
             return Color == PieceColor.White ? "K" : "k";
         }
-        private string pieces;
+        
         public List<Position> AvailableKills(string[,] GameField)
         {
             var AvailableKillsList = new List<Position>();
@@ -126,7 +123,6 @@ namespace ChessLib
 
         private void GetOppositeAndFriendPieces()
         {
-
             if (Color == PieceColor.White)
             {
                 pieces = "kbnpqr";
@@ -135,9 +131,8 @@ namespace ChessLib
             {
                 pieces = "KBNPQR";
             }
-
-
         }
+
         public void ChangePosition(Position newPosition)
         {
             Position = newPosition;
@@ -165,14 +160,14 @@ namespace ChessLib
         /// 8 directions for move/attack
         /// </summary>
         private readonly Position[] Directions = new Position[] {
-            new Position(1, 1),
-            new Position(0, 1),
-            new Position(-1, 1),
-            new Position(-1, 0),
-            new Position(1, 0),
-            new Position(-1, -1),
-            new Position(0, -1),
-            new Position(1, -1)
+            new(1, 1),
+            new(0, 1),
+            new(-1, 1),
+            new(-1, 0),
+            new(1, 0),
+            new(-1, -1),
+            new(0, -1),
+            new(1, -1)
         };
     }
 }

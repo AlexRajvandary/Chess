@@ -47,7 +47,7 @@ namespace ChessLib
         /// Устанавливает начальные позиции фигурам
         /// </summary>
         /// <returns>Список фигур</returns>
-        public List<IPiece> GetPiecesStartPosition()
+        public static List<IPiece> GetPiecesStartPosition()
         {
             var Pieces = new List<IPiece>();
             //Create pawns
@@ -92,7 +92,7 @@ namespace ChessLib
         /// </summary>
         /// <param name="pieces">Список фигур</param>
         /// <returns>Строковое представление игровой доски</returns>
-        public string[,] GetGameField(List<IPiece> pieces)
+        public static string[,] GetGameField(List<IPiece> pieces)
         {
             string[,] GameField = new string[8, 8];
             foreach (var piece in pieces)
@@ -112,7 +112,6 @@ namespace ChessLib
             return GameField;
         }
 
-
         /// <summary>
         /// Initializes a new game
         /// </summary>
@@ -127,7 +126,7 @@ namespace ChessLib
             MoveHistory = new List<MoveNotation>();
 
             // Player with white pieces
-            Player player1 = new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
+            Player player1 = new(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1");
 
             // Player with black pieces
             Player player2 = new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2");
@@ -359,7 +358,9 @@ namespace ChessLib
         {
             CurrentPlayer++;
             if (CurrentPlayer >= 2)
+            {
                 CurrentPlayer = 0;
+            }
         }
 
         /// <summary>

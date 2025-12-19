@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace ChessBoard
+namespace ChessWPF.Commands
 {
     public class RelayCommand : ICommand
     {
@@ -14,7 +14,7 @@ namespace ChessBoard
             remove { CommandManager.RequerySuggested -= value; }
         }
         /// <summary>
-        /// ввв
+        /// Relay command implementation for MVVM pattern
         /// </summary>
         /// <param name="execute"></param>
         /// <param name="canExecute"></param>

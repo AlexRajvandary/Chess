@@ -1,9 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using ChessBoard.Models;
-using ChessBoard.ViewModels;
 
-namespace ChessBoard.Windows
+namespace ChessWPF.Windows
 {
     /// <summary>
     /// Interaction logic for SettingsWindow.xaml

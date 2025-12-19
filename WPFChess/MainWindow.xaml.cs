@@ -1,4 +1,6 @@
-﻿namespace ChessBoard
+﻿using ChessWPF.ViewModels;
+
+namespace ChessWPF
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

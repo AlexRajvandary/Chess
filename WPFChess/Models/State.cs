@@ -1,6 +1,9 @@
-﻿namespace ChessBoard
+﻿namespace ChessWPF.Models
 {
-    public enum State
+    /// <summary>
+    /// UI state for a chess cell - represents piece type and color for display
+    /// </summary>
+    public enum CellUIState
     {
         Empty,       // пусто
         WhiteKing,   // король

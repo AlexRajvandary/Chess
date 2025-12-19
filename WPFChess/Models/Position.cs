@@ -1,4 +1,4 @@
-﻿namespace ChessBoard
+﻿namespace ChessWPF
 {
     /// <summary>
     /// Позиция 

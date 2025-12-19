@@ -1,6 +1,6 @@
 using System.Windows.Media;
 
-namespace ChessBoard.Models
+namespace ChessWPF.Models
 {
     /// <summary>
     /// Represents a color scheme for the chess board
@@ -23,4 +23,5 @@ namespace ChessBoard.Models
         }
     }
 }
+
 

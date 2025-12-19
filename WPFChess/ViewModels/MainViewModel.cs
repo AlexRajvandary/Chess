@@ -7,20 +7,21 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using ChessLib;
-using ChessBoard.Models;
-using ChessBoard.Windows;
-using ChessBoard.Services;
+using ChessWPF.Models;
+using ChessWPF.Services;
+using ChessWPF.Commands;
+using ChessWPF.Windows;
 
-namespace ChessBoard
+namespace ChessWPF.ViewModels
 {
     public class MainViewModel : NotifyPropertyChanged
     {
         private const string pathOfFenFile = "fen.txt";
 
-        private Board board;
+        private BoardViewModel board;
         private ICommand cellCommand;
         
-        private Game game;
+        private ChessGameService gameService;
         private ObservableCollection<string> moves;
         private ICommand newGameCommand;
         private ObservableCollection<string> playerMoves;
@@ -36,7 +37,8 @@ namespace ChessBoard
 
         public MainViewModel()
         {
-            Board = new Board();
+            Board = new BoardViewModel();
+            gameService = new ChessGameService();
             // Initialize with default colors
             LightSquareColor = new SolidColorBrush(Color.FromRgb(240, 217, 181)); // Bisque
             DarkSquareColor = new SolidColorBrush(Color.FromRgb(181, 136, 99));   // SandyBrown
@@ -74,9 +76,8 @@ namespace ChessBoard
         public ICommand OpenSettingsCommand => openSettingsCommand ??= new RelayCommand(parameter =>
         {
             var settingsWindow = new SettingsWindow();
-            var settingsViewModel = new ViewModels.SettingsViewModel();
+            var settingsViewModel = new SettingsViewModel();
             
-            // Subscribe to color scheme changes
             settingsViewModel.OnColorSchemeChanged += (scheme) =>
             {
                 LightSquareColor = scheme.LightSquareColor;
@@ -87,7 +88,7 @@ namespace ChessBoard
             settingsWindow.ShowDialog();
         });
 
-        public Board Board
+        public BoardViewModel Board
         {
             get => board;
             set
@@ -99,56 +100,48 @@ namespace ChessBoard
 
         public ICommand CellCommand => cellCommand ??= new RelayCommand(parameter =>
         {
-            Cell currentCell = (Cell)parameter;
-            Cell previousActiveCell = Board.FirstOrDefault(x => x.Active);
+            CellViewModel currentCell = (CellViewModel)parameter;
+            CellViewModel previousActiveCell = Board.FirstOrDefault(x => x.Active);
 
-            // Convert UI positions to chess positions
             var currentPos = new ChessLib.Position(currentCell.Position.Horizontal, currentCell.Position.Vertical);
             
             if (previousActiveCell == null)
             {
-                // First click - select piece
                 SelectPiece(currentCell);
             }
             else
             {
-                // Second click - make move
                 var fromPos = new ChessLib.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
-                
-                // Use Game API to make move
-                var result = game.MakeMove(fromPos, currentPos);
+                var result = gameService.MakeMove(fromPos, currentPos);
                 
                 if (result.IsValid)
                 {
-                    // Play move sound
                     soundService.PlayMoveSound(result);
-                    
-                    // Update UI based on game state
                     UpdateViewFromGameState();
                     
                     if (result.IsCheck)
+                    {
                         MessageBox.Show("Check!");
+                    }
+
                     if (result.IsCheckmate)
                     {
                         MessageBox.Show("Checkmate!");
                         soundService.PlayCheckmateSound();
                     }
                     
-                    // Save FEN notation
-                    var fen = game.GetFen();
+                    var fen = gameService.GetFen();
                     File.AppendAllText(pathOfFenFile, $"{fen}\n");
                 }
                 else
                 {
-                    // Show error message
-                    var validMoves = game.GetValidMoves(fromPos);
+                    var validMoves = gameService.GetValidMoves(fromPos);
                     IncorrectMoveMessage(currentCell, validMoves);
                 }
                 
-                // Clear selection
                 previousActiveCell.Active = false;
             }
-        }, parameter => parameter is Cell cell && (Board.Any(x => x.Active) || cell.State != State.Empty));
+        }, parameter => parameter is CellViewModel cell && (Board.Any(x => x.Active) || cell.State != CellUIState.Empty));
 
         public ObservableCollection<string> PlayersMoves
         {
@@ -208,15 +201,14 @@ namespace ChessBoard
 
         public ICommand NewGameCommand => newGameCommand ??= new RelayCommand(parameter =>
         {
-            game = new Game();
+            gameService.StartNewGame();
             playerMoves = new ObservableCollection<string>();
             moves = new ObservableCollection<string>();
-            var initialFen = game.GetFen();
-            File.WriteAllText(pathOfFenFile, $"{DateTime.Now.ToString()}\n{initialFen}\n");
+            var initialFen = gameService.GetFen();
+            File.WriteAllText(pathOfFenFile, $"{DateTime.Now}\n{initialFen}\n");
             
-            // Set initial FEN and move history
             Fen = initialFen;
-            MoveHistory = "";
+            MoveHistory = string.Empty;
 
             SetupBoard();
         });
@@ -224,10 +216,10 @@ namespace ChessBoard
         /// <summary>
         /// Selects a piece and shows valid moves
         /// </summary>
-        private void SelectPiece(Cell cell)
+        private void SelectPiece(CellViewModel cell)
         {
             var pos = new ChessLib.Position(cell.Position.Horizontal, cell.Position.Vertical);
-            var validMoves = game.GetValidMoves(pos);
+            var validMoves = gameService.GetValidMoves(pos);
             
             // Highlight valid moves on board
             foreach (var move in validMoves)
@@ -247,60 +239,60 @@ namespace ChessBoard
         /// </summary>
         private void UpdateViewFromGameState()
         {
-            var state = game.GetState();
+            var boardState = gameService.GetBoardState();
             
             // Update board representation
-            UpdateBoardFromState(state);
+            ApplyBoardState(boardState);
             
             // Update FEN notation and move history
-            Fen = game.GetFen();
-            MoveHistory = game.GetMoveHistory();
+            Fen = gameService.GetFen();
+            MoveHistory = gameService.GetMoveHistory();
         }
 
         /// <summary>
-        /// Updates board UI from game state
+        /// Applies board state snapshot to the UI board
         /// </summary>
-        private void UpdateBoardFromState(GameState state)
+        private void ApplyBoardState(BoardStateSnapshot boardState)
         {
             // Update board cells based on pieces
             for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    var piece = state.Pieces.FirstOrDefault(p => p.Position.X == j && p.Position.Y == i && !p.IsDead);
-                    if (piece != null)
+                    var pieceInfo = boardState.Cells[j, i];
+                    if (pieceInfo != null)
                     {
-                        // Convert piece to State enum and update board
-                        Board[7 - i, j] = GetStateFromPiece(piece);
+                        // Convert piece to CellUiState enum and update board
+                        Board[7 - i, j] = GetStateFromPiece(pieceInfo.Piece);
                     }
                     else
                     {
-                        Board[7 - i, j] = State.Empty;
+                        Board[7 - i, j] = CellUIState.Empty;
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Converts IPiece to State enum
+        /// Converts IPiece to CellUiState enum
         /// </summary>
-        private State GetStateFromPiece(IPiece piece)
+        private CellUIState GetStateFromPiece(IPiece piece)
         {
             bool isWhite = piece.Color == PieceColor.White;
             
             return piece switch
             {
-                Pawn => isWhite ? State.WhitePawn : State.BlackPawn,
-                Rook => isWhite ? State.WhiteRook : State.BlackRook,
-                Knight => isWhite ? State.WhiteKnight : State.BlackKnight,
-                Bishop => isWhite ? State.WhiteBishop : State.BlackBishop,
-                Queen => isWhite ? State.WhiteQueen : State.BlackQueen,
-                King => isWhite ? State.WhiteKing : State.BlackKing,
-                _ => State.Empty
+                Pawn => isWhite ? CellUIState.WhitePawn : CellUIState.BlackPawn,
+                Rook => isWhite ? CellUIState.WhiteRook : CellUIState.BlackRook,
+                Knight => isWhite ? CellUIState.WhiteKnight : CellUIState.BlackKnight,
+                Bishop => isWhite ? CellUIState.WhiteBishop : CellUIState.BlackBishop,
+                Queen => isWhite ? CellUIState.WhiteQueen : CellUIState.BlackQueen,
+                King => isWhite ? CellUIState.WhiteKing : CellUIState.BlackKing,
+                _ => CellUIState.Empty
             };
         }
 
-        private static void IncorrectMoveMessage(Cell CurrentCell, List<ChessLib.Position> ValidMoves)
+        private static void IncorrectMoveMessage(CellViewModel CurrentCell, List<ChessLib.Position> ValidMoves)
         {
             string info = "";
             foreach (var move in ValidMoves)

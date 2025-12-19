@@ -2,11 +2,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows.Media;
-using ChessBoard.Models;
+using ChessWPF.Models;
 using System.Windows;
-using ChessBoard;
+using ChessWPF.Commands;
 
-namespace ChessBoard.ViewModels
+namespace ChessWPF.ViewModels
 {
     public class SettingsViewModel : NotifyPropertyChanged
     {
