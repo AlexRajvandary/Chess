@@ -3,6 +3,12 @@
 ## Описание
 Простая игра Шахматы. Реализована как консольная версия, так и оконная версия игры (WPF)
 
+### WPF
+![img](images/colors.gif)
+![img](images/import_games.gif)
+![img](images/chessPlay.gif)
+### Console
+![img](images/chessConsolePlay.gif)
 ## Features
 
 ### Game Logic
@@ -42,24 +48,6 @@
 - Text-based interface for console play
 - ASCII board visualization
 - Interactive piece and move selection
-### WPF
-![img](images/colors.gif)
-![img](images/import_games.gif)
-![img](images/chessPlay.gif)
-### Console
-![img](images/chessConsolePlay.gif)
-## Структура проекта
-- **Chess/WPFChess**
-    - WPF проект (MVVM)
-- **Chess/ChessLib**
-    - Библиотека классов. Здесь реализована логика движения фигур.
-- **Chess/chess**
-    - Консольное приложение
-- **Chess/svg**
-    - Ресурсы для фигур в WPF (векторные картинки)
-## Как запустить код
-Достаточно просто скачать репозиторий и запустить решение в Visual Studio, выбрать проект.
-В **консольной версии** нужно выбрать желаемую фигуру из списка доступных (нажать ее номер на клавиатуре), затем выбрать желаемый ход из доступных.
 ## Модели шахматных фигур
 В **WPF версии** используются модели шахматных фигур (картинки векторные), скачанные из общедоступного сайта https://www.iconfinder.com/
   
