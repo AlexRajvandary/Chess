@@ -72,6 +72,14 @@ namespace ChessWPF.ViewModels
                     ? System.Windows.HorizontalAlignment.Left 
                     : System.Windows.HorizontalAlignment.Right;
             };
+            settingsViewModel.OnShowAvailableMovesChanged += (show) =>
+            {
+                // If disabled, clear current highlights
+                if (!show)
+                {
+                    ClearAvailableMoves();
+                }
+            };
         }
 
         public Brush LightSquareColor
@@ -410,13 +418,16 @@ namespace ChessWPF.ViewModels
             var pos = new ChessLib.Position(cell.Position.Horizontal, cell.Position.Vertical);
             var validMoves = gameService.GetValidMoves(pos);
             
-            // Highlight valid moves on board
-            foreach (var move in validMoves)
+            // Highlight valid moves on board if enabled in settings
+            if (settingsViewModel.ShowAvailableMoves)
             {
-                var boardCell = Board.FirstOrDefault(c => c.Position.Horizontal == move.X && c.Position.Vertical == move.Y);
-                if (boardCell != null)
+                foreach (var move in validMoves)
                 {
-                    boardCell.AvailableMove = true;
+                    var boardCell = Board.FirstOrDefault(c => c.Position.Horizontal == move.X && c.Position.Vertical == move.Y);
+                    if (boardCell != null)
+                    {
+                        boardCell.AvailableMove = true;
+                    }
                 }
             }
             

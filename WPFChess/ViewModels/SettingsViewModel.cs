@@ -14,6 +14,7 @@ namespace ChessWPF.ViewModels
         private bool isUpdatingCustomScheme = false;
         private bool isUpdatingFromSelection = false;
         private PanelPosition panelPosition = PanelPosition.Left;
+        private bool showAvailableMoves = true;
 
         public ObservableCollection<ColorScheme> ColorSchemes { get; set; }
 
@@ -102,6 +103,7 @@ namespace ChessWPF.ViewModels
 
         public event System.Action<ColorScheme> OnColorSchemeChanged;
         public event System.Action<PanelPosition> OnPanelPositionChanged;
+        public event System.Action<bool> OnShowAvailableMovesChanged;
 
         public PanelPosition PanelPosition
         {
@@ -113,6 +115,19 @@ namespace ChessWPF.ViewModels
                 panelPosition = value;
                 OnPropertyChanged();
                 OnPanelPositionChanged?.Invoke(value);
+            }
+        }
+
+        public bool ShowAvailableMoves
+        {
+            get => showAvailableMoves;
+            set
+            {
+                if (showAvailableMoves == value) return;
+                
+                showAvailableMoves = value;
+                OnPropertyChanged();
+                OnShowAvailableMovesChanged?.Invoke(value);
             }
         }
 
