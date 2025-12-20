@@ -67,7 +67,6 @@
                 <Style TargetType="TabItem">
                     <Setter Property="Padding" Value="20,10"/>
                     <Setter Property="FontSize" Value="14"/>
-                    <Setter Property="FontWeight" Value="SemiBold"/>
                     <Setter Property="Background" Value="#ECF0F1"/>
                     <Setter Property="BorderThickness" Value="0,0,0,3"/>
                     <Setter Property="BorderBrush" Value="Transparent"/>
@@ -89,7 +88,7 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <!-- New Game -->
-                            <TextBlock Text="🆕 New Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="🆕 New Game" FontSize="18" Margin="0,0,0,10"/>
                             <TextBlock Text="Start a fresh chess game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="New Game" 
@@ -105,7 +104,7 @@
                             </Border>
 
                             <!-- Load Game -->
-                            <TextBlock Text="📂 Load Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="📂 Load Game" FontSize="18" Margin="0,0,0,10"/>
                             <TextBlock Text="Load a previously saved game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="Load Game" 
@@ -121,7 +120,7 @@
                             </Border>
 
                             <!-- Save Game -->
-                            <TextBlock Text="💾 Save Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="💾 Save Game" FontSize="18" Margin="0,0,0,10"/>
                             <TextBlock Text="Save the current game state" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="Save Game" 

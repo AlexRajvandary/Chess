@@ -3,17 +3,9 @@ using System.Linq;
 using System.Windows.Input;
 using System.Windows.Media;
 using ChessWPF.Models;
-using System.Windows;
-using ChessWPF.Commands;
 
 namespace ChessWPF.ViewModels
 {
-    public enum PanelPosition
-    {
-        Left,
-        Right
-    }
-
     public class SettingsViewModel : NotifyPropertyChanged
     {
         private ColorScheme selectedColorScheme;

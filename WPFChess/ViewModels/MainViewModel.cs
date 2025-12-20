@@ -9,7 +9,6 @@ using System.Windows.Media;
 using ChessLib;
 using ChessWPF.Models;
 using ChessWPF.Services;
-using ChessWPF.Commands;
 
 namespace ChessWPF.ViewModels
 {

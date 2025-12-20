@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace ChessWPF.Commands
+namespace ChessWPF.ViewModels
 {
     public class RelayCommand : ICommand
     {
