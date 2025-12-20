@@ -50,6 +50,15 @@ namespace ChessWPF.ViewModels
         private ICommand refreshGamesCommand;
         private ObservableCollection<CapturedPieceInfo> capturedByWhite;
         private ObservableCollection<CapturedPieceInfo> capturedByBlack;
+        private bool isGameLoaded = false;
+        private List<string> loadedGameMoves = new List<string>();
+        private int selectedMoveIndex = -1;
+        private ObservableCollection<MoveDisplayItem> moveHistoryItems;
+        private ICommand previousMoveCommand;
+        private ICommand nextMoveCommand;
+        private ICommand toggleAutoPlayCommand;
+        private System.Windows.Threading.DispatcherTimer autoPlayTimer;
+        private bool isAutoPlaying = false;
         private System.Windows.HorizontalAlignment settingsPanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment gamePanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment aboutPanelAlignment = System.Windows.HorizontalAlignment.Left;
@@ -97,6 +106,27 @@ namespace ChessWPF.ViewModels
             // Initialize captured pieces collections
             CapturedByWhite = new ObservableCollection<CapturedPieceInfo>();
             CapturedByBlack = new ObservableCollection<CapturedPieceInfo>();
+            
+            // Initialize move history items
+            MoveHistoryItems = new ObservableCollection<MoveDisplayItem>();
+            
+            // Initialize auto-play timer
+            autoPlayTimer = new System.Windows.Threading.DispatcherTimer();
+            autoPlayTimer.Interval = TimeSpan.FromSeconds(1.0); // 1 second per move
+            autoPlayTimer.Tick += AutoPlayTimer_Tick;
+        }
+
+        private void AutoPlayTimer_Tick(object sender, EventArgs e)
+        {
+            if (IsGameLoaded && SelectedMoveIndex < loadedGameMoves.Count - 1)
+            {
+                NavigateToMove(SelectedMoveIndex + 1);
+            }
+            else
+            {
+                // Reached the end, stop auto-play
+                StopAutoPlay();
+            }
         }
 
         public Brush LightSquareColor
@@ -255,54 +285,12 @@ namespace ChessWPF.ViewModels
         {
             try
             {
-                // Start new game
-                gameService.StartNewGame();
-
-                // Parse PGN and apply moves
-                var moves = PgnService.ParsePgnMoves(gameRecord.PgnNotation);
-
-                // Apply each move to reach the final position
-                int appliedMoves = 0;
-                foreach (var moveNotation in moves)
-                {
-                    var moveInfo = PgnMoveParser.ParseMove(moveNotation, gameService.CurrentGame);
-                    if (moveInfo != null)
-                    {
-                        var result = gameService.MakeMove(moveInfo.From, moveInfo.To);
-                        if (result.IsValid)
-                        {
-                            appliedMoves++;
-                        }
-                        // Continue even if move fails - some moves might not parse correctly
-                    }
-                }
-
-                // Update view - this will update board, FEN, and move history
-                // This ensures the board shows the final position after all moves
-                UpdateViewFromGameState();
+                // Parse PGN and save moves
+                loadedGameMoves = PgnService.ParsePgnMoves(gameRecord.PgnNotation);
+                IsGameLoaded = true;
                 
-                // Update captured pieces from move history
-                UpdateCapturedPieces();
-                
-                // Explicitly update move history from the game's MoveHistory
-                // This ensures all moves are displayed in the notation panel
-                var history = gameService.GetMoveHistory();
-                if (!string.IsNullOrEmpty(history))
-                {
-                    MoveHistory = history;
-                }
-                else
-                {
-                    // If history is empty, try to get it from PGN directly
-                    // Format the moves from PGN for display
-                    MoveHistory = FormatMovesFromPgn(moves);
-                }
-                
-                // Update FEN to show final position
-                Fen = gameService.GetFen();
-                
-                // Force UI update
-                SetupBoard();
+                // Apply all moves to show final position
+                NavigateToMove(loadedGameMoves.Count - 1);
                 
                 // Clear selection after loading
                 SelectedGame = null;
@@ -311,6 +299,241 @@ namespace ChessWPF.ViewModels
             {
                 MessageBox.Show($"Ошибка при загрузке партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>
+        /// Navigates to a specific move in the loaded game
+        /// </summary>
+        private void NavigateToMove(int moveIndex)
+        {
+            if (!IsGameLoaded || moveIndex < -1 || moveIndex >= loadedGameMoves.Count)
+                return;
+
+            // Start new game
+            gameService.StartNewGame();
+
+            // Apply moves up to the selected index
+            for (int i = 0; i <= moveIndex; i++)
+            {
+                var moveNotation = loadedGameMoves[i];
+                var moveInfo = PgnMoveParser.ParseMove(moveNotation, gameService.CurrentGame);
+                if (moveInfo != null)
+                {
+                    var result = gameService.MakeMove(moveInfo.From, moveInfo.To);
+                    // Continue even if move fails
+                }
+            }
+
+            SelectedMoveIndex = moveIndex;
+
+            // Update view
+            UpdateViewFromGameState();
+            UpdateCapturedPieces();
+            
+            // Update move history display
+            UpdateMoveHistoryItems();
+            
+            Fen = gameService.GetFen();
+            SetupBoard();
+            
+            // Force command re-evaluation
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+        }
+
+        /// <summary>
+        /// Updates the move history items collection for clickable display
+        /// </summary>
+        private void UpdateMoveHistoryItems()
+        {
+            MoveHistoryItems.Clear();
+            
+            if (!IsGameLoaded || loadedGameMoves == null || loadedGameMoves.Count == 0)
+            {
+                // For non-loaded games, use formatted text
+                if (!string.IsNullOrEmpty(MoveHistory))
+                {
+                    MoveHistoryItems.Add(new MoveDisplayItem
+                    {
+                        MoveNumber = 0,
+                        WhiteMoveText = MoveHistory,
+                        BlackMoveText = null
+                    });
+                }
+                return;
+            }
+
+            // Parse moves and create items - group white and black moves together
+            int moveNumber = 1;
+            for (int i = 0; i < loadedGameMoves.Count; i += 2)
+            {
+                int whiteIndex = i;
+                int blackIndex = i + 1;
+                string whiteMove = loadedGameMoves[whiteIndex];
+                string blackMove = blackIndex < loadedGameMoves.Count ? loadedGameMoves[blackIndex] : null;
+                
+                var item = new MoveDisplayItem
+                {
+                    MoveNumber = moveNumber,
+                    WhiteMoveIndex = whiteIndex,
+                    WhiteMoveText = whiteMove,
+                    IsWhiteSelected = whiteIndex == SelectedMoveIndex,
+                    SelectWhiteMoveCommand = new RelayCommand(_ => SelectMove(whiteIndex))
+                };
+                
+                if (blackMove != null)
+                {
+                    item.BlackMoveIndex = blackIndex;
+                    item.BlackMoveText = blackMove;
+                    item.IsBlackSelected = blackIndex == SelectedMoveIndex;
+                    item.SelectBlackMoveCommand = new RelayCommand(_ => SelectMove(blackIndex));
+                }
+                
+                MoveHistoryItems.Add(item);
+                moveNumber++;
+            }
+            
+            // Update selection state for all items
+            foreach (var item in MoveHistoryItems)
+            {
+                item.IsWhiteSelected = item.WhiteMoveIndex == SelectedMoveIndex;
+                if (item.BlackMoveText != null)
+                {
+                    item.IsBlackSelected = item.BlackMoveIndex == SelectedMoveIndex;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Selects a move from the loaded game
+        /// </summary>
+        public void SelectMove(int moveIndex)
+        {
+            NavigateToMove(moveIndex);
+        }
+
+        /// <summary>
+        /// Indicates if a game is currently loaded
+        /// </summary>
+        public bool IsGameLoaded
+        {
+            get => isGameLoaded;
+            set
+            {
+                isGameLoaded = value;
+                OnPropertyChanged();
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        /// <summary>
+        /// Currently selected move index in loaded game
+        /// </summary>
+        public int SelectedMoveIndex
+        {
+            get => selectedMoveIndex;
+            set
+            {
+                selectedMoveIndex = value;
+                OnPropertyChanged();
+                UpdateMoveHistoryItems();
+            }
+        }
+
+        /// <summary>
+        /// Collection of move history items for clickable display
+        /// </summary>
+        public ObservableCollection<MoveDisplayItem> MoveHistoryItems
+        {
+            get => moveHistoryItems;
+            set
+            {
+                moveHistoryItems = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Command to navigate to previous move
+        /// </summary>
+        public ICommand PreviousMoveCommand => previousMoveCommand ??= new RelayCommand(
+            _ =>
+            {
+                if (IsGameLoaded && SelectedMoveIndex > -1)
+                {
+                    NavigateToMove(SelectedMoveIndex - 1);
+                }
+            },
+            _ => IsGameLoaded && SelectedMoveIndex > -1);
+
+        /// <summary>
+        /// Command to navigate to next move
+        /// </summary>
+        public ICommand NextMoveCommand => nextMoveCommand ??= new RelayCommand(
+            _ =>
+            {
+                if (IsGameLoaded && SelectedMoveIndex < loadedGameMoves.Count - 1)
+                {
+                    NavigateToMove(SelectedMoveIndex + 1);
+                }
+            },
+            _ => IsGameLoaded && SelectedMoveIndex < loadedGameMoves.Count - 1);
+
+        /// <summary>
+        /// Command to toggle auto-play
+        /// </summary>
+        public ICommand ToggleAutoPlayCommand => toggleAutoPlayCommand ??= new RelayCommand(
+            _ =>
+            {
+                if (isAutoPlaying)
+                {
+                    StopAutoPlay();
+                }
+                else
+                {
+                    StartAutoPlay();
+                }
+            },
+            _ => IsGameLoaded);
+
+        /// <summary>
+        /// Indicates if auto-play is currently active
+        /// </summary>
+        public bool IsAutoPlaying
+        {
+            get => isAutoPlaying;
+            private set
+            {
+                isAutoPlaying = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AutoPlayButtonText));
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        /// <summary>
+        /// Text for auto-play button
+        /// </summary>
+        public string AutoPlayButtonText => isAutoPlaying ? "⏸ Pause" : "▶ Play";
+
+        /// <summary>
+        /// Starts auto-play
+        /// </summary>
+        private void StartAutoPlay()
+        {
+            if (!IsGameLoaded)
+                return;
+
+            IsAutoPlaying = true;
+            autoPlayTimer.Start();
+        }
+
+        /// <summary>
+        /// Stops auto-play
+        /// </summary>
+        private void StopAutoPlay()
+        {
+            IsAutoPlaying = false;
+            autoPlayTimer.Stop();
         }
 
         /// <summary>
@@ -540,7 +763,7 @@ namespace ChessWPF.ViewModels
                     ClearAvailableMoves();
                 }
             }
-        }, parameter => parameter is CellViewModel);
+        }, parameter => parameter is CellViewModel && !IsGameLoaded);
 
         public ObservableCollection<string> PlayersMoves
         {
@@ -633,6 +856,13 @@ namespace ChessWPF.ViewModels
             CapturedByWhite.Clear();
             CapturedByBlack.Clear();
 
+            // Reset loaded game state
+            IsGameLoaded = false;
+            loadedGameMoves.Clear();
+            SelectedMoveIndex = -1;
+            MoveHistoryItems.Clear();
+            StopAutoPlay();
+
             SetupBoard();
             
             // Close game panel after starting new game
@@ -693,6 +923,12 @@ namespace ChessWPF.ViewModels
             // Update FEN notation and move history
             Fen = gameService.GetFen();
             MoveHistory = gameService.GetMoveHistory();
+            
+            // Update move history items if game is loaded
+            if (IsGameLoaded)
+            {
+                UpdateMoveHistoryItems();
+            }
         }
 
         /// <summary>
