@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -218,6 +218,26 @@ namespace ChessWPF.ViewModels
             {
                 moveHistory = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(FormattedMoveHistory));
+            }
+        }
+
+        public string FormattedMoveHistory
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(moveHistory))
+                    return string.Empty;
+
+                // Format move history with line breaks for better vertical display
+                // Split by move numbers (e.g., "1. ", "2. ", etc.)
+                var formatted = System.Text.RegularExpressions.Regex.Replace(
+                    moveHistory,
+                    @"(\d+\.\s)",
+                    "\n$1"
+                ).TrimStart('\n');
+
+                return formatted;
             }
         }
 
