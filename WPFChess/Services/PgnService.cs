@@ -123,6 +123,11 @@ namespace ChessWPF.Services
                     foreach (var move in individualMoves)
                     {
                         var cleanMove = move.Trim();
+                        // Skip if it's a move number (shouldn't happen, but just in case)
+                        if (System.Text.RegularExpressions.Regex.IsMatch(cleanMove, @"^\d+\.?$"))
+                        {
+                            continue;
+                        }
                         // Remove check/checkmate symbols for parsing
                         cleanMove = cleanMove.TrimEnd('+', '#');
                         if (!string.IsNullOrEmpty(cleanMove))
@@ -166,7 +171,7 @@ namespace ChessWPF.Services
         public static Dictionary<string, string> ParsePgnHeaders(string pgn)
         {
             var headers = new Dictionary<string, string>();
-            var lines = pgn.Split('\n');
+            var lines = pgn.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
             foreach (var line in lines)
             {
@@ -174,12 +179,22 @@ namespace ChessWPF.Services
                 if (trimmed.StartsWith("[") && trimmed.EndsWith("]"))
                 {
                     var content = trimmed.Substring(1, trimmed.Length - 2);
-                    var parts = content.Split(new[] { ' ' }, 2);
-                    if (parts.Length == 2)
+                    // Split by space, but handle quoted values properly
+                    var spaceIndex = content.IndexOf(' ');
+                    if (spaceIndex > 0)
                     {
-                        var key = parts[0].Trim();
-                        var value = parts[1].Trim('"');
-                        headers[key] = value;
+                        var key = content.Substring(0, spaceIndex).Trim();
+                        var value = content.Substring(spaceIndex + 1).Trim();
+                        // Remove quotes if present
+                        if (value.StartsWith("\"") && value.EndsWith("\""))
+                        {
+                            value = value.Substring(1, value.Length - 2);
+                        }
+                        // Only add non-empty values (skip empty strings like "")
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            headers[key] = value;
+                        }
                     }
                 }
             }

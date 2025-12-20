@@ -2,6 +2,46 @@
 
 ## Описание
 Простая игра Шахматы. Реализована как консольная версия, так и оконная версия игры (WPF)
+
+## Features
+
+### Game Logic
+- Full chess rules implementation
+- All standard pieces (pawn, rook, knight, bishop, queen, king)
+- Castling (short and long)
+- En passant capture
+- Check and checkmate detection
+- Move validation
+- Available moves highlighting
+
+### Notation and Format
+- FEN notation (read and write)
+- Algebraic move notation
+- PGN format support (import and export)
+- Move history with navigation
+
+### WPF Interface
+- Modern user interface
+- Chess board visualization with vector pieces
+- Multiple color schemes for the board
+- Custom color configuration (light and dark squares)
+- Captured pieces display
+- Sound effects for moves
+- Side panel with tabs (Games, Historical Games, Settings, About)
+
+### Game Management
+- Save and load games
+- Import historical games from PGN files
+- Pagination for historical games list
+- Game information display (players, date, result, move count)
+- Move navigation in loaded games
+- Auto-play for historical games
+- Game number display in the list
+
+### Console Interface
+- Text-based interface for console play
+- ASCII board visualization
+- Interactive piece and move selection
 ### WPF
 ![img](images/wpfChessNew.gif)
 ![img](images/chessPlay.gif)

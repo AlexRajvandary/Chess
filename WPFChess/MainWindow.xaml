@@ -19,6 +19,7 @@
         <converters:PanelPositionConverter x:Key="PanelPositionConverter"/>
         <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
         <converters:BooleanToGridLengthConverter x:Key="BooleanToGridLengthConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -89,7 +90,7 @@
             </TabControl.Resources>
             
             <!-- Game Tab -->
-            <TabItem Header="🎮 Game">
+            <TabItem Header="💾 My Games">
                 <Border Background="#F5F5F5" Padding="20">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
@@ -250,6 +251,299 @@
                                                 </Style>
                                             </Button.Style>
                                         </Button>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </TabItem>
+            
+            <!-- Historical Games Tab -->
+            <TabItem Header="📚 Historical Games">
+                <Border Background="#F5F5F5" Padding="20">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Import PGN File Section -->
+                            <TextBlock Text="📥 Import PGN File" FontSize="18" Margin="0,0,0,5"/>
+                            <TextBlock Text="Import games from a PGN file in Assets/HistoricalGames folder" FontSize="12" Foreground="#555" Margin="0,0,0,10"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <StackPanel>
+                                    <Button Content="Select PGN File" 
+                                            Command="{Binding ImportPgnFileCommand}"
+                                            Background="#3498DB" 
+                                            Foreground="White" 
+                                            BorderThickness="0" 
+                                            FontSize="14" 
+                                            FontWeight="Bold"
+                                            Padding="20,10" 
+                                            Cursor="Hand"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,0,0,10">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Background" Value="#95A5A6"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="True">
+                                                        <Setter Property="Background" Value="#3498DB"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    
+                                    <!-- Progress Section -->
+                                    <StackPanel Visibility="{Binding IsImporting, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="{Binding ImportProgressText}" 
+                                                   FontSize="13" 
+                                                   Foreground="#555" 
+                                                   Margin="0,0,0,10"
+                                                   TextWrapping="Wrap"/>
+                                        <Grid Margin="0,0,0,5">
+                                            <ProgressBar Value="{Binding ImportProgress}" 
+                                                        Maximum="100" 
+                                                        Height="25"
+                                                        BorderThickness="1"
+                                                        BorderBrush="#DDD"/>
+                                            <TextBlock Text="{Binding ImportProgress, StringFormat='{}{0}%'}" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"
+                                                       FontSize="12"
+                                                       FontWeight="Bold"
+                                                       Foreground="White"/>
+                                        </Grid>
+                                    </StackPanel>
+                                    
+                                    <!-- Import Result Message -->
+                                    <TextBlock Text="{Binding ImportResultMessage}" 
+                                               FontSize="12" 
+                                               Foreground="{Binding ImportResultColor}"
+                                               Margin="0,5,0,0"
+                                               TextWrapping="Wrap"
+                                               Visibility="{Binding ImportResultMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Historical Games List -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="📚 Historical Games" FontSize="18" Margin="0,0,0,5"/>
+                                    <TextBlock FontSize="13" FontWeight="SemiBold" Margin="0,0,0,3">
+                                        <Run Text="Всего партий: " Foreground="#333"/>
+                                        <Run Text="{Binding HistoricalGamesTotalCount, Mode=OneWay}" Foreground="#3498DB" FontWeight="Bold"/>
+                                        <Run Text=" (" Foreground="#999"/>
+                                        <Run Text="{Binding HistoricalGamesDatabaseSizeFormatted, Mode=OneWay}" Foreground="#999"/>
+                                        <Run Text=")" Foreground="#999"/>
+                                    </TextBlock>
+                                    <TextBlock Text="Select a historical game to load" FontSize="12" Foreground="#555"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" 
+                                        Content="🔄" 
+                                        Command="{Binding RefreshHistoricalGamesCommand}"
+                                        ToolTip="Refresh list"
+                                        Background="Transparent" 
+                                        BorderThickness="0" 
+                                        FontSize="16" 
+                                        Padding="8"
+                                        Cursor="Hand"
+                                        VerticalAlignment="Top"
+                                        Margin="0,0,0,5">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Foreground" Value="#555"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="#3498DB"/>
+                                                    <Setter Property="Background" Value="#E3F2FD"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="0" Margin="0,0,0,20">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <!-- Historical Games List -->
+                                    <ListBox Grid.Row="0" 
+                                             ItemsSource="{Binding HistoricalGames}"
+                                             SelectedItem="{Binding SelectedHistoricalGame}"
+                                             MaxHeight="500"
+                                             BorderThickness="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="Transparent" Padding="10,8" Margin="0,2">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <!-- Game Number -->
+                                                        <TextBlock Grid.Column="0" 
+                                                                   Text="{Binding Id, StringFormat='#{0}'}" 
+                                                                   FontWeight="Bold" 
+                                                                   FontSize="12"
+                                                                   Foreground="#666"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"
+                                                                   MinWidth="40"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Text="{Binding WhitePlayer, StringFormat='{}{0} vs '}" 
+                                                                       FontWeight="Bold" FontSize="13"/>
+                                                            <TextBlock>
+                                                                <Run Text="{Binding BlackPlayer}"/>
+                                                                <Run Text=" • " Foreground="#999"/>
+                                                                <Run Text="{Binding PlayedAt, StringFormat='{}{0:yyyy-MM-dd}'}" Foreground="#999"/>
+                                                                <Run Text=" • " Foreground="#999"/>
+                                                                <Run Text="{Binding MoveCount, StringFormat='{}{0} moves'}" Foreground="#999"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="2" 
+                                                                   Text="{Binding Result}" 
+                                                                   FontWeight="Bold" 
+                                                                   FontSize="12"
+                                                                   Foreground="#3498DB"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="10,0,0,0"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="Margin" Value="0"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                                        <Setter Property="BorderBrush" Value="#3498DB"/>
+                                                        <Setter Property="BorderThickness" Value="0,0,3,0"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                    </ListBox>
+                                    
+                                    <!-- Pagination and Load Button -->
+                                    <Border Grid.Row="1" 
+                                            Background="#F5F5F5" 
+                                            BorderBrush="#DDD" 
+                                            BorderThickness="0,1,0,0" 
+                                            Padding="10">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <!-- Pagination Controls -->
+                                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <!-- Page Info -->
+                                                <TextBlock Grid.Column="0" 
+                                                           Text="{Binding HistoricalGamesPageInfo}" 
+                                                           FontSize="11" 
+                                                           Foreground="#666"
+                                                           VerticalAlignment="Center"/>
+                                                
+                                                <!-- Previous Page Button -->
+                                                <Button Grid.Column="1" 
+                                                        Content="◄" 
+                                                        Command="{Binding PreviousHistoricalGamesPageCommand}"
+                                                        Background="#3498DB" 
+                                                        Foreground="White" 
+                                                        BorderThickness="0" 
+                                                        FontSize="12" 
+                                                        FontWeight="Bold"
+                                                        Padding="8,4" 
+                                                        Cursor="Hand"
+                                                        Margin="5,0"
+                                                        MinWidth="35"
+                                                        IsEnabled="{Binding CanGoToPreviousHistoricalGamesPage}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsEnabled" Value="False">
+                                                                    <Setter Property="Background" Value="#95A5A6"/>
+                                                                    <Setter Property="Cursor" Value="Arrow"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                
+                                                <!-- Next Page Button -->
+                                                <Button Grid.Column="2" 
+                                                        Content="►" 
+                                                        Command="{Binding NextHistoricalGamesPageCommand}"
+                                                        Background="#3498DB" 
+                                                        Foreground="White" 
+                                                        BorderThickness="0" 
+                                                        FontSize="12" 
+                                                        FontWeight="Bold"
+                                                        Padding="8,4" 
+                                                        Cursor="Hand"
+                                                        MinWidth="35"
+                                                        IsEnabled="{Binding CanGoToNextHistoricalGamesPage}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsEnabled" Value="False">
+                                                                    <Setter Property="Background" Value="#95A5A6"/>
+                                                                    <Setter Property="Cursor" Value="Arrow"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </Grid>
+                                            
+                                            <!-- Load Button -->
+                                            <Button Grid.Row="1" 
+                                                    Content="Load" 
+                                                    Command="{Binding LoadSelectedHistoricalGameCommand}"
+                                                    Background="#27AE60" 
+                                                    Foreground="White" 
+                                                    BorderThickness="0" 
+                                                    FontSize="13" 
+                                                    FontWeight="Bold"
+                                                    Padding="15,8" 
+                                                    Cursor="Hand"
+                                                    HorizontalAlignment="Stretch">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsEnabled" Value="False">
+                                                                <Setter Property="Background" Value="#95A5A6"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsEnabled" Value="True">
+                                                                <Setter Property="Background" Value="#27AE60"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
                                     </Border>
                                 </Grid>
                             </Border>

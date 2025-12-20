@@ -48,6 +48,22 @@ namespace ChessWPF.ViewModels
         private GameRecord selectedGame;
         private ICommand loadSelectedGameCommand;
         private ICommand refreshGamesCommand;
+        private ObservableCollection<HistoricalGame> historicalGames;
+        private HistoricalGame selectedHistoricalGame;
+        private ICommand loadSelectedHistoricalGameCommand;
+        private ICommand refreshHistoricalGamesCommand;
+        private ICommand importPgnFileCommand;
+        private bool isImporting = false;
+        private int historicalGamesCurrentPage = 1;
+        private int historicalGamesPageSize = 7;
+        private int historicalGamesTotalCount = 0;
+        private long historicalGamesDatabaseSize = 0;
+        private ICommand previousHistoricalGamesPageCommand;
+        private ICommand nextHistoricalGamesPageCommand;
+        private int importProgress = 0;
+        private string importProgressText = "";
+        private string importResultMessage = "";
+        private System.Windows.Media.Brush importResultColor = System.Windows.Media.Brushes.Black;
         private ObservableCollection<CapturedPieceInfo> capturedByWhite;
         private ObservableCollection<CapturedPieceInfo> capturedByBlack;
         private bool isGameLoaded = false;
@@ -102,6 +118,10 @@ namespace ChessWPF.ViewModels
             // Initialize saved games list
             SavedGames = new ObservableCollection<GameRecord>();
             LoadSavedGames();
+            
+            // Initialize historical games list
+            HistoricalGames = new ObservableCollection<HistoricalGame>();
+            LoadHistoricalGames();
 
             // Initialize captured pieces collections
             CapturedByWhite = new ObservableCollection<CapturedPieceInfo>();
@@ -249,6 +269,359 @@ namespace ChessWPF.ViewModels
             }
         }, parameter => SelectedGame != null);
 
+        public ICommand LoadSelectedHistoricalGameCommand => loadSelectedHistoricalGameCommand ??= new RelayCommand(parameter =>
+        {
+            if (SelectedHistoricalGame != null)
+            {
+                LoadGameFromHistoricalGame(SelectedHistoricalGame);
+            }
+        }, parameter => SelectedHistoricalGame != null);
+
+        public ICommand RefreshHistoricalGamesCommand => refreshHistoricalGamesCommand ??= new RelayCommand(parameter =>
+        {
+            HistoricalGamesCurrentPage = 1;
+            LoadHistoricalGames();
+        });
+
+        public ICommand ImportPgnFileCommand => importPgnFileCommand ??= new RelayCommand(parameter =>
+        {
+            ImportPgnFile();
+        }, parameter => !IsImporting);
+
+        public bool IsImporting
+        {
+            get => isImporting;
+            set
+            {
+                isImporting = value;
+                OnPropertyChanged();
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        public int ImportProgress
+        {
+            get => importProgress;
+            set
+            {
+                importProgress = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ImportProgressText
+        {
+            get => importProgressText;
+            set
+            {
+                importProgressText = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ImportResultMessage
+        {
+            get => importResultMessage;
+            set
+            {
+                importResultMessage = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public System.Windows.Media.Brush ImportResultColor
+        {
+            get => importResultColor;
+            set
+            {
+                importResultColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private void ImportPgnFile()
+        {
+            try
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "PGN files (*.pgn)|*.pgn|All files (*.*)|*.*",
+                    Title = "Select PGN file to import"
+                };
+
+                // Try to set initial directory to Assets/HistoricalGames
+                var assetsPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "HistoricalGames");
+                if (System.IO.Directory.Exists(assetsPath))
+                {
+                    dialog.InitialDirectory = assetsPath;
+                }
+
+                if (dialog.ShowDialog() == true)
+                {
+                    var filePath = dialog.FileName;
+                    var fileName = System.IO.Path.GetFileName(filePath);
+
+                    // Check if file already parsed
+                    if (GameStorageService.IsFileParsed(fileName))
+                    {
+                        ImportResultMessage = $"Файл {fileName} уже был импортирован ранее.";
+                        ImportResultColor = System.Windows.Media.Brushes.Orange;
+                        return;
+                    }
+
+                    IsImporting = true;
+                    ImportProgress = 0;
+                    ImportProgressText = "Начинаем импорт...";
+                    ImportResultMessage = "";
+
+                    // Run import on background thread
+                    System.Threading.Tasks.Task.Run(() =>
+                    {
+                        try
+                        {
+                            var result = GameStorageService.ImportPgnFile(filePath, (progress, current, total) =>
+                            {
+                                // Update progress on UI thread
+                                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    ImportProgress = progress;
+                                    if (progress == 0 && current == 0)
+                                    {
+                                        // Initial callback - file is being parsed
+                                        ImportProgressText = "Анализ файла...";
+                                    }
+                                    else if (total > 0)
+                                    {
+                                        ImportProgressText = $"Обработано игр: {current} из {total} ({progress}%)";
+                                    }
+                                    else
+                                    {
+                                        ImportProgressText = $"Обработано игр: {current} ({progress}%)";
+                                    }
+                                });
+                            });
+
+                            // Update UI on main thread
+                            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                IsImporting = false;
+                                ImportProgress = 100;
+
+                                if (result.Success)
+                                {
+                                    ImportResultMessage = result.Message;
+                                    ImportResultColor = System.Windows.Media.Brushes.Green;
+                                    // Refresh games list and reset to first page
+                                    HistoricalGamesCurrentPage = 1;
+                                    LoadHistoricalGames();
+                                }
+                                else
+                                {
+                                    ImportResultMessage = result.Message;
+                                    ImportResultColor = System.Windows.Media.Brushes.Red;
+                                }
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                IsImporting = false;
+                                ImportResultMessage = $"Ошибка при импорте: {ex.Message}";
+                                ImportResultColor = System.Windows.Media.Brushes.Red;
+                            });
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                IsImporting = false;
+                ImportResultMessage = $"Ошибка: {ex.Message}";
+                ImportResultColor = System.Windows.Media.Brushes.Red;
+            }
+        }
+
+        public ObservableCollection<HistoricalGame> HistoricalGames
+        {
+            get => historicalGames;
+            set
+            {
+                historicalGames = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Current page number for historical games pagination
+        /// </summary>
+        public int HistoricalGamesCurrentPage
+        {
+            get => historicalGamesCurrentPage;
+            set
+            {
+                historicalGamesCurrentPage = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HistoricalGamesPageInfo));
+                OnPropertyChanged(nameof(CanGoToPreviousHistoricalGamesPage));
+                OnPropertyChanged(nameof(CanGoToNextHistoricalGamesPage));
+            }
+        }
+
+        /// <summary>
+        /// Total count of historical games
+        /// </summary>
+        public int HistoricalGamesTotalCount
+        {
+            get => historicalGamesTotalCount;
+            set
+            {
+                historicalGamesTotalCount = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HistoricalGamesPageInfo));
+                OnPropertyChanged(nameof(HistoricalGamesCountInfo));
+                OnPropertyChanged(nameof(CanGoToPreviousHistoricalGamesPage));
+                OnPropertyChanged(nameof(CanGoToNextHistoricalGamesPage));
+            }
+        }
+
+        /// <summary>
+        /// Database size in bytes
+        /// </summary>
+        public long HistoricalGamesDatabaseSize
+        {
+            get => historicalGamesDatabaseSize;
+            set
+            {
+                historicalGamesDatabaseSize = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HistoricalGamesDatabaseSizeFormatted));
+                OnPropertyChanged(nameof(HistoricalGamesCountInfo));
+            }
+        }
+
+        /// <summary>
+        /// Formatted database size (KB, MB, etc.)
+        /// </summary>
+        public string HistoricalGamesDatabaseSizeFormatted
+        {
+            get
+            {
+                if (historicalGamesDatabaseSize == 0)
+                    return "0 КБ";
+                
+                double size = historicalGamesDatabaseSize;
+                string[] units = { "Б", "КБ", "МБ", "ГБ" };
+                int unitIndex = 0;
+                
+                while (size >= 1024 && unitIndex < units.Length - 1)
+                {
+                    size /= 1024;
+                    unitIndex++;
+                }
+                
+                return $"{size:F2} {units[unitIndex]}";
+            }
+        }
+
+        /// <summary>
+        /// Combined info: total count and database size
+        /// </summary>
+        public string HistoricalGamesCountInfo
+        {
+            get
+            {
+                if (historicalGamesTotalCount == 0)
+                    return "Нет партий";
+                
+                return $"{historicalGamesTotalCount} партий ({HistoricalGamesDatabaseSizeFormatted})";
+            }
+        }
+
+        /// <summary>
+        /// Page size for historical games pagination
+        /// </summary>
+        public int HistoricalGamesPageSize
+        {
+            get => historicalGamesPageSize;
+            set
+            {
+                historicalGamesPageSize = value;
+                OnPropertyChanged();
+                LoadHistoricalGames();
+            }
+        }
+
+        /// <summary>
+        /// Page info string for display
+        /// </summary>
+        public string HistoricalGamesPageInfo
+        {
+            get
+            {
+                if (historicalGamesTotalCount == 0)
+                    return "Нет партий";
+                
+                int totalPages = (int)Math.Ceiling((double)historicalGamesTotalCount / historicalGamesPageSize);
+                int startIndex = (historicalGamesCurrentPage - 1) * historicalGamesPageSize + 1;
+                int endIndex = Math.Min(historicalGamesCurrentPage * historicalGamesPageSize, historicalGamesTotalCount);
+                
+                return $"Страница {historicalGamesCurrentPage} из {totalPages} ({startIndex}-{endIndex} из {historicalGamesTotalCount})";
+            }
+        }
+
+        /// <summary>
+        /// Can navigate to previous page
+        /// </summary>
+        public bool CanGoToPreviousHistoricalGamesPage => historicalGamesCurrentPage > 1;
+
+        /// <summary>
+        /// Can navigate to next page
+        /// </summary>
+        public bool CanGoToNextHistoricalGamesPage
+        {
+            get
+            {
+                int totalPages = (int)Math.Ceiling((double)historicalGamesTotalCount / historicalGamesPageSize);
+                return historicalGamesCurrentPage < totalPages;
+            }
+        }
+
+        /// <summary>
+        /// Command to go to previous page
+        /// </summary>
+        public ICommand PreviousHistoricalGamesPageCommand => previousHistoricalGamesPageCommand ??= new RelayCommand(parameter =>
+        {
+            if (CanGoToPreviousHistoricalGamesPage)
+            {
+                HistoricalGamesCurrentPage--;
+                LoadHistoricalGames();
+            }
+        }, parameter => CanGoToPreviousHistoricalGamesPage);
+
+        /// <summary>
+        /// Command to go to next page
+        /// </summary>
+        public ICommand NextHistoricalGamesPageCommand => nextHistoricalGamesPageCommand ??= new RelayCommand(parameter =>
+        {
+            if (CanGoToNextHistoricalGamesPage)
+            {
+                HistoricalGamesCurrentPage++;
+                LoadHistoricalGames();
+            }
+        }, parameter => CanGoToNextHistoricalGamesPage);
+
+        public HistoricalGame SelectedHistoricalGame
+        {
+            get => selectedHistoricalGame;
+            set
+            {
+                selectedHistoricalGame = value;
+                OnPropertyChanged();
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
         /// <summary>
         /// Command to refresh saved games list
         /// </summary>
@@ -275,6 +648,53 @@ namespace ChessWPF.ViewModels
             {
                 MessageBox.Show($"Ошибка при загрузке списка партий: {ex.Message}", "Ошибка", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void LoadHistoricalGames()
+        {
+            try
+            {
+                var (games, totalCount) = GameStorageService.GetHistoricalGamesPaginated(historicalGamesCurrentPage, historicalGamesPageSize);
+                HistoricalGamesTotalCount = totalCount;
+                HistoricalGamesDatabaseSize = GameStorageService.GetDatabaseSize();
+                HistoricalGames.Clear();
+                foreach (var game in games)
+                {
+                    HistoricalGames.Add(game);
+                }
+                OnPropertyChanged(nameof(HistoricalGamesPageInfo));
+                OnPropertyChanged(nameof(HistoricalGamesDatabaseSizeFormatted));
+                OnPropertyChanged(nameof(CanGoToPreviousHistoricalGamesPage));
+                OnPropertyChanged(nameof(CanGoToNextHistoricalGamesPage));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке исторических партий: {ex.Message}", "Ошибка", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Loads a game from HistoricalGame
+        /// </summary>
+        private void LoadGameFromHistoricalGame(HistoricalGame historicalGame)
+        {
+            try
+            {
+                // Parse PGN and save moves
+                loadedGameMoves = PgnService.ParsePgnMoves(historicalGame.PgnNotation);
+                IsGameLoaded = true;
+                
+                // Apply all moves to show final position
+                NavigateToMove(loadedGameMoves.Count - 1);
+                
+                // Clear selection after loading
+                SelectedHistoricalGame = null;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке исторической партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -345,60 +765,109 @@ namespace ChessWPF.ViewModels
         /// </summary>
         private void UpdateMoveHistoryItems()
         {
+            var oldCount = MoveHistoryItems.Count;
             MoveHistoryItems.Clear();
             
-            if (!IsGameLoaded || loadedGameMoves == null || loadedGameMoves.Count == 0)
+            if (IsGameLoaded && loadedGameMoves != null && loadedGameMoves.Count > 0)
             {
-                // For non-loaded games, use formatted text
+                // Parse moves and create items - group white and black moves together
+                int moveNumber = 1;
+                for (int i = 0; i < loadedGameMoves.Count; i += 2)
+                {
+                    int whiteIndex = i;
+                    int blackIndex = i + 1;
+                    string whiteMove = loadedGameMoves[whiteIndex];
+                    string blackMove = blackIndex < loadedGameMoves.Count ? loadedGameMoves[blackIndex] : null;
+                    
+                    var item = new MoveDisplayItem
+                    {
+                        MoveNumber = moveNumber,
+                        WhiteMoveIndex = whiteIndex,
+                        WhiteMoveText = whiteMove,
+                        IsWhiteSelected = whiteIndex == SelectedMoveIndex,
+                        SelectWhiteMoveCommand = new RelayCommand(_ => SelectMove(whiteIndex))
+                    };
+                    
+                    if (blackMove != null)
+                    {
+                        item.BlackMoveIndex = blackIndex;
+                        item.BlackMoveText = blackMove;
+                        item.IsBlackSelected = blackIndex == SelectedMoveIndex;
+                        item.SelectBlackMoveCommand = new RelayCommand(_ => SelectMove(blackIndex));
+                    }
+                    
+                    MoveHistoryItems.Add(item);
+                    moveNumber++;
+                }
+                
+                // Update selection state for all items
+                foreach (var item in MoveHistoryItems)
+                {
+                    item.IsWhiteSelected = item.WhiteMoveIndex == SelectedMoveIndex;
+                    if (item.BlackMoveText != null)
+                    {
+                        item.IsBlackSelected = item.BlackMoveIndex == SelectedMoveIndex;
+                    }
+                }
+            }
+            else
+            {
+                // For non-loaded games, parse MoveHistory string (format: "1. e4 e5 2. Nf3 Nc6...")
                 if (!string.IsNullOrEmpty(MoveHistory))
                 {
-                    MoveHistoryItems.Add(new MoveDisplayItem
-                    {
-                        MoveNumber = 0,
-                        WhiteMoveText = MoveHistory,
-                        BlackMoveText = null
-                    });
+                    ParseMoveHistoryString(MoveHistory);
                 }
-                return;
-            }
-
-            // Parse moves and create items - group white and black moves together
-            int moveNumber = 1;
-            for (int i = 0; i < loadedGameMoves.Count; i += 2)
-            {
-                int whiteIndex = i;
-                int blackIndex = i + 1;
-                string whiteMove = loadedGameMoves[whiteIndex];
-                string blackMove = blackIndex < loadedGameMoves.Count ? loadedGameMoves[blackIndex] : null;
-                
-                var item = new MoveDisplayItem
-                {
-                    MoveNumber = moveNumber,
-                    WhiteMoveIndex = whiteIndex,
-                    WhiteMoveText = whiteMove,
-                    IsWhiteSelected = whiteIndex == SelectedMoveIndex,
-                    SelectWhiteMoveCommand = new RelayCommand(_ => SelectMove(whiteIndex))
-                };
-                
-                if (blackMove != null)
-                {
-                    item.BlackMoveIndex = blackIndex;
-                    item.BlackMoveText = blackMove;
-                    item.IsBlackSelected = blackIndex == SelectedMoveIndex;
-                    item.SelectBlackMoveCommand = new RelayCommand(_ => SelectMove(blackIndex));
-                }
-                
-                MoveHistoryItems.Add(item);
-                moveNumber++;
             }
             
-            // Update selection state for all items
-            foreach (var item in MoveHistoryItems)
+            // Force UI update if collection changed
+            if (MoveHistoryItems.Count != oldCount)
             {
-                item.IsWhiteSelected = item.WhiteMoveIndex == SelectedMoveIndex;
-                if (item.BlackMoveText != null)
+                OnPropertyChanged(nameof(MoveHistoryItems));
+            }
+        }
+
+        /// <summary>
+        /// Parses move history string and creates display items
+        /// Format: "1. e4 e5 2. Nf3 Nc6..." where each number followed by white and optionally black move
+        /// Note: Removes move numbers from move text since we have a separate column for move numbers
+        /// </summary>
+        private void ParseMoveHistoryString(string moveHistory)
+        {
+            if (string.IsNullOrWhiteSpace(moveHistory))
+                return;
+
+            // Remove newlines and normalize whitespace - replace all whitespace with single space
+            moveHistory = System.Text.RegularExpressions.Regex.Replace(moveHistory, @"\s+", " ").Trim();
+
+            // Pattern: "1. e4 e5" or "1.e4 e5" or "1. e4" (if only white move)
+            // Matches: number, dot, optional space, then white move (non-whitespace, non-digit), optionally black move
+            // This pattern handles moves like "e4", "Nf3", "O-O", "e8=Q", etc.
+            // Note: explicitly excludes digits to avoid matching move numbers in the move text
+            var regex = new System.Text.RegularExpressions.Regex(@"(\d+)\.\s*([^\s\d]+(?:\+|\#)?)(?:\s+([^\s\d]+(?:\+|\#)?))?");
+            var matches = regex.Matches(moveHistory);
+
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                if (match.Success && match.Groups.Count >= 3)
                 {
-                    item.IsBlackSelected = item.BlackMoveIndex == SelectedMoveIndex;
+                    int moveNumber = int.Parse(match.Groups[1].Value);
+                    string whiteMove = match.Groups[2].Value.TrimEnd('+', '#');
+                    string blackMove = match.Groups.Count > 3 && match.Groups[3].Success && !string.IsNullOrWhiteSpace(match.Groups[3].Value)
+                        ? match.Groups[3].Value.TrimEnd('+', '#')
+                        : null;
+
+                    // Only add if we have at least a white move
+                    if (!string.IsNullOrWhiteSpace(whiteMove))
+                    {
+                        var item = new MoveDisplayItem
+                        {
+                            MoveNumber = moveNumber,
+                            WhiteMoveText = whiteMove,
+                            BlackMoveText = blackMove
+                        };
+
+                        MoveHistoryItems.Add(item);
+                    }
                 }
             }
         }
@@ -924,11 +1393,8 @@ namespace ChessWPF.ViewModels
             Fen = gameService.GetFen();
             MoveHistory = gameService.GetMoveHistory();
             
-            // Update move history items if game is loaded
-            if (IsGameLoaded)
-            {
-                UpdateMoveHistoryItems();
-            }
+            // Update move history items - always call this to ensure UI is updated
+            UpdateMoveHistoryItems();
         }
 
         /// <summary>

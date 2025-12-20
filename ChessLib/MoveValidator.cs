@@ -96,12 +96,19 @@ namespace ChessLib
                 return false;
 
             var enemyPieces = allPieces.Where(p => p.Color != king.Color && !p.IsDead).ToList();
+            var enemyColor = enemyPieces.FirstOrDefault()?.Color ?? (king.Color == PieceColor.White ? PieceColor.Black : PieceColor.White);
+
+            // Check if king is currently in check
+            if (IsSquareAttacked(allPieces, king.Position, enemyColor, gameFieldString))
+                return false;
 
             // Check if squares between king and rook are free and not attacked
             int startX = castleType == CastleType.Short ? king.Position.X + 1 : king.Position.X - 1;
             int endX = castleType == CastleType.Short ? 7 : 0;
             int y = king.Position.Y;
 
+            // Check all squares the king will pass through (including destination)
+            int kingDestinationX = castleType == CastleType.Short ? 6 : 2;
             for (int x = startX; x != endX; x += castleType == CastleType.Short ? 1 : -1)
             {
                 var position = new Position(x, y);
@@ -110,10 +117,15 @@ namespace ChessLib
                 if (gameFieldString[x, y] != " ")
                     return false;
 
-                // Check if square is attacked
-                if (IsSquareAttacked(allPieces, position, enemyPieces.FirstOrDefault()?.Color ?? PieceColor.White, gameFieldString))
+                // Check if square is attacked (king cannot pass through attacked squares)
+                if (IsSquareAttacked(allPieces, position, enemyColor, gameFieldString))
                     return false;
             }
+
+            // Also check the destination square
+            var kingDest = new Position(kingDestinationX, y);
+            if (IsSquareAttacked(allPieces, kingDest, enemyColor, gameFieldString))
+                return false;
 
             return true;
         }

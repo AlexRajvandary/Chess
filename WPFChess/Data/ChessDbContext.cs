@@ -9,6 +9,8 @@ namespace ChessWPF.Data
     public class ChessDbContext : DbContext
     {
         public DbSet<GameRecord> GameRecords { get; set; }
+        public DbSet<HistoricalGame> HistoricalGames { get; set; }
+        public DbSet<ParsedFile> ParsedFiles { get; set; }
 
         public ChessDbContext()
         {
@@ -37,6 +39,20 @@ namespace ChessWPF.Data
                 entity.HasIndex(e => e.CreatedAt);
                 entity.HasIndex(e => e.WhitePlayer);
                 entity.HasIndex(e => e.BlackPlayer);
+            });
+
+            modelBuilder.Entity<HistoricalGame>(entity =>
+            {
+                entity.ToTable("HistoricalGames");
+                entity.HasIndex(e => e.PlayedAt);
+                entity.HasIndex(e => e.WhitePlayer);
+                entity.HasIndex(e => e.BlackPlayer);
+            });
+
+            modelBuilder.Entity<ParsedFile>(entity =>
+            {
+                entity.ToTable("ParsedFiles");
+                entity.HasIndex(e => e.FileName).IsUnique();
             });
         }
     }
