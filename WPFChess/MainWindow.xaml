@@ -7,6 +7,7 @@
         xmlns:viewModels="clr-namespace:ChessWPF.ViewModels"
         xmlns:controls="clr-namespace:ChessWPF.Controls"
         xmlns:converters="clr-namespace:ChessWPF.Converters"
+        xmlns:models="clr-namespace:ChessWPF.Models"
         mc:Ignorable="d"
         Title="Chess" Width="800" Height="700" MinWidth="600" MinHeight="500" ResizeMode="CanResize"
         d:DataContext="{d:DesignInstance viewModels:MainViewModel, IsDesignTimeCreatable=True}"
@@ -393,7 +394,15 @@
                                             <ControlTemplate>
                                                 <Border Background="{TemplateBinding Background}" >
                                                     <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
-                                                        <controls:ChessPiece Piece="{Binding State}" />
+                                                        <Grid>
+                                                            <controls:ChessPiece Piece="{Binding State}" />
+                                                            <Ellipse Width="20" Height="20" 
+                                                                     Fill="#4CAF50" 
+                                                                     Opacity="0.6"
+                                                                     HorizontalAlignment="Center" 
+                                                                     VerticalAlignment="Center"
+                                                                     Visibility="{Binding AvailableMove, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                        </Grid>
                                                     </Border>
                                                 </Border>
                                             </ControlTemplate>
@@ -405,6 +414,10 @@
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Active}" Value="True">
                                             <Setter Property="BorderBrush" Value="Red"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding AvailableMove}" Value="True">
+                                            <Setter Property="BorderBrush" Value="#4CAF50"/>
+                                            <Setter Property="BorderThickness" Value="3"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

@@ -242,7 +242,18 @@ namespace ChessWPF.ViewModels
             
             if (previousActiveCell == null)
             {
+                // If clicking on empty cell when nothing is selected, do nothing
+                if (currentCell.State == CellUIState.Empty)
+                {
+                    return;
+                }
                 SelectPiece(currentCell);
+            }
+            else if (previousActiveCell == currentCell)
+            {
+                // Clicking on the same cell - deselect
+                previousActiveCell.Active = false;
+                ClearAvailableMoves();
             }
             else
             {
@@ -267,16 +278,33 @@ namespace ChessWPF.ViewModels
                     
                     var fen = gameService.GetFen();
                     File.AppendAllText(pathOfFenFile, $"{fen}\n");
+                    
+                    // Clear highlights after move
+                    ClearAvailableMoves();
                 }
                 else
                 {
-                    var validMoves = gameService.GetValidMoves(fromPos);
-                    IncorrectMoveMessage(currentCell, validMoves);
+                    // If invalid move, try to select new piece if clicked on a piece
+                    if (currentCell.State != CellUIState.Empty)
+                    {
+                        previousActiveCell.Active = false;
+                        ClearAvailableMoves();
+                        SelectPiece(currentCell);
+                    }
+                    else
+                    {
+                        var validMoves = gameService.GetValidMoves(fromPos);
+                        IncorrectMoveMessage(currentCell, validMoves);
+                    }
                 }
                 
-                previousActiveCell.Active = false;
+                if (previousActiveCell.Active)
+                {
+                    previousActiveCell.Active = false;
+                    ClearAvailableMoves();
+                }
             }
-        }, parameter => parameter is CellViewModel cell && (Board.Any(x => x.Active) || cell.State != CellUIState.Empty));
+        }, parameter => parameter is CellViewModel);
 
         public ObservableCollection<string> PlayersMoves
         {
@@ -376,6 +404,9 @@ namespace ChessWPF.ViewModels
         /// </summary>
         private void SelectPiece(CellViewModel cell)
         {
+            // Clear previous available moves
+            ClearAvailableMoves();
+            
             var pos = new ChessLib.Position(cell.Position.Horizontal, cell.Position.Vertical);
             var validMoves = gameService.GetValidMoves(pos);
             
@@ -385,11 +416,22 @@ namespace ChessWPF.ViewModels
                 var boardCell = Board.FirstOrDefault(c => c.Position.Horizontal == move.X && c.Position.Vertical == move.Y);
                 if (boardCell != null)
                 {
-                    // Mark cell as available for move (you may need to add a property for this)
+                    boardCell.AvailableMove = true;
                 }
             }
             
             cell.Active = true;
+        }
+
+        /// <summary>
+        /// Clears all available move highlights
+        /// </summary>
+        private void ClearAvailableMoves()
+        {
+            foreach (var cell in Board)
+            {
+                cell.AvailableMove = false;
+            }
         }
 
         /// <summary>
@@ -401,6 +443,9 @@ namespace ChessWPF.ViewModels
             
             // Update board representation
             ApplyBoardState(boardState);
+            
+            // Clear highlights when board state changes
+            ClearAvailableMoves();
             
             // Update FEN notation and move history
             Fen = gameService.GetFen();
@@ -468,6 +513,9 @@ namespace ChessWPF.ViewModels
             // Update view from game state
             UpdateViewFromGameState();
             playerMoves = new ObservableCollection<string>();
+            
+            // Clear any highlights
+            ClearAvailableMoves();
         }
     }
 }

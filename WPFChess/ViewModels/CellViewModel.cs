@@ -1,10 +1,11 @@
-﻿using ChessWPF.Models;
+using ChessWPF.Models;
 
 namespace ChessWPF.ViewModels
 {
     public class CellViewModel : NotifyPropertyChanged
     {
         private bool _active;
+        private bool _availableMove;
         private CellUIState _state;
        
         public CellViewModel(int horizontal, int vertical)
@@ -18,6 +19,16 @@ namespace ChessWPF.ViewModels
             set
             {
                 _active = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AvailableMove
+        {
+            get => _availableMove;
+            set
+            {
+                _availableMove = value;
                 OnPropertyChanged();
             }
         }
