@@ -10,7 +10,6 @@ using ChessLib;
 using ChessWPF.Models;
 using ChessWPF.Services;
 using ChessWPF.Commands;
-using ChessWPF.Windows;
 
 namespace ChessWPF.ViewModels
 {
@@ -32,12 +31,21 @@ namespace ChessWPF.ViewModels
         private ICommand openAboutCommand;
         private ICommand openSettingsCommand;
         private ICommand closeSettingsCommand;
+        private ICommand openGameCommand;
+        private ICommand closeGameCommand;
+        private ICommand loadGameCommand;
+        private ICommand saveGameCommand;
+        private ICommand closeAboutCommand;
         private Brush lightSquareColor;
         private Brush darkSquareColor;
         private readonly SoundService soundService;
         private SettingsViewModel settingsViewModel;
         private bool isSettingsPanelVisible;
+        private bool isGamePanelVisible;
+        private bool isAboutPanelVisible;
         private System.Windows.HorizontalAlignment settingsPanelAlignment = System.Windows.HorizontalAlignment.Left;
+        private System.Windows.HorizontalAlignment gamePanelAlignment = System.Windows.HorizontalAlignment.Left;
+        private System.Windows.HorizontalAlignment aboutPanelAlignment = System.Windows.HorizontalAlignment.Left;
 
         public MainViewModel()
         {
@@ -87,8 +95,12 @@ namespace ChessWPF.ViewModels
 
         public ICommand OpenAboutCommand => openAboutCommand ??= new RelayCommand(parameter =>
         {
-            var aboutWindow = new AboutWindow();
-            aboutWindow.ShowDialog();
+            IsAboutPanelVisible = true;
+        });
+
+        public ICommand CloseAboutCommand => closeAboutCommand ??= new RelayCommand(parameter =>
+        {
+            IsAboutPanelVisible = false;
         });
 
         public ICommand OpenSettingsCommand => openSettingsCommand ??= new RelayCommand(parameter =>
@@ -99,6 +111,30 @@ namespace ChessWPF.ViewModels
         public ICommand CloseSettingsCommand => closeSettingsCommand ??= new RelayCommand(parameter =>
         {
             IsSettingsPanelVisible = false;
+        });
+
+        public ICommand OpenGameCommand => openGameCommand ??= new RelayCommand(parameter =>
+        {
+            IsGamePanelVisible = true;
+        });
+
+        public ICommand CloseGameCommand => closeGameCommand ??= new RelayCommand(parameter =>
+        {
+            IsGamePanelVisible = false;
+        });
+
+        public ICommand LoadGameCommand => loadGameCommand ??= new RelayCommand(parameter =>
+        {
+            // TODO: Implement load game functionality
+            MessageBox.Show("Load Game functionality will be implemented");
+            IsGamePanelVisible = false;
+        });
+
+        public ICommand SaveGameCommand => saveGameCommand ??= new RelayCommand(parameter =>
+        {
+            // TODO: Implement save game functionality
+            MessageBox.Show("Save Game functionality will be implemented");
+            IsGamePanelVisible = false;
         });
 
         public SettingsViewModel SettingsViewModel
@@ -127,6 +163,46 @@ namespace ChessWPF.ViewModels
             set
             {
                 settingsPanelAlignment = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsGamePanelVisible
+        {
+            get => isGamePanelVisible;
+            set
+            {
+                isGamePanelVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public System.Windows.HorizontalAlignment GamePanelAlignment
+        {
+            get => gamePanelAlignment;
+            set
+            {
+                gamePanelAlignment = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsAboutPanelVisible
+        {
+            get => isAboutPanelVisible;
+            set
+            {
+                isAboutPanelVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public System.Windows.HorizontalAlignment AboutPanelAlignment
+        {
+            get => aboutPanelAlignment;
+            set
+            {
+                aboutPanelAlignment = value;
                 OnPropertyChanged();
             }
         }
@@ -274,6 +350,9 @@ namespace ChessWPF.ViewModels
             MoveHistory = string.Empty;
 
             SetupBoard();
+            
+            // Close game panel after starting new game
+            IsGamePanelVisible = false;
         });
 
         /// <summary>
