@@ -1,45 +1,770 @@
-﻿<Window x:Class="ChessBoard.MainWindow"
+﻿<Window x:Class="ChessWPF.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ChessBoard"
-        xmlns:controls="clr-namespace:ChessBoard.Controls"
+        xmlns:local="clr-namespace:ChessWPF"
+        xmlns:viewModels="clr-namespace:ChessWPF.ViewModels"
+        xmlns:controls="clr-namespace:ChessWPF.Controls"
+        xmlns:converters="clr-namespace:ChessWPF.Converters"
+        xmlns:models="clr-namespace:ChessWPF.Models"
         mc:Ignorable="d"
         Title="Chess" Width="800" Height="700" MinWidth="600" MinHeight="500" ResizeMode="CanResize"
-        d:DataContext="{d:DesignInstance local:MainViewModel, IsDesignTimeCreatable=True}"
+        d:DataContext="{d:DesignInstance viewModels:MainViewModel, IsDesignTimeCreatable=True}"
         SnapsToDevicePixels="True">
     <Window.Resources>
-        <local:CellColorConverter x:Key="CellColorConverter"/>
+        <converters:CellColorConverter x:Key="CellColorConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:ColorSchemeEqualityConverter x:Key="ColorSchemeEqualityConverter"/>
+        <converters:PanelPositionConverter x:Key="PanelPositionConverter"/>
+        <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
+        <converters:BooleanToGridLengthConverter x:Key="BooleanToGridLengthConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition>
+                <ColumnDefinition.Width>
+                    <Binding Path="IsSidePanelVisible" Converter="{StaticResource BooleanToGridLengthConverter}"/>
+                </ColumnDefinition.Width>
+            </ColumnDefinition>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <Menu Height="25" VerticalAlignment="Top" Grid.ColumnSpan="3">
-            <MenuItem Header="Game">
-                <MenuItem Header="New Game" Command="{Binding NewGameCommand}"/>
-                <MenuItem Header="Load Game"/>
-                <MenuItem Header="Save Game"/>
-            </MenuItem>
-            <MenuItem Header="Settings" Command="{Binding OpenSettingsCommand}"/>
-            <MenuItem Header="About" Command="{Binding OpenAboutCommand}"/>
-        </Menu>
+        
+        <!-- Toggle Side Panel Button -->
+        <Button Grid.Row="0" Grid.Column="1" 
+                Command="{Binding ToggleSidePanelCommand}"
+                Width="30" 
+                Background="Transparent" 
+                Foreground="#555" 
+                BorderThickness="0"
+                FontSize="18"
+                FontWeight="Bold"
+                Padding="0"
+                Cursor="Hand"
+                VerticalAlignment="Top"
+                Margin="0,10,0,0">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Content" Value="✕"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSidePanelVisible}" Value="False">
+                            <Setter Property="Content" Value="▶"/>
+                        </DataTrigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="#3498DB"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+        
+        <!-- Tabs Panel - Left Side -->
+        <TabControl Grid.Row="0" Grid.Column="0" 
+                    BorderThickness="0" 
+                    Background="#F5F5F5"
+                    Visibility="{Binding IsSidePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="Padding" Value="20,10"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="Background" Value="#ECF0F1"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,3"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#F5F5F5"/>
+                            <Setter Property="BorderBrush" Value="#3498DB"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#D5DBDB"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TabControl.Resources>
+            
+            <!-- Game Tab -->
+            <TabItem Header="💾 My Games">
+                <Border Background="#F5F5F5" Padding="20">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- New Game -->
+                            <TextBlock Text="🆕 New Game" FontSize="18" Margin="0,0,0,10"/>
+                            <TextBlock Text="Start a fresh chess game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <Button Content="New Game" 
+                                        Command="{Binding NewGameCommand}"
+                                        Background="#27AE60" 
+                                        Foreground="White" 
+                                        BorderThickness="0" 
+                                        FontSize="14" 
+                                        FontWeight="Bold"
+                                        Padding="20,10" 
+                                        Cursor="Hand"
+                                        HorizontalAlignment="Stretch"/>
+                            </Border>
 
-        <!-- Chess Board with Labels -->
-        <Grid Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <!-- Save Game -->
+                            <TextBlock Text="💾 Save Game" FontSize="18" Margin="0,0,0,10"/>
+                            <TextBlock Text="Save the current game state" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <Button Content="Save Game" 
+                                        Command="{Binding SaveGameCommand}"
+                                        Background="#E67E22" 
+                                        Foreground="White" 
+                                        BorderThickness="0" 
+                                        FontSize="14" 
+                                        FontWeight="Bold"
+                                        Padding="20,10" 
+                                        Cursor="Hand"
+                                        HorizontalAlignment="Stretch"/>
+                            </Border>
+
+                            <!-- Saved Games List -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="📋 Saved Games" FontSize="18" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Select a game to load" FontSize="12" Foreground="#555"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" 
+                                        Content="🔄" 
+                                        Command="{Binding RefreshGamesCommand}"
+                                        ToolTip="Refresh list"
+                                        Background="Transparent" 
+                                        BorderThickness="0" 
+                                        FontSize="16" 
+                                        Padding="8"
+                                        Cursor="Hand"
+                                        VerticalAlignment="Top"
+                                        Margin="0,0,0,5">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Foreground" Value="#555"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="#3498DB"/>
+                                                    <Setter Property="Background" Value="#E3F2FD"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="0" Margin="0,0,0,20">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <!-- Games List -->
+                                    <ListBox Grid.Row="0" 
+                                             ItemsSource="{Binding SavedGames}"
+                                             SelectedItem="{Binding SelectedGame}"
+                                             MaxHeight="300"
+                                             BorderThickness="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="Transparent" Padding="10,8" Margin="0,2">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Grid.Column="0">
+                                                            <TextBlock Text="{Binding WhitePlayer, StringFormat='{}{0} vs '}" 
+                                                                       FontWeight="Bold" FontSize="13"/>
+                                                            <TextBlock>
+                                                                <Run Text="{Binding BlackPlayer}"/>
+                                                                <Run Text=" • " Foreground="#999"/>
+                                                                <Run Text="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Foreground="#999"/>
+                                                                <Run Text=" • " Foreground="#999"/>
+                                                                <Run Text="{Binding MoveCount, StringFormat='{}{0} moves'}" Foreground="#999"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="1" 
+                                                                   Text="{Binding Result}" 
+                                                                   FontWeight="Bold" 
+                                                                   FontSize="12"
+                                                                   Foreground="#3498DB"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="10,0,0,0"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="Margin" Value="0"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                                        <Setter Property="BorderBrush" Value="#3498DB"/>
+                                                        <Setter Property="BorderThickness" Value="0,0,3,0"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                    </ListBox>
+                                    
+                                    <!-- Load Button -->
+                                    <Border Grid.Row="1" 
+                                            Background="#F5F5F5" 
+                                            BorderBrush="#DDD" 
+                                            BorderThickness="0,1,0,0" 
+                                            Padding="10">
+                                        <Button Content="Load" 
+                                                Command="{Binding LoadSelectedGameCommand}"
+                                                Background="#27AE60" 
+                                                Foreground="White" 
+                                                BorderThickness="0" 
+                                                FontSize="13" 
+                                                FontWeight="Bold"
+                                                Padding="15,8" 
+                                                Cursor="Hand"
+                                                HorizontalAlignment="Stretch">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter Property="Background" Value="#95A5A6"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="True">
+                                                            <Setter Property="Background" Value="#27AE60"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </TabItem>
+            
+            <!-- Historical Games Tab -->
+            <TabItem Header="📚 Historical Games">
+                <Border Background="#F5F5F5" Padding="20">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Import PGN File Section -->
+                            <TextBlock Text="📥 Import PGN File" FontSize="18" Margin="0,0,0,5"/>
+                            <TextBlock Text="Import games from a PGN file in Assets/HistoricalGames folder" FontSize="12" Foreground="#555" Margin="0,0,0,10"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <StackPanel>
+                                    <Button Content="Select PGN File" 
+                                            Command="{Binding ImportPgnFileCommand}"
+                                            Background="#3498DB" 
+                                            Foreground="White" 
+                                            BorderThickness="0" 
+                                            FontSize="14" 
+                                            FontWeight="Bold"
+                                            Padding="20,10" 
+                                            Cursor="Hand"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,0,0,10">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Background" Value="#95A5A6"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="True">
+                                                        <Setter Property="Background" Value="#3498DB"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    
+                                    <!-- Progress Section -->
+                                    <StackPanel Visibility="{Binding IsImporting, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="{Binding ImportProgressText}" 
+                                                   FontSize="13" 
+                                                   Foreground="#555" 
+                                                   Margin="0,0,0,10"
+                                                   TextWrapping="Wrap"/>
+                                        <Grid Margin="0,0,0,5">
+                                            <ProgressBar Value="{Binding ImportProgress}" 
+                                                        Maximum="100" 
+                                                        Height="25"
+                                                        BorderThickness="1"
+                                                        BorderBrush="#DDD"/>
+                                            <TextBlock Text="{Binding ImportProgress, StringFormat='{}{0}%'}" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"
+                                                       FontSize="12"
+                                                       FontWeight="Bold"
+                                                       Foreground="White"/>
+                                        </Grid>
+                                    </StackPanel>
+                                    
+                                    <!-- Import Result Message -->
+                                    <TextBlock Text="{Binding ImportResultMessage}" 
+                                               FontSize="12" 
+                                               Foreground="{Binding ImportResultColor}"
+                                               Margin="0,5,0,0"
+                                               TextWrapping="Wrap"
+                                               Visibility="{Binding ImportResultMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Historical Games List -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="📚 Historical Games" FontSize="18" Margin="0,0,0,5"/>
+                                    <TextBlock FontSize="13" FontWeight="SemiBold" Margin="0,0,0,3">
+                                        <Run Text="Всего партий: " Foreground="#333"/>
+                                        <Run Text="{Binding HistoricalGamesTotalCount, Mode=OneWay}" Foreground="#3498DB" FontWeight="Bold"/>
+                                        <Run Text=" (" Foreground="#999"/>
+                                        <Run Text="{Binding HistoricalGamesDatabaseSizeFormatted, Mode=OneWay}" Foreground="#999"/>
+                                        <Run Text=")" Foreground="#999"/>
+                                    </TextBlock>
+                                    <TextBlock Text="Select a historical game to load" FontSize="12" Foreground="#555"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" 
+                                        Content="🔄" 
+                                        Command="{Binding RefreshHistoricalGamesCommand}"
+                                        ToolTip="Refresh list"
+                                        Background="Transparent" 
+                                        BorderThickness="0" 
+                                        FontSize="16" 
+                                        Padding="8"
+                                        Cursor="Hand"
+                                        VerticalAlignment="Top"
+                                        Margin="0,0,0,5">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Foreground" Value="#555"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="#3498DB"/>
+                                                    <Setter Property="Background" Value="#E3F2FD"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="0" Margin="0,0,0,20">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <!-- Historical Games List -->
+                                    <ListBox Grid.Row="0" 
+                                             ItemsSource="{Binding HistoricalGames}"
+                                             SelectedItem="{Binding SelectedHistoricalGame}"
+                                             MaxHeight="500"
+                                             BorderThickness="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="Transparent" Padding="10,8" Margin="0,2">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <!-- Game Number -->
+                                                        <TextBlock Grid.Column="0" 
+                                                                   Text="{Binding Id, StringFormat='#{0}'}" 
+                                                                   FontWeight="Bold" 
+                                                                   FontSize="12"
+                                                                   Foreground="#666"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"
+                                                                   MinWidth="40"/>
+                                                        <StackPanel Grid.Column="1">
+                                                            <TextBlock Text="{Binding WhitePlayer, StringFormat='{}{0} vs '}" 
+                                                                       FontWeight="Bold" FontSize="13"/>
+                                                            <TextBlock>
+                                                                <Run Text="{Binding BlackPlayer}"/>
+                                                                <Run Text=" • " Foreground="#999"/>
+                                                                <Run Text="{Binding PlayedAt, StringFormat='{}{0:yyyy-MM-dd}'}" Foreground="#999"/>
+                                                                <Run Text=" • " Foreground="#999"/>
+                                                                <Run Text="{Binding MoveCount, StringFormat='{}{0} moves'}" Foreground="#999"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="2" 
+                                                                   Text="{Binding Result}" 
+                                                                   FontWeight="Bold" 
+                                                                   FontSize="12"
+                                                                   Foreground="#3498DB"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="10,0,0,0"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="Margin" Value="0"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                                        <Setter Property="BorderBrush" Value="#3498DB"/>
+                                                        <Setter Property="BorderThickness" Value="0,0,3,0"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                    </ListBox>
+                                    
+                                    <!-- Pagination and Load Button -->
+                                    <Border Grid.Row="1" 
+                                            Background="#F5F5F5" 
+                                            BorderBrush="#DDD" 
+                                            BorderThickness="0,1,0,0" 
+                                            Padding="10">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <!-- Pagination Controls -->
+                                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <!-- Page Info -->
+                                                <TextBlock Grid.Column="0" 
+                                                           Text="{Binding HistoricalGamesPageInfo}" 
+                                                           FontSize="11" 
+                                                           Foreground="#666"
+                                                           VerticalAlignment="Center"/>
+                                                
+                                                <!-- Previous Page Button -->
+                                                <Button Grid.Column="1" 
+                                                        Content="◄" 
+                                                        Command="{Binding PreviousHistoricalGamesPageCommand}"
+                                                        Background="#3498DB" 
+                                                        Foreground="White" 
+                                                        BorderThickness="0" 
+                                                        FontSize="12" 
+                                                        FontWeight="Bold"
+                                                        Padding="8,4" 
+                                                        Cursor="Hand"
+                                                        Margin="5,0"
+                                                        MinWidth="35"
+                                                        IsEnabled="{Binding CanGoToPreviousHistoricalGamesPage}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsEnabled" Value="False">
+                                                                    <Setter Property="Background" Value="#95A5A6"/>
+                                                                    <Setter Property="Cursor" Value="Arrow"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                
+                                                <!-- Next Page Button -->
+                                                <Button Grid.Column="2" 
+                                                        Content="►" 
+                                                        Command="{Binding NextHistoricalGamesPageCommand}"
+                                                        Background="#3498DB" 
+                                                        Foreground="White" 
+                                                        BorderThickness="0" 
+                                                        FontSize="12" 
+                                                        FontWeight="Bold"
+                                                        Padding="8,4" 
+                                                        Cursor="Hand"
+                                                        MinWidth="35"
+                                                        IsEnabled="{Binding CanGoToNextHistoricalGamesPage}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsEnabled" Value="False">
+                                                                    <Setter Property="Background" Value="#95A5A6"/>
+                                                                    <Setter Property="Cursor" Value="Arrow"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </Grid>
+                                            
+                                            <!-- Load Button -->
+                                            <Button Grid.Row="1" 
+                                                    Content="Load" 
+                                                    Command="{Binding LoadSelectedHistoricalGameCommand}"
+                                                    Background="#27AE60" 
+                                                    Foreground="White" 
+                                                    BorderThickness="0" 
+                                                    FontSize="13" 
+                                                    FontWeight="Bold"
+                                                    Padding="15,8" 
+                                                    Cursor="Hand"
+                                                    HorizontalAlignment="Stretch">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsEnabled" Value="False">
+                                                                <Setter Property="Background" Value="#95A5A6"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsEnabled" Value="True">
+                                                                <Setter Property="Background" Value="#27AE60"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </TabItem>
+            
+            <!-- Settings Tab -->
+            <TabItem Header="⚙️ Settings">
+                <Border Background="#F5F5F5" Padding="20">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel DataContext="{Binding SettingsViewModel}">
+                            <!-- Game Settings -->
+                            <TextBlock Text="⚙️ Game Settings" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <StackPanel>
+                                    <CheckBox Content="Show Available Moves" 
+                                              IsChecked="{Binding ShowAvailableMoves}"
+                                              FontSize="14"
+                                              Margin="0,5,0,5"/>
+                                    <TextBlock Text="Highlight possible moves when selecting a piece" 
+                                               FontSize="12" 
+                                               Foreground="#666" 
+                                               Margin="25,0,0,0"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="🎨 Color Scheme" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Choose a color scheme for the chess board" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+
+                            <!-- Custom Color Scheme Section -->
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <TextBlock Text="🎨 Custom Colors" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <TextBlock Text="Light:" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                            <Border Background="{Binding CustomLightColorBrush}" BorderBrush="#CCC" BorderThickness="1" 
+                                                    Height="40" CornerRadius="3"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="Choose" Padding="10,5" 
+                                                Command="{Binding SelectCustomLightColorCommand}" 
+                                                Background="#3498DB" Foreground="White" 
+                                                BorderThickness="0" FontSize="11" Cursor="Hand" 
+                                                VerticalAlignment="Bottom" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="2" Margin="10,0,10,0">
+                                            <TextBlock Text="Dark:" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                            <Border Background="{Binding CustomDarkColorBrush}" BorderBrush="#CCC" BorderThickness="1" 
+                                                    Height="40" CornerRadius="3"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="3" Content="Choose" Padding="10,5" 
+                                                Command="{Binding SelectCustomDarkColorCommand}" 
+                                                Background="#3498DB" Foreground="White" 
+                                                BorderThickness="0" FontSize="11" Cursor="Hand" 
+                                                VerticalAlignment="Bottom"/>
+                                    </Grid>
+                                    <Button Content="Apply" 
+                                            Command="{Binding ApplyCustomColorsCommand}"
+                                            Background="#27AE60" 
+                                            Foreground="White" 
+                                            BorderThickness="0" 
+                                            FontSize="13" 
+                                            FontWeight="Bold"
+                                            Padding="20,10" 
+                                            Cursor="Hand"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,15,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Color Schemes Grid -->
+                            <ItemsControl ItemsSource="{Binding ColorSchemes}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" Rows="5"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton GroupName="ColorSchemes" Margin="5" 
+                                                    Tag="{Binding}"
+                                                    Checked="ColorSchemeRadioButton_Checked">
+                                            <RadioButton.IsChecked>
+                                                <MultiBinding Converter="{StaticResource ColorSchemeEqualityConverter}">
+                                                    <Binding Path="DataContext.SettingsViewModel.SelectedColorScheme" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                    <Binding Path="Tag" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
+                                                </MultiBinding>
+                                            </RadioButton.IsChecked>
+                                            <RadioButton.Content>
+                                                <Border Padding="10" Background="White" 
+                                                        BorderThickness="2" BorderBrush="#DDD" CornerRadius="5"
+                                                        Cursor="Hand">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                                    <Setter Property="BorderBrush" Value="#3498DB"/>
+                                                                    <Setter Property="BorderThickness" Value="3"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Icon}" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                                        <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                                                        <TextBlock Text="{Binding Description}" FontSize="10" TextWrapping="Wrap" 
+                                                                   HorizontalAlignment="Center" Foreground="#666" TextAlignment="Center" Margin="0,0,0,8"/>
+                                                        <Grid Height="30" Margin="0,3,0,0">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="{Binding LightSquareColor}" 
+                                                                    BorderBrush="#CCC" BorderThickness="1" Margin="0,0,1,0"/>
+                                                            <Border Grid.Column="1" Background="{Binding DarkSquareColor}" 
+                                                                    BorderBrush="#CCC" BorderThickness="1" Margin="1,0,0,0"/>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </RadioButton.Content>
+                                            <RadioButton.Style>
+                                                <Style TargetType="RadioButton">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="RadioButton">
+                                                                <ContentPresenter/>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </RadioButton.Style>
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </TabItem>
+            
+            <!-- About Tab -->
+            <TabItem Header="ℹ️ About">
+                <Border Background="#F5F5F5" Padding="20">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <StackPanel Margin="0,0,0,20">
+                                <TextBlock Text="♟️ Chess Application" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                <TextBlock Text="Version 1.0" FontSize="12" Foreground="#555" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <TextBlock Text="About This Project" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                            
+                            <TextBlock TextWrapping="Wrap" LineHeight="28" FontSize="14" Margin="0,0,0,20">
+                                <Run Text="This chess application was started in 2021 as a learning project by a beginner developer. "/>
+                                <Run Text="After a couple of years, I returned to complete and improve it, applying new knowledge and best practices."/>
+                            </TextBlock>
+
+                            <TextBlock Text="Development Journey" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                            
+                            <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13" Margin="0,0,0,15">
+                                <Run Text="• Started: 2021 - Initial development as a beginner project"/>
+                                <LineBreak/>
+                                <Run Text="• Returned: 2023-2024 - Refactoring and completion"/>
+                                <LineBreak/>
+                                <Run Text="• Focus: Clean architecture, separation of concerns, and modern .NET practices"/>
+                            </TextBlock>
+
+                            <TextBlock Text="Features" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                            
+                            <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13" Margin="0,0,0,15">
+                                <Run Text="• Full chess game logic with all standard rules"/>
+                                <LineBreak/>
+                                <Run Text="• FEN notation support"/>
+                                <LineBreak/>
+                                <Run Text="• Algebraic move notation"/>
+                                <LineBreak/>
+                                <Run Text="• Multiple color schemes"/>
+                                <LineBreak/>
+                                <Run Text="• Both WPF and Console interfaces"/>
+                            </TextBlock>
+
+                            <TextBlock Text="Technology Stack" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                            
+                            <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13">
+                                <Run Text="• .NET 8"/>
+                                <LineBreak/>
+                                <Run Text="• WPF for desktop UI"/>
+                                <LineBreak/>
+                                <Run Text="• MVVM pattern"/>
+                                <LineBreak/>
+                                <Run Text="• Clean architecture principles"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </TabItem>
+        </TabControl>
+        
+        <!-- Right Side - Chess Board and Notation -->
+        <Grid Grid.Row="0" Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Chess Board with Labels -->
+            <Grid Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -48,10 +773,42 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            
+
+            <!-- Captured by Black (above board) -->
+            <ItemsControl Grid.Row="0" Grid.Column="2" 
+                          ItemsSource="{Binding CapturedByBlack}"
+                          HorizontalAlignment="Left"
+                          Margin="0,0,0,5">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="28" Height="28" Margin="2">
+                            <Border Width="28" Height="28">
+                                <controls:ChessPiece Piece="{Binding Piece}"/>
+                            </Border>
+                            <TextBlock Text="{Binding DisplayText}" 
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Bottom"
+                                       FontSize="9"
+                                       FontWeight="Bold"
+                                       Margin="0,0,1,1"
+                                       Foreground="#333"
+                                       Background="#FFFFFF"
+                                       Padding="1,0"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <!-- Top letters -->
-            <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
+            <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="60">
@@ -65,9 +822,9 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
-            
+
             <!-- Left numbers -->
-            <ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
+            <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="60">
@@ -76,9 +833,9 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            
+
             <!-- Chess Board -->
-            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Board}" AlternationCount="64">
+            <ItemsControl Grid.Row="2" Grid.Column="2" ItemsSource="{Binding Board}" AlternationCount="64">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Button Width="60" Height="60" Command="{Binding DataContext.CellCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" >
@@ -93,7 +850,15 @@
                                             <ControlTemplate>
                                                 <Border Background="{TemplateBinding Background}" >
                                                     <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
-                                                        <controls:ChessPiece Piece="{Binding State}" />
+                                                        <Grid>
+                                                            <controls:ChessPiece Piece="{Binding State}" />
+                                                            <Ellipse Width="20" Height="20" 
+                                                                     Fill="#4CAF50" 
+                                                                     Opacity="0.6"
+                                                                     HorizontalAlignment="Center" 
+                                                                     VerticalAlignment="Center"
+                                                                     Visibility="{Binding AvailableMove, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                        </Grid>
                                                     </Border>
                                                 </Border>
                                             </ControlTemplate>
@@ -105,6 +870,10 @@
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Active}" Value="True">
                                             <Setter Property="BorderBrush" Value="Red"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding AvailableMove}" Value="True">
+                                            <Setter Property="BorderBrush" Value="#4CAF50"/>
+                                            <Setter Property="BorderThickness" Value="3"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -118,9 +887,9 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
-            
+
             <!-- Right numbers -->
-            <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
+            <ItemsControl Grid.Row="2" Grid.Column="3" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="60">
@@ -129,9 +898,9 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            
+
             <!-- Bottom letters -->
-            <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
+            <ItemsControl Grid.Row="3" Grid.Column="2" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="60">
@@ -145,38 +914,614 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
+
+            <!-- Captured by White (below board) -->
+            <ItemsControl Grid.Row="4" Grid.Column="2" 
+                          ItemsSource="{Binding CapturedByWhite}"
+                          HorizontalAlignment="Left"
+                          Margin="0,5,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="28" Height="28" Margin="2">
+                            <Border Width="28" Height="28">
+                                <controls:ChessPiece Piece="{Binding Piece}"/>
+                            </Border>
+                            <TextBlock Text="{Binding DisplayText}" 
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Bottom"
+                                       FontSize="9"
+                                       FontWeight="Bold"
+                                       Margin="0,0,1,1"
+                                       Foreground="#333"
+                                       Background="#FFFFFF"
+                                       Padding="1,0"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
         </Grid>
-       
-        <!-- Notation Display with Toggle -->
-        <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Background="LightGray" Padding="10" Margin="5">
+
+            <!-- Algebraic Notation Display - Right Panel -->
+            <Border Grid.Row="0" Grid.Column="1" Background="#F5F5F5" Padding="15" Margin="10,10,10,10" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="150"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-                    <TextBlock Text="View:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <Button Content="{Binding NotationToggleText}" Padding="10,5" 
-                            Command="{Binding ToggleNotationCommand}"/>
-                </StackPanel>
-                
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <!-- FEN Notation -->
-                        <StackPanel Visibility="{Binding ShowFenNotation, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <TextBlock Text="FEN Notation:" FontWeight="Bold" Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding Fen}" FontFamily="Consolas" TextWrapping="Wrap" />
-                        </StackPanel>
-                        
-                        <!-- Move History -->
-                        <StackPanel Visibility="{Binding ShowMoveHistory, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <TextBlock Text="Move History:" FontWeight="Bold" Margin="0,0,0,5"/>
-                            <TextBlock Text="{Binding MoveHistory}" FontFamily="Consolas" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </StackPanel>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Move History" FontWeight="Bold" FontSize="14" Margin="0,0,0,15" Foreground="#2C3E50"/>
+                    <Border Grid.Column="1" 
+                            Background="#4A90E2" 
+                            Padding="6,3" 
+                            CornerRadius="3"
+                            Margin="0,0,0,15"
+                            Visibility="{Binding IsGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="READ ONLY" 
+                                   FontSize="9" 
+                                   FontWeight="Bold" 
+                                   Foreground="White"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Background="White" BorderBrush="#DDD" BorderThickness="1" Padding="10">
+                    <Border Background="#F8F8F8" BorderBrush="#E0E0E0" BorderThickness="1" Padding="8">
+                        <ItemsControl ItemsSource="{Binding MoveHistoryItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <!-- Move Number -->
+                                        <TextBlock Grid.Column="0" 
+                                                   Text="{Binding MoveNumber, StringFormat='{}{0}.'}" 
+                                                   FontFamily="Consolas" 
+                                                   FontSize="12" 
+                                                   Foreground="#666"
+                                                   Margin="0,0,10,0"
+                                                   VerticalAlignment="Center"
+                                                   MinWidth="30"/>
+                                        
+                                        <!-- White Move -->
+                                        <TextBlock Grid.Column="1" 
+                                                   Text="{Binding WhiteMoveText}" 
+                                                   FontFamily="Consolas" 
+                                                   FontSize="12" 
+                                                   LineHeight="20"
+                                                   Margin="0,0,5,0"
+                                                   Cursor="Hand"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#333"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsWhiteSelected}" Value="True">
+                                                            <Setter Property="Background" Value="#4A90E2"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                            <Setter Property="Padding" Value="3,1"/>
+                                                        </DataTrigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#E3F2FD"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                            <TextBlock.InputBindings>
+                                                <MouseBinding Gesture="LeftClick" Command="{Binding SelectWhiteMoveCommand}"/>
+                                            </TextBlock.InputBindings>
+                                        </TextBlock>
+                                        
+                                        <!-- Black Move -->
+                                        <TextBlock Grid.Column="2" 
+                                                   Text="{Binding BlackMoveText}" 
+                                                   FontFamily="Consolas" 
+                                                   FontSize="12" 
+                                                   LineHeight="20"
+                                                   Cursor="Hand"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#333"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsBlackSelected}" Value="True">
+                                                            <Setter Property="Background" Value="#4A90E2"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                            <Setter Property="Padding" Value="3,1"/>
+                                                        </DataTrigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#E3F2FD"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                            <TextBlock.InputBindings>
+                                                <MouseBinding Gesture="LeftClick" Command="{Binding SelectBlackMoveCommand}"/>
+                                            </TextBlock.InputBindings>
+                                        </TextBlock>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
                 </ScrollViewer>
+
+                <!-- Navigation buttons at bottom -->
+                <StackPanel Grid.Row="3" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Center"
+                            Margin="0,10,0,0"
+                            Visibility="{Binding IsGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Button Content="◄"
+                            Command="{Binding PreviousMoveCommand}"
+                            Background="#4A90E2"
+                            Foreground="White"
+                            FontSize="14"
+                            FontWeight="Bold"
+                            Padding="12,5"
+                            Margin="0,0,10,0"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            MinWidth="40"
+                            MinHeight="30">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="3"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    
+                    <Button Content="{Binding AutoPlayButtonText}"
+                            Command="{Binding ToggleAutoPlayCommand}"
+                            Foreground="White"
+                            FontSize="11"
+                            FontWeight="Bold"
+                            Padding="15,5"
+                            Margin="0,0,10,0"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            MinWidth="80"
+                            MinHeight="30">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#4A90E2"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsAutoPlaying}" Value="True">
+                                        <Setter Property="Background" Value="#E74C3C"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="3"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    
+                    <Button Content="►"
+                            Command="{Binding NextMoveCommand}"
+                            Background="#4A90E2"
+                            Foreground="White"
+                            FontSize="14"
+                            FontWeight="Bold"
+                            Padding="12,5"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            MinWidth="40"
+                            MinHeight="30">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="3"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
+
+            <!-- FEN Notation Display - Bottom Panel -->
+            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#F5F5F5" Padding="15" Margin="10,5,10,10" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="FEN Notation:" FontWeight="Bold" FontSize="12" Margin="0,0,0,8" Foreground="#2C3E50"/>
+                <Border Grid.Row="1" Background="#F8F8F8" BorderBrush="#E0E0E0" BorderThickness="1" Padding="8">
+                    <TextBlock Text="{Binding Fen}" FontFamily="Consolas" TextWrapping="Wrap" FontSize="11" />
+                </Border>
+            </Grid>
+        </Border>
+        </Grid>
+
+        <!-- Game Panel Overlay -->
+        <Grid Grid.RowSpan="5" Grid.ColumnSpan="3" 
+              Background="#80000000" 
+              Visibility="{Binding IsGamePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+              MouseDown="GameOverlay_MouseDown">
+            <Border x:Name="GamePanel" 
+                    Width="400" 
+                    HorizontalAlignment="{Binding GamePanelAlignment}" 
+                    Background="#F5F5F5"
+                    MouseDown="GamePanel_MouseDown">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="Black" Opacity="0.5"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="#2C3E50" Padding="20">
+                        <Grid>
+                            <TextBlock Text="🎮 Game" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                            <Button HorizontalAlignment="Right" 
+                                    Command="{Binding CloseGameCommand}"
+                                    Background="Transparent" 
+                                    BorderThickness="0" 
+                                    Foreground="White" 
+                                    FontSize="20" 
+                                    Padding="10"
+                                    Cursor="Hand"
+                                    Content="✕"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+                        <StackPanel>
+                            <!-- New Game -->
+                            <TextBlock Text="🆕 New Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Start a fresh chess game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <Button Content="New Game" 
+                                        Command="{Binding NewGameCommand}"
+                                        Background="#27AE60" 
+                                        Foreground="White" 
+                                        BorderThickness="0" 
+                                        FontSize="14" 
+                                        FontWeight="Bold"
+                                        Padding="20,10" 
+                                        Cursor="Hand"
+                                        HorizontalAlignment="Stretch"
+                                        Click="NewGameButton_Click"/>
+                            </Border>
+
+                            <!-- Load Game -->
+                            <TextBlock Text="📂 Load Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Load a previously saved game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <Button Content="Load Game" 
+                                        Command="{Binding LoadGameCommand}"
+                                        Background="#3498DB" 
+                                        Foreground="White" 
+                                        BorderThickness="0" 
+                                        FontSize="14" 
+                                        FontWeight="Bold"
+                                        Padding="20,10" 
+                                        Cursor="Hand"
+                                        HorizontalAlignment="Stretch"/>
+                            </Border>
+
+                            <!-- Save Game -->
+                            <TextBlock Text="💾 Save Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Save the current game state" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <Button Content="Save Game" 
+                                        Command="{Binding SaveGameCommand}"
+                                        Background="#E67E22" 
+                                        Foreground="White" 
+                                        BorderThickness="0" 
+                                        FontSize="14" 
+                                        FontWeight="Bold"
+                                        Padding="20,10" 
+                                        Cursor="Hand"
+                                        HorizontalAlignment="Stretch"/>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Settings Panel Overlay -->
+        <Grid Grid.RowSpan="5" Grid.ColumnSpan="3" 
+              Background="#80000000" 
+              Visibility="{Binding IsSettingsPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+              MouseDown="SettingsOverlay_MouseDown">
+            <Border x:Name="SettingsPanel" 
+                    Width="400" 
+                    HorizontalAlignment="{Binding SettingsPanelAlignment}" 
+                    Background="#F5F5F5"
+                    MouseDown="SettingsPanel_MouseDown">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="Black" Opacity="0.5"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="#2C3E50" Padding="20">
+                        <Grid>
+                            <TextBlock Text="⚙️ Settings" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                            <Button HorizontalAlignment="Right" 
+                                    Command="{Binding CloseSettingsCommand}"
+                                    Background="Transparent" 
+                                    BorderThickness="0" 
+                                    Foreground="White" 
+                                    FontSize="20" 
+                                    Padding="10"
+                                    Cursor="Hand"
+                                    Content="✕"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+                        <StackPanel DataContext="{Binding SettingsViewModel}">
+                            <!-- Game Settings -->
+                            <TextBlock Text="⚙️ Game Settings" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                                <StackPanel>
+                                    <CheckBox Content="Show Available Moves" 
+                                              IsChecked="{Binding ShowAvailableMoves}"
+                                              FontSize="14"
+                                              Margin="0,5,0,5"/>
+                                    <TextBlock Text="Highlight possible moves when selecting a piece" 
+                                               FontSize="12" 
+                                               Foreground="#666" 
+                                               Margin="25,0,0,0"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="🎨 Color Scheme" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <TextBlock Text="Choose a color scheme for the chess board" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+
+                            <!-- Custom Color Scheme Section -->
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <TextBlock Text="🎨 Custom Colors" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <TextBlock Text="Light:" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                            <Border Background="{Binding CustomLightColorBrush}" BorderBrush="#CCC" BorderThickness="1" 
+                                                    Height="40" CornerRadius="3"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="Choose" Padding="10,5" 
+                                                Command="{Binding SelectCustomLightColorCommand}" 
+                                                Background="#3498DB" Foreground="White" 
+                                                BorderThickness="0" FontSize="11" Cursor="Hand" 
+                                                VerticalAlignment="Bottom" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="2" Margin="10,0,10,0">
+                                            <TextBlock Text="Dark:" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                            <Border Background="{Binding CustomDarkColorBrush}" BorderBrush="#CCC" BorderThickness="1" 
+                                                    Height="40" CornerRadius="3"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="3" Content="Choose" Padding="10,5" 
+                                                Command="{Binding SelectCustomDarkColorCommand}" 
+                                                Background="#3498DB" Foreground="White" 
+                                                BorderThickness="0" FontSize="11" Cursor="Hand" 
+                                                VerticalAlignment="Bottom"/>
+                                    </Grid>
+                                    <Button Content="Apply" 
+                                            Command="{Binding ApplyCustomColorsCommand}"
+                                            Background="#27AE60" 
+                                            Foreground="White" 
+                                            BorderThickness="0" 
+                                            FontSize="13" 
+                                            FontWeight="Bold"
+                                            Padding="20,10" 
+                                            Cursor="Hand"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,15,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Color Schemes Grid -->
+                            <ItemsControl ItemsSource="{Binding ColorSchemes}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" Rows="5"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton GroupName="ColorSchemes" Margin="5" 
+                                                    Tag="{Binding}"
+                                                    Checked="ColorSchemeRadioButton_Checked">
+                                            <RadioButton.IsChecked>
+                                                <MultiBinding Converter="{StaticResource ColorSchemeEqualityConverter}">
+                                                    <Binding Path="DataContext.SettingsViewModel.SelectedColorScheme" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                    <Binding Path="Tag" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
+                                                </MultiBinding>
+                                            </RadioButton.IsChecked>
+                                            <RadioButton.Content>
+                                                <Border Padding="10" Background="White" 
+                                                        BorderThickness="2" BorderBrush="#DDD" CornerRadius="5"
+                                                        Cursor="Hand">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                                    <Setter Property="BorderBrush" Value="#3498DB"/>
+                                                                    <Setter Property="BorderThickness" Value="3"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Icon}" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                                        <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,3"/>
+                                                        <TextBlock Text="{Binding Description}" FontSize="10" TextWrapping="Wrap" 
+                                                                   HorizontalAlignment="Center" Foreground="#666" TextAlignment="Center" Margin="0,0,0,8"/>
+                                                        <Grid Height="30" Margin="0,3,0,0">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Grid.Column="0" Background="{Binding LightSquareColor}" 
+                                                                    BorderBrush="#CCC" BorderThickness="1" Margin="0,0,1,0"/>
+                                                            <Border Grid.Column="1" Background="{Binding DarkSquareColor}" 
+                                                                    BorderBrush="#CCC" BorderThickness="1" Margin="1,0,0,0"/>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </RadioButton.Content>
+                                            <RadioButton.Style>
+                                                <Style TargetType="RadioButton">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="RadioButton">
+                                                                <ContentPresenter/>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </RadioButton.Style>
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- About Panel Overlay -->
+        <Grid Grid.RowSpan="5" Grid.ColumnSpan="3" 
+              Background="#80000000" 
+              Visibility="{Binding IsAboutPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+              MouseDown="AboutOverlay_MouseDown">
+            <Border x:Name="AboutPanel" 
+                    Width="500" 
+                    HorizontalAlignment="{Binding AboutPanelAlignment}" 
+                    Background="#F5F5F5"
+                    MouseDown="AboutPanel_MouseDown">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="Black" Opacity="0.5"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="#2C3E50" Padding="20">
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="♟️ Chess Application" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Version 1.0" FontSize="12" Foreground="#ECF0F1" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                            </StackPanel>
+                            <Button HorizontalAlignment="Right" 
+                                    Command="{Binding CloseAboutCommand}"
+                                    Background="Transparent" 
+                                    BorderThickness="0" 
+                                    Foreground="White" 
+                                    FontSize="20" 
+                                    Padding="10"
+                                    Cursor="Hand"
+                                    Content="✕"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30">
+                        <StackPanel>
+                            <TextBlock Text="About This Project" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                            
+                            <TextBlock TextWrapping="Wrap" LineHeight="28" FontSize="14" Margin="0,0,0,20">
+                                <Run Text="This chess application was started in 2021 as a learning project by a beginner developer. "/>
+                                <Run Text="After a couple of years, I returned to complete and improve it, applying new knowledge and best practices."/>
+                            </TextBlock>
+
+                            <TextBlock Text="Development Journey" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                            
+                            <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13" Margin="0,0,0,15">
+                                <Run Text="• Started: 2021 - Initial development as a beginner project"/>
+                                <LineBreak/>
+                                <Run Text="• Returned: 2023-2024 - Refactoring and completion"/>
+                                <LineBreak/>
+                                <Run Text="• Focus: Clean architecture, separation of concerns, and modern .NET practices"/>
+                            </TextBlock>
+
+                            <TextBlock Text="Features" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                            
+                            <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13" Margin="0,0,0,15">
+                                <Run Text="• Full chess game logic with all standard rules"/>
+                                <LineBreak/>
+                                <Run Text="• FEN notation support"/>
+                                <LineBreak/>
+                                <Run Text="• Algebraic move notation"/>
+                                <LineBreak/>
+                                <Run Text="• Multiple color schemes"/>
+                                <LineBreak/>
+                                <Run Text="• Both WPF and Console interfaces"/>
+                            </TextBlock>
+
+                            <TextBlock Text="Technology Stack" FontSize="18" FontWeight="Bold" Margin="0,20,0,10"/>
+                            
+                            <TextBlock TextWrapping="Wrap" LineHeight="26" FontSize="13">
+                                <Run Text="• .NET 8"/>
+                                <LineBreak/>
+                                <Run Text="• WPF for desktop UI"/>
+                                <LineBreak/>
+                                <Run Text="• MVVM pattern"/>
+                                <LineBreak/>
+                                <Run Text="• Clean architecture principles"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
 
     </Grid>
 </Window>

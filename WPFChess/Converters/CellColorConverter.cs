@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace ChessBoard
+namespace ChessWPF.Converters
 {
     public class CellColorConverter : IValueConverter
     {

@@ -29,7 +29,7 @@ namespace ChessLib
                 AllPossibleMoves.AddRange(piece.AvailableMoves(gameField));
                 AllPossibleMoves.AddRange(piece.AvailableKills(gameField));
             }
-            this[cell.X, cell.Y].isAtacked = AllPossibleMoves.Contains(cell);
+            this[cell.X, cell.Y].IsAtacked = AllPossibleMoves.Contains(cell);
             return AllPossibleMoves.Contains(cell);
         }
         public static bool GetCheckStatusAfterMove(List<IPiece> pieces, IPiece chosenPiece, Position destinationCell)
@@ -48,15 +48,35 @@ namespace ChessLib
 
             foreach(var piece in pieces)
             {
-                board[piece.Position.X, piece.Position.Y].isFilled = true;
                 board[piece.Position.X, piece.Position.Y].Piece = piece;
+            }
+            
+            // Calculate attack status for all cells
+            var gameFieldString = GetStringFromGameField(board);
+            var allPieces = pieces.ToList();
+            var enemyPieces = allPieces.Where(p => p.Color != chosenPiece.Color).ToList();
+            
+            // Update attack status for all cells
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    var pos = new Position(i, j);
+                    var allPossibleMoves = new List<Position>();
+                    foreach (var piece in enemyPieces)
+                    {
+                        allPossibleMoves.AddRange(piece.AvailableMoves(gameFieldString));
+                        allPossibleMoves.AddRange(piece.AvailableKills(gameFieldString));
+                    }
+                    board[i, j].IsAtacked = allPossibleMoves.Contains(pos);
+                }
             }
             
             for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    if (board[i,j].isAtacked && board[i, j].Piece is King)
+                    if (board[i,j].IsAtacked && board[i, j].Piece is King)
                     {
                         return true;
                     }
@@ -90,7 +110,7 @@ namespace ChessLib
 
             foreach (var EnemyPiece in EnemyPieces)
             {
-                AllAvalaibleAttacksOfEnemies.Add((EnemyPiece.ToString(), EnemyPiece.AvailableKills(GetStringFromGameField(FieldAfterMove))));
+                AllAvalaibleAttacksOfEnemies.Add((EnemyPiece.ToString(), EnemyPiece.AvailableKills(GameField.GetStringFromGameField(FieldAfterMove))));
             }
 
             return AllAvalaibleAttacksOfEnemies.Select(x => x.Item2).ToList().SelectMany(a => a).ToList().Contains(MyKing.Position);
@@ -100,11 +120,9 @@ namespace ChessLib
         {
             Cell[,] CloneOfTheField = HardCloningOfTheField();
 
-            CloneOfTheField[ChosenPiece.Position.X, ChosenPiece.Position.Y].isFilled = false;
-
             CloneOfTheField[ChosenPiece.Position.X, ChosenPiece.Position.Y].Piece = null;
 
-            if (CloneOfTheField[DestinationCell.X, DestinationCell.Y].isFilled)
+            if (CloneOfTheField[DestinationCell.X, DestinationCell.Y].IsFilled)
             {
                 CopiedPieces.Find(piece => piece.Position == DestinationCell).IsDead = true;
 
@@ -122,8 +140,6 @@ namespace ChessLib
 
             CopiedPieces.Find(piece => piece.Position == ((IPiece)CopiedChosenPiece).Position).ChangePosition(DestinationCell);
 
-            CloneOfTheField[DestinationCell.X, DestinationCell.Y].isFilled = true;
-
             CloneOfTheField[DestinationCell.X, DestinationCell.Y].Piece = (IPiece)CopiedChosenPiece;
 
             return CloneOfTheField;
@@ -139,12 +155,10 @@ namespace ChessLib
                 {
                     FieldAfterMove[i, j] = new Cell
                     {
-                        isAtacked = Field[i, j].isAtacked,
-
-                        isFilled = Field[i, j].isFilled
+                        IsAtacked = Field[i, j].IsAtacked
                     };
 
-                    if (FieldAfterMove[i, j].isFilled)
+                    if (Field[i, j].IsFilled)
                     {
                         FieldAfterMove[i, j].Piece = (IPiece)Field[i, j].Piece.Clone();
                     }
@@ -198,7 +212,7 @@ namespace ChessLib
             return CopiedPieces;
         }
 
-        public string[,] GetStringFromGameField(Cell[,] cells)
+        public static string[,] GetStringFromGameField(Cell[,] cells)
         {
             string[,] StringFromGameField = new string[8, 8];
 
@@ -206,7 +220,7 @@ namespace ChessLib
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    if (cells[i, j].isFilled == false)
+                    if (!cells[i, j].IsFilled)
                     {
                         StringFromGameField[i, j] = " ";
                     }
@@ -243,7 +257,7 @@ namespace ChessLib
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    if (this[i, j].isAtacked && this[i, j].Piece is King)
+                    if (this[i, j].IsAtacked && this[i, j].Piece is King)
                     {
 
                         return true;
@@ -262,8 +276,7 @@ namespace ChessLib
                 for (int j = 0; j < 8; j++)
                 {
                     this[i, j].Piece = null;
-                    this[i, j].isFilled = false;
-                    this[i, j].isAtacked = false;
+                    this[i, j].IsAtacked = false;
                 }
             }
 
@@ -273,7 +286,6 @@ namespace ChessLib
                 int i = piece.Position.X;
                 int j = piece.Position.Y;
 
-                this[i, j].isFilled = true;
                 this[i, j].Piece = piece;
 
                 GetAtackStatus(enemyPices, piece.Position, gameFiled);

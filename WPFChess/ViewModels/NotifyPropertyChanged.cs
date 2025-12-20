@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace ChessBoard
+namespace ChessWPF.ViewModels
 {
     public class NotifyPropertyChanged : INotifyPropertyChanged
     {

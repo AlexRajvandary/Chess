@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace ChessBoard.Converters
+namespace ChessWPF.Converters
 {
     public class EqualityConverter : IValueConverter
     {
@@ -23,4 +23,3 @@ namespace ChessBoard.Converters
         }
     }
 }
-

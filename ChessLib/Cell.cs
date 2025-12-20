@@ -4,30 +4,26 @@
     {
         private IPiece piece;
 
-        public bool isAtacked { get; set; }
+        public Cell()
+        {
+            IsAtacked = false;
+            piece = null;
+        }
 
-        public bool isFilled { get; set; }
+        public bool IsAtacked { get; set; }
+
+        /// <summary>
+        /// Returns true if cell contains a piece
+        /// </summary>
+        public bool IsFilled => piece != null;
 
         public IPiece Piece
         {
             get => piece;
             set
             {
-                if (isFilled)
-                {
-                    piece = value;
-                }
-                else
-                {
-                    piece = null;
-                }
+                piece = value;
             }
-        }
-
-        public Cell()
-        {
-            isAtacked = false;
-            isFilled = false;
         }
     }
 }

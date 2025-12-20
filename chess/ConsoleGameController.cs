@@ -5,9 +5,6 @@ using System.Linq;
 
 namespace chess
 {
-    /// <summary>
-    /// Контроллер для управления консольной версией игры
-    /// </summary>
     public class ConsoleGameController
     {
         private readonly Game game;
@@ -20,9 +17,6 @@ namespace chess
             this.view = view;
         }
 
-        /// <summary>
-        /// Starts the console game
-        /// </summary>
         public void StartGame()
         {
             while (!game.IsGameOver)
@@ -34,28 +28,21 @@ namespace chess
             view.Show($"Game Over! {state.GameOverReason}\n");
         }
 
-        /// <summary>
-        /// Processes one turn
-        /// </summary>
         private void ProcessTurn()
         {
             var state = game.GetState();
             
-            // Display board (using game.CurrentPlayer as required by IView interface)
             view.Visualize(state.BoardRepresentation, game.CurrentPlayer);
 
-            // Display move history
             var moveHistory = game.GetMoveHistory();
             if (!string.IsNullOrEmpty(moveHistory))
             {
                 view.Show($"Moves: {moveHistory}\n\n");
             }
             
-            // Display FEN notation
             var fen = game.GetFen();
             view.Show($"FEN: {fen}\n\n");
 
-            // Check for check/checkmate
             if (state.IsCheck)
             {
                 view.Show("Check!\n");
@@ -67,22 +54,17 @@ namespace chess
                 return;
             }
 
-            // Process player input and make move
             ProcessPlayerInput();
-
-            // Clear console and show result
             Console.Clear();
             state = game.GetState();
             view.Visualize(state.BoardRepresentation, game.CurrentPlayer);
             
-            // Display updated move history
             moveHistory = game.GetMoveHistory();
             if (!string.IsNullOrEmpty(moveHistory))
             {
                 view.Show($"Moves: {moveHistory}\n\n");
             }
             
-            // Display updated FEN
             fen = game.GetFen();
             view.Show($"FEN: {fen}\n\n");
             
@@ -90,14 +72,9 @@ namespace chess
             Console.ReadLine();
         }
 
-        /// <summary>
-        /// Processes player input: selects piece, shows moves, gets destination, and makes move via Game API
-        /// </summary>
         private void ProcessPlayerInput()
         {
             var state = game.GetState();
-            
-            // Get pieces of current player (UI logic - preparing data for display)
             var currentPlayerPieces = state.Pieces
                 .Where(p => p.Color == state.CurrentPlayerColor && !p.IsDead)
                 .ToList();
@@ -108,15 +85,12 @@ namespace chess
                 return;
             }
 
-            // Choose piece (UI logic - user input)
             int numOfElements = 1;
             int numOfElementsInLine = 1;
-            uint chosenPieceIndex = ChoosePiece(currentPlayerPieces, ref numOfElements, ref numOfElementsInLine);
+            int chosenPieceIndex = ChoosePiece(currentPlayerPieces, ref numOfElements, ref numOfElementsInLine);
             var chosenPiece = currentPlayerPieces[(int)(chosenPieceIndex - 1)];
 
-            // Get valid moves using Game API
             var validMoves = game.GetValidMoves(chosenPiece.Position);
-
             if (validMoves.Count == 0)
             {
                 view.Show("No available moves for selected piece!\n" +
@@ -125,11 +99,8 @@ namespace chess
                 return;
             }
 
-            // Show available moves (UI logic - display)
-            int counter = ShowAvailableMoves(1, validMoves);
-
-            // Choose move (UI logic - user input)
-            uint chosenMoveIndex = UserInput(validMoves.Count);
+            var counter = ShowAvailableMoves(1, validMoves);
+            var chosenMoveIndex = UserInput(validMoves.Count);
             var destination = validMoves[(int)(chosenMoveIndex - 1)];
 
             // Execute move using Game API (business logic is in Game.MakeMove)
@@ -149,13 +120,10 @@ namespace chess
                 view.Show("Checkmate!\n");
         }
 
-        /// <summary>
-        /// Пользовательский ввод
-        /// </summary>
-        private uint UserInput(int numberOfElements)
+        private int UserInput(int numberOfElements)
         {
-            uint chosenElement;
-            while (!uint.TryParse(Console.ReadLine(), out chosenElement) || chosenElement == 0 || chosenElement > numberOfElements)
+            int chosenElement;
+            while (!int.TryParse(Console.ReadLine(), out chosenElement) || chosenElement == 0 || chosenElement > numberOfElements)
             {
                 view.Show("Invalid input!\n" +
                     "Try again\n");
@@ -163,10 +131,7 @@ namespace chess
             return chosenElement;
         }
 
-        /// <summary>
-        /// Выбор фигуры для хода
-        /// </summary>
-        private uint ChoosePiece(List<IPiece> currentPlayerPieces, ref int numOfElements, ref int numOfElementsInLine)
+        private int ChoosePiece(List<IPiece> currentPlayerPieces, ref int numOfElements, ref int numOfElementsInLine)
         {
             view.Show("Choose a piece\n");
 
@@ -187,9 +152,6 @@ namespace chess
             return UserInput(currentPlayerPieces.Count);
         }
 
-        /// <summary>
-        /// Shows available moves
-        /// </summary>
         private int ShowAvailableMoves(int counter, List<Position> availableMoves)
         {
             if (availableMoves.Count == 0)
@@ -207,6 +169,5 @@ namespace chess
             }
             return counter;
         }
-
     }
 }

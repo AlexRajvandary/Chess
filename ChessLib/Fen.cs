@@ -14,7 +14,9 @@ namespace ChessLib
         private static char GetPieceChar(IPiece piece)
         {
             if (piece == null || piece.IsDead)
+            {
                 return ' ';
+            }
 
             char pieceChar = piece switch
             {
@@ -97,16 +99,12 @@ namespace ChessLib
             return fen.ToString();
         }
 
-        /// <summary>
-        /// Gets castling rights in FEN format (KQkq or -)
-        /// </summary>
         private static string GetCastlingRights(System.Collections.Generic.List<IPiece> pieces)
         {
             var castling = new StringBuilder();
 
             // White king and rooks
-            var whiteKing = pieces.FirstOrDefault(p => p is King && p.Color == PieceColor.White && !p.IsDead) as King;
-            if (whiteKing != null && !whiteKing.IsMoved)
+            if (pieces.FirstOrDefault(p => p is King && p.Color == PieceColor.White && !p.IsDead) is King whiteKing && !whiteKing.IsMoved)
             {
                 var whiteRooks = pieces.Where(p => p is Rook && p.Color == PieceColor.White && !p.IsDead).Cast<Rook>().ToList();
                 var kingsideRook = whiteRooks.FirstOrDefault(r => r.RookKind == RookKind.Royal && !r.IsMoved);
@@ -119,8 +117,7 @@ namespace ChessLib
             }
 
             // Black king and rooks
-            var blackKing = pieces.FirstOrDefault(p => p is King && p.Color == PieceColor.Black && !p.IsDead) as King;
-            if (blackKing != null && !blackKing.IsMoved)
+            if (pieces.FirstOrDefault(p => p is King && p.Color == PieceColor.Black && !p.IsDead) is King blackKing && !blackKing.IsMoved)
             {
                 var blackRooks = pieces.Where(p => p is Rook && p.Color == PieceColor.Black && !p.IsDead).Cast<Rook>().ToList();
                 var kingsideRook = blackRooks.FirstOrDefault(r => r.RookKind == RookKind.Royal && !r.IsMoved);

@@ -4,7 +4,7 @@ using System.Windows.Media;
 using ChessLib;
 using System.Threading.Tasks;
 
-namespace ChessBoard.Services
+namespace ChessWPF.Services
 {
     /// <summary>
     /// Service for playing sounds during chess moves

@@ -2,11 +2,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows.Media;
-using ChessBoard.Models;
-using System.Windows;
-using ChessBoard;
+using ChessWPF.Models;
 
-namespace ChessBoard.ViewModels
+namespace ChessWPF.ViewModels
 {
     public class SettingsViewModel : NotifyPropertyChanged
     {
@@ -15,6 +13,8 @@ namespace ChessBoard.ViewModels
         private Color customDarkColor;
         private bool isUpdatingCustomScheme = false;
         private bool isUpdatingFromSelection = false;
+        private PanelPosition panelPosition = PanelPosition.Left;
+        private bool showAvailableMoves = true;
 
         public ObservableCollection<ColorScheme> ColorSchemes { get; set; }
 
@@ -38,11 +38,13 @@ namespace ChessBoard.ViewModels
                         {
                             customLightColor = lightBrush.Color;
                             OnPropertyChanged(nameof(CustomLightColor));
+                            OnPropertyChanged(nameof(CustomLightColorBrush));
                         }
                         if (value.DarkSquareColor is SolidColorBrush darkBrush)
                         {
                             customDarkColor = darkBrush.Color;
                             OnPropertyChanged(nameof(CustomDarkColor));
+                            OnPropertyChanged(nameof(CustomDarkColorBrush));
                         }
                     }
                     finally
@@ -65,6 +67,7 @@ namespace ChessBoard.ViewModels
                 
                 customLightColor = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(CustomLightColorBrush));
                 
                 if (!isUpdatingFromSelection)
                 {
@@ -82,6 +85,7 @@ namespace ChessBoard.ViewModels
                 
                 customDarkColor = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(CustomDarkColorBrush));
                 
                 if (!isUpdatingFromSelection)
                 {
@@ -90,10 +94,42 @@ namespace ChessBoard.ViewModels
             }
         }
 
+        public SolidColorBrush CustomLightColorBrush => new SolidColorBrush(CustomLightColor);
+        public SolidColorBrush CustomDarkColorBrush => new SolidColorBrush(CustomDarkColor);
+
         public ICommand SelectCustomLightColorCommand { get; }
         public ICommand SelectCustomDarkColorCommand { get; }
+        public ICommand ApplyCustomColorsCommand { get; }
 
         public event System.Action<ColorScheme> OnColorSchemeChanged;
+        public event System.Action<PanelPosition> OnPanelPositionChanged;
+        public event System.Action<bool> OnShowAvailableMovesChanged;
+
+        public PanelPosition PanelPosition
+        {
+            get => panelPosition;
+            set
+            {
+                if (panelPosition == value) return;
+                
+                panelPosition = value;
+                OnPropertyChanged();
+                OnPanelPositionChanged?.Invoke(value);
+            }
+        }
+
+        public bool ShowAvailableMoves
+        {
+            get => showAvailableMoves;
+            set
+            {
+                if (showAvailableMoves == value) return;
+                
+                showAvailableMoves = value;
+                OnPropertyChanged();
+                OnShowAvailableMovesChanged?.Invoke(value);
+            }
+        }
 
         public SettingsViewModel()
         {
@@ -103,11 +139,9 @@ namespace ChessBoard.ViewModels
             
             InitializeColorSchemes();
             
-            // Add custom scheme after initializing others
-            UpdateCustomColorScheme();
-            
             SelectCustomLightColorCommand = new RelayCommand(_ => SelectCustomColor(true));
             SelectCustomDarkColorCommand = new RelayCommand(_ => SelectCustomColor(false));
+            ApplyCustomColorsCommand = new RelayCommand(_ => ApplyCustomColors());
         }
 
         private void SelectCustomColor(bool isLightColor)
@@ -135,42 +169,22 @@ namespace ChessBoard.ViewModels
 
         private void UpdateCustomColorScheme()
         {
-            if (isUpdatingCustomScheme || ColorSchemes == null) return;
+            // No longer creating/updating custom scheme in the list
+            // Custom colors are applied via ApplyCustomColors command
+        }
+
+        private void ApplyCustomColors()
+        {
+            var customScheme = new ColorScheme(
+                "Custom",
+                "Your personalized color scheme",
+                new SolidColorBrush(CustomLightColor),
+                new SolidColorBrush(CustomDarkColor),
+                "🎨"
+            );
             
-            isUpdatingCustomScheme = true;
-            try
-            {
-                // Find or create custom color scheme
-                var customScheme = ColorSchemes.FirstOrDefault(s => s.Name == "Custom");
-                if (customScheme == null)
-                {
-                    customScheme = new ColorScheme(
-                        "Custom",
-                        "Your personalized color scheme",
-                        new SolidColorBrush(CustomLightColor),
-                        new SolidColorBrush(CustomDarkColor),
-                        "🎨"
-                    );
-                    ColorSchemes.Add(customScheme);
-                }
-                else
-                {
-                    customScheme.LightSquareColor = new SolidColorBrush(CustomLightColor);
-                    customScheme.DarkSquareColor = new SolidColorBrush(CustomDarkColor);
-                }
-                
-                // Select custom scheme if colors are being edited (but avoid recursion)
-                if (SelectedColorScheme?.Name != "Custom")
-                {
-                    selectedColorScheme = customScheme;
-                    OnPropertyChanged(nameof(SelectedColorScheme));
-                    OnColorSchemeChanged?.Invoke(customScheme);
-                }
-            }
-            finally
-            {
-                isUpdatingCustomScheme = false;
-            }
+            SelectedColorScheme = customScheme;
+            OnColorSchemeChanged?.Invoke(customScheme);
         }
 
         private void InitializeColorSchemes()

@@ -1,18 +1,19 @@
-﻿using System.Windows;
+﻿using ChessWPF.Models;
+using System.Windows;
 using System.Windows.Controls;
 
-namespace ChessBoard.Controls
+namespace ChessWPF.Controls
 {
     /// <summary>
     /// Interaction logic for ChessPiece.xaml
     /// </summary>
     public partial class ChessPiece : UserControl
     {
-        public static readonly DependencyProperty PieceProperty = DependencyProperty.Register("Piece", typeof(State), typeof(ChessPiece));
+        public static readonly DependencyProperty PieceProperty = DependencyProperty.Register("Piece", typeof(CellUIState), typeof(ChessPiece));
 
-        public State Piece
+        public CellUIState Piece
         {
-            get => (State)GetValue(PieceProperty);
+            get => (CellUIState)GetValue(PieceProperty);
             set => SetValue(PieceProperty, value);
         }
 
