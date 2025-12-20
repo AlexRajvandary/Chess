@@ -30,7 +30,9 @@ namespace ChessLib
             {
                 capturedPiece.IsDead = true;
                 piece.ChangePosition(destination);
-                return MoveResult.Success(MoveType.Capture);
+                var result = MoveResult.Success(MoveType.Capture);
+                result.CapturedPiece = capturedPiece;
+                return result;
             }
 
             // Regular move
@@ -71,7 +73,9 @@ namespace ChessLib
 
             capturedPawn.IsDead = true;
             pawn.ChangePosition(destination);
-            return MoveResult.Success(MoveType.EnPassant);
+            var result = MoveResult.Success(MoveType.EnPassant);
+            result.CapturedPiece = capturedPawn;
+            return result;
         }
 
         /// <summary>

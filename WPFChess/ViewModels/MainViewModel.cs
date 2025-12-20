@@ -48,6 +48,8 @@ namespace ChessWPF.ViewModels
         private GameRecord selectedGame;
         private ICommand loadSelectedGameCommand;
         private ICommand refreshGamesCommand;
+        private ObservableCollection<CapturedPieceInfo> capturedByWhite;
+        private ObservableCollection<CapturedPieceInfo> capturedByBlack;
         private System.Windows.HorizontalAlignment settingsPanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment gamePanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment aboutPanelAlignment = System.Windows.HorizontalAlignment.Left;
@@ -91,6 +93,10 @@ namespace ChessWPF.ViewModels
             // Initialize saved games list
             SavedGames = new ObservableCollection<GameRecord>();
             LoadSavedGames();
+
+            // Initialize captured pieces collections
+            CapturedByWhite = new ObservableCollection<CapturedPieceInfo>();
+            CapturedByBlack = new ObservableCollection<CapturedPieceInfo>();
         }
 
         public Brush LightSquareColor
@@ -274,6 +280,9 @@ namespace ChessWPF.ViewModels
                 // Update view - this will update board, FEN, and move history
                 // This ensures the board shows the final position after all moves
                 UpdateViewFromGameState();
+                
+                // Update captured pieces from move history
+                UpdateCapturedPieces();
                 
                 // Explicitly update move history from the game's MoveHistory
                 // This ensures all moves are displayed in the notation panel
@@ -463,6 +472,33 @@ namespace ChessWPF.ViewModels
                 if (result.IsValid)
                 {
                     soundService.PlayMoveSound(result);
+                    
+                    // Update captured pieces if a piece was captured
+                    if (result.CapturedPiece != null)
+                    {
+                        var capturedState = GetStateFromPiece(result.CapturedPiece);
+                        // Determine the color of the capturing piece from the previous cell
+                        // The piece that made the move was in previousActiveCell
+                        bool isWhiteCapturing = previousActiveCell.State == CellUIState.WhitePawn ||
+                                               previousActiveCell.State == CellUIState.WhiteRook ||
+                                               previousActiveCell.State == CellUIState.WhiteKnight ||
+                                               previousActiveCell.State == CellUIState.WhiteBishop ||
+                                               previousActiveCell.State == CellUIState.WhiteQueen ||
+                                               previousActiveCell.State == CellUIState.WhiteKing;
+                        
+                        // Add to the collection of the player who captured it
+                        var targetCollection = isWhiteCapturing ? CapturedByWhite : CapturedByBlack;
+                        var existingPiece = targetCollection.FirstOrDefault(p => p.Piece == capturedState);
+                        if (existingPiece != null)
+                        {
+                            existingPiece.Count++;
+                        }
+                        else
+                        {
+                            targetCollection.Add(new CapturedPieceInfo { Piece = capturedState, Count = 1 });
+                        }
+                    }
+                    
                     UpdateViewFromGameState();
                     
                     if (result.IsCheck)
@@ -593,6 +629,10 @@ namespace ChessWPF.ViewModels
             Fen = initialFen;
             MoveHistory = string.Empty;
 
+            // Clear captured pieces
+            CapturedByWhite.Clear();
+            CapturedByBlack.Clear();
+
             SetupBoard();
             
             // Close game panel after starting new game
@@ -696,6 +736,70 @@ namespace ChessWPF.ViewModels
                 King => isWhite ? CellUIState.WhiteKing : CellUIState.BlackKing,
                 _ => CellUIState.Empty
             };
+        }
+
+        /// <summary>
+        /// Collection of pieces captured by white player
+        /// </summary>
+        public ObservableCollection<CapturedPieceInfo> CapturedByWhite
+        {
+            get => capturedByWhite;
+            set
+            {
+                capturedByWhite = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Collection of pieces captured by black player
+        /// </summary>
+        public ObservableCollection<CapturedPieceInfo> CapturedByBlack
+        {
+            get => capturedByBlack;
+            set
+            {
+                capturedByBlack = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Updates captured pieces lists from move history
+        /// </summary>
+        private void UpdateCapturedPieces()
+        {
+            CapturedByWhite.Clear();
+            CapturedByBlack.Clear();
+
+            if (gameService?.CurrentGame?.MoveHistory == null)
+            {
+                System.Diagnostics.Debug.WriteLine("UpdateCapturedPieces: MoveHistory is null");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"UpdateCapturedPieces: Processing {gameService.CurrentGame.MoveHistory.Count} moves");
+
+            foreach (var move in gameService.CurrentGame.MoveHistory)
+            {
+                if (move.CapturedPiece != null)
+                {
+                    var capturedState = GetStateFromPiece(move.CapturedPiece);
+                    // Add to the collection of the player who captured it
+                    var targetCollection = move.PlayerColor == PieceColor.White ? CapturedByWhite : CapturedByBlack;
+                    var existingPiece = targetCollection.FirstOrDefault(p => p.Piece == capturedState);
+                    if (existingPiece != null)
+                    {
+                        existingPiece.Count++;
+                    }
+                    else
+                    {
+                        targetCollection.Add(new CapturedPieceInfo { Piece = capturedState, Count = 1 });
+                    }
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"UpdateCapturedPieces: White captured {CapturedByWhite.Count}, Black captured {CapturedByBlack.Count}");
         }
 
         private static void IncorrectMoveMessage(CellViewModel CurrentCell, List<ChessLib.Position> ValidMoves)

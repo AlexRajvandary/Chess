@@ -473,15 +473,48 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- Captured by Black (above board) -->
+            <ItemsControl Grid.Row="0" Grid.Column="2" 
+                          ItemsSource="{Binding CapturedByBlack}"
+                          HorizontalAlignment="Left"
+                          Margin="0,0,0,5">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="28" Height="28" Margin="2">
+                            <Border Width="28" Height="28">
+                                <controls:ChessPiece Piece="{Binding Piece}"/>
+                            </Border>
+                            <TextBlock Text="{Binding DisplayText}" 
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Bottom"
+                                       FontSize="9"
+                                       FontWeight="Bold"
+                                       Margin="0,0,1,1"
+                                       Foreground="#333"
+                                       Background="#FFFFFF"
+                                       Padding="1,0"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <!-- Top letters -->
-            <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
+            <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="60">
@@ -497,7 +530,7 @@
             </ItemsControl>
 
             <!-- Left numbers -->
-            <ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
+            <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="60">
@@ -508,7 +541,7 @@
             </ItemsControl>
 
             <!-- Chess Board -->
-            <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Board}" AlternationCount="64">
+            <ItemsControl Grid.Row="2" Grid.Column="2" ItemsSource="{Binding Board}" AlternationCount="64">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Button Width="60" Height="60" Command="{Binding DataContext.CellCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" >
@@ -562,7 +595,7 @@
             </ItemsControl>
 
             <!-- Right numbers -->
-            <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
+            <ItemsControl Grid.Row="2" Grid.Column="3" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="60">
@@ -573,7 +606,7 @@
             </ItemsControl>
 
             <!-- Bottom letters -->
-            <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
+            <ItemsControl Grid.Row="3" Grid.Column="2" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="60">
@@ -586,6 +619,36 @@
                         <StackPanel Orientation="Horizontal"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <!-- Captured by White (below board) -->
+            <ItemsControl Grid.Row="4" Grid.Column="2" 
+                          ItemsSource="{Binding CapturedByWhite}"
+                          HorizontalAlignment="Left"
+                          Margin="0,5,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="28" Height="28" Margin="2">
+                            <Border Width="28" Height="28">
+                                <controls:ChessPiece Piece="{Binding Piece}"/>
+                            </Border>
+                            <TextBlock Text="{Binding DisplayText}" 
+                                       HorizontalAlignment="Right"
+                                       VerticalAlignment="Bottom"
+                                       FontSize="9"
+                                       FontWeight="Bold"
+                                       Margin="0,0,1,1"
+                                       Foreground="#333"
+                                       Background="#FFFFFF"
+                                       Padding="1,0"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Grid>
 
