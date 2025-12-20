@@ -43,7 +43,7 @@
 - ASCII board visualization
 - Interactive piece and move selection
 ### WPF
-![img](images/wpfChessNew.gif)
+![img](images/import_games.gif)
 ![img](images/chessPlay.gif)
 ### Console
 ![img](images/chessConsolePlay.gif)
