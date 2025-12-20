@@ -36,6 +36,7 @@ namespace ChessWPF.ViewModels
         private ICommand loadGameCommand;
         private ICommand saveGameCommand;
         private ICommand closeAboutCommand;
+        private ICommand toggleSidePanelCommand;
         private Brush lightSquareColor;
         private Brush darkSquareColor;
         private readonly SoundService soundService;
@@ -43,6 +44,7 @@ namespace ChessWPF.ViewModels
         private bool isSettingsPanelVisible;
         private bool isGamePanelVisible;
         private bool isAboutPanelVisible;
+        private bool isSidePanelVisible = true;
         private System.Windows.HorizontalAlignment settingsPanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment gamePanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment aboutPanelAlignment = System.Windows.HorizontalAlignment.Left;
@@ -137,6 +139,11 @@ namespace ChessWPF.ViewModels
             IsGamePanelVisible = false;
         });
 
+        public ICommand ToggleSidePanelCommand => toggleSidePanelCommand ??= new RelayCommand(parameter =>
+        {
+            IsSidePanelVisible = !IsSidePanelVisible;
+        });
+
         public SettingsViewModel SettingsViewModel
         {
             get => settingsViewModel;
@@ -203,6 +210,16 @@ namespace ChessWPF.ViewModels
             set
             {
                 aboutPanelAlignment = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsSidePanelVisible
+        {
+            get => isSidePanelVisible;
+            set
+            {
+                isSidePanelVisible = value;
                 OnPropertyChanged();
             }
         }
