@@ -4,9 +4,13 @@
 Простая игра Шахматы. Реализована как консольная версия, так и оконная версия игры (WPF). Реализованы все шахматные правила, импорт партий в PGN, алгебраическая и FEN нотации. Пользовательские и исторические партии храняться в SQLite.
 
 ### WPF
+### Autoplaying imported game
 ![img](images/autoplay.gif)
+### Selecting different color themes
 ![img](images/colors2.gif)
+### Importing games
 ![img](images/import_games.gif)
+### Basic game
 ![img](images/chessPlay.gif)
 ### Console
 ![img](images/chessConsolePlay.gif)
