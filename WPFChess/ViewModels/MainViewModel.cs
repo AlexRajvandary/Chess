@@ -32,18 +32,22 @@ namespace ChessWPF.ViewModels
         private ICommand closeSettingsCommand;
         private ICommand openGameCommand;
         private ICommand closeGameCommand;
-        private ICommand loadGameCommand;
         private ICommand saveGameCommand;
         private ICommand closeAboutCommand;
         private ICommand toggleSidePanelCommand;
         private Brush lightSquareColor;
         private Brush darkSquareColor;
         private readonly SoundService soundService;
+        private readonly GameStorageService gameStorageService;
         private SettingsViewModel settingsViewModel;
         private bool isSettingsPanelVisible;
         private bool isGamePanelVisible;
         private bool isAboutPanelVisible;
         private bool isSidePanelVisible = true;
+        private ObservableCollection<GameRecord> savedGames;
+        private GameRecord selectedGame;
+        private ICommand loadSelectedGameCommand;
+        private ICommand refreshGamesCommand;
         private System.Windows.HorizontalAlignment settingsPanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment gamePanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment aboutPanelAlignment = System.Windows.HorizontalAlignment.Left;
@@ -58,6 +62,9 @@ namespace ChessWPF.ViewModels
             
             // Initialize sound service
             soundService = new SoundService();
+            
+            // Initialize game storage service
+            gameStorageService = new GameStorageService();
             
             // Initialize settings view model
             settingsViewModel = new SettingsViewModel();
@@ -80,6 +87,10 @@ namespace ChessWPF.ViewModels
                     ClearAvailableMoves();
                 }
             };
+
+            // Initialize saved games list
+            SavedGames = new ObservableCollection<GameRecord>();
+            LoadSavedGames();
         }
 
         public Brush LightSquareColor
@@ -125,6 +136,8 @@ namespace ChessWPF.ViewModels
         public ICommand OpenGameCommand => openGameCommand ??= new RelayCommand(parameter =>
         {
             IsGamePanelVisible = true;
+            // Refresh saved games list when opening the panel
+            LoadSavedGames();
         });
 
         public ICommand CloseGameCommand => closeGameCommand ??= new RelayCommand(parameter =>
@@ -132,19 +145,198 @@ namespace ChessWPF.ViewModels
             IsGamePanelVisible = false;
         });
 
-        public ICommand LoadGameCommand => loadGameCommand ??= new RelayCommand(parameter =>
-        {
-            // TODO: Implement load game functionality
-            MessageBox.Show("Load Game functionality will be implemented");
-            IsGamePanelVisible = false;
-        });
 
         public ICommand SaveGameCommand => saveGameCommand ??= new RelayCommand(parameter =>
         {
-            // TODO: Implement save game functionality
-            MessageBox.Show("Save Game functionality will be implemented");
-            IsGamePanelVisible = false;
+            try
+            {
+                var gameRecord = gameStorageService.SaveGame(
+                    gameService.CurrentGame,
+                    "White",
+                    "Black",
+                    "Casual Game",
+                    "Local",
+                    "1"
+                );
+
+                if (gameRecord != null)
+                {
+                    MessageBox.Show($"Партия успешно сохранена!\nID: {gameRecord.Id}\nХодов: {gameRecord.MoveCount}", 
+                        "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    
+                    // Refresh saved games list
+                    LoadSavedGames();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         });
+
+        /// <summary>
+        /// Collection of saved games
+        /// </summary>
+        public ObservableCollection<GameRecord> SavedGames
+        {
+            get => savedGames;
+            set
+            {
+                savedGames = value;
+                OnPropertyChanged();
+            }
+        }
+
+        /// <summary>
+        /// Selected game from the list
+        /// </summary>
+        public GameRecord SelectedGame
+        {
+            get => selectedGame;
+            set
+            {
+                selectedGame = value;
+                OnPropertyChanged();
+                // Force command to re-evaluate CanExecute
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        /// <summary>
+        /// Command to load selected game
+        /// </summary>
+        public ICommand LoadSelectedGameCommand => loadSelectedGameCommand ??= new RelayCommand(parameter =>
+        {
+            if (SelectedGame != null)
+            {
+                LoadGameFromRecord(SelectedGame);
+            }
+        }, parameter => SelectedGame != null);
+
+        /// <summary>
+        /// Command to refresh saved games list
+        /// </summary>
+        public ICommand RefreshGamesCommand => refreshGamesCommand ??= new RelayCommand(parameter =>
+        {
+            LoadSavedGames();
+        });
+
+        /// <summary>
+        /// Loads saved games from database
+        /// </summary>
+        private void LoadSavedGames()
+        {
+            try
+            {
+                var games = GameStorageService.GetAllGames();
+                SavedGames.Clear();
+                foreach (var game in games)
+                {
+                    SavedGames.Add(game);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке списка партий: {ex.Message}", "Ошибка", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Loads a game from GameRecord
+        /// </summary>
+        private void LoadGameFromRecord(GameRecord gameRecord)
+        {
+            try
+            {
+                // Start new game
+                gameService.StartNewGame();
+
+                // Parse PGN and apply moves
+                var moves = PgnService.ParsePgnMoves(gameRecord.PgnNotation);
+
+                // Apply each move to reach the final position
+                int appliedMoves = 0;
+                foreach (var moveNotation in moves)
+                {
+                    var moveInfo = PgnMoveParser.ParseMove(moveNotation, gameService.CurrentGame);
+                    if (moveInfo != null)
+                    {
+                        var result = gameService.MakeMove(moveInfo.From, moveInfo.To);
+                        if (result.IsValid)
+                        {
+                            appliedMoves++;
+                        }
+                        // Continue even if move fails - some moves might not parse correctly
+                    }
+                }
+
+                // Update view - this will update board, FEN, and move history
+                // This ensures the board shows the final position after all moves
+                UpdateViewFromGameState();
+                
+                // Explicitly update move history from the game's MoveHistory
+                // This ensures all moves are displayed in the notation panel
+                var history = gameService.GetMoveHistory();
+                if (!string.IsNullOrEmpty(history))
+                {
+                    MoveHistory = history;
+                }
+                else
+                {
+                    // If history is empty, try to get it from PGN directly
+                    // Format the moves from PGN for display
+                    MoveHistory = FormatMovesFromPgn(moves);
+                }
+                
+                // Update FEN to show final position
+                Fen = gameService.GetFen();
+                
+                // Force UI update
+                SetupBoard();
+                
+                // Clear selection after loading
+                SelectedGame = null;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Formats moves from PGN list for display
+        /// </summary>
+        private string FormatMovesFromPgn(List<string> moves)
+        {
+            if (moves == null || moves.Count == 0)
+                return string.Empty;
+
+            var result = new System.Text.StringBuilder();
+            int moveNumber = 1;
+            
+            for (int i = 0; i < moves.Count; i += 2)
+            {
+                result.Append($"{moveNumber}. ");
+                
+                // White move
+                if (i < moves.Count)
+                {
+                    result.Append(moves[i]);
+                }
+                
+                // Black move
+                if (i + 1 < moves.Count)
+                {
+                    result.Append($" {moves[i + 1]}");
+                }
+                
+                result.Append(" ");
+                moveNumber++;
+            }
+            
+            return result.ToString().Trim();
+        }
 
         public ICommand ToggleSidePanelCommand => toggleSidePanelCommand ??= new RelayCommand(parameter =>
         {
