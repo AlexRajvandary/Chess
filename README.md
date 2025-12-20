@@ -5,7 +5,7 @@
 
 ### WPF
 ![img](images/autoplay.gif)
-![img](images/colors.gif)
+![img](images/colors2.gif)
 ![img](images/import_games.gif)
 ![img](images/chessPlay.gif)
 ### Console
