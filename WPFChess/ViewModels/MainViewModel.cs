@@ -78,6 +78,17 @@ namespace ChessWPF.ViewModels
         private System.Windows.HorizontalAlignment settingsPanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment gamePanelAlignment = System.Windows.HorizontalAlignment.Left;
         private System.Windows.HorizontalAlignment aboutPanelAlignment = System.Windows.HorizontalAlignment.Left;
+        
+        // Timer properties
+        private TimeSpan whitePlayerTime = TimeSpan.Zero;
+        private TimeSpan blackPlayerTime = TimeSpan.Zero;
+        private TimeSpan initialTimePerPlayer = TimeSpan.FromMinutes(10); // Default 10 minutes
+        private System.Windows.Threading.DispatcherTimer gameTimer;
+        private bool isWhitePlayerActive = true;
+        private bool isTimerEnabled = false; // Setting for next game
+        private Models.TimeOption selectedTimeOption;
+        private bool isFirstMove = true; // Track if this is the first move of the game
+        private bool currentGameHasTimers = false; // Whether current game has timers enabled
 
         public MainViewModel()
         {
@@ -122,6 +133,14 @@ namespace ChessWPF.ViewModels
             // Initialize historical games list
             HistoricalGames = new ObservableCollection<HistoricalGame>();
             LoadHistoricalGames();
+            
+            // Initialize game timer
+            gameTimer = new System.Windows.Threading.DispatcherTimer();
+            gameTimer.Interval = TimeSpan.FromSeconds(1);
+            gameTimer.Tick += GameTimer_Tick;
+            
+            // Initialize time option (default 10 minutes)
+            SelectedTimeOption = new Models.TimeOption { Time = TimeSpan.FromMinutes(10), Display = "10 минут" };
 
             // Initialize captured pieces collections
             CapturedByWhite = new ObservableCollection<CapturedPieceInfo>();
@@ -682,6 +701,10 @@ namespace ChessWPF.ViewModels
         {
             try
             {
+                // Loaded games don't have timers
+                currentGameHasTimers = false;
+                OnPropertyChanged(nameof(ShowTimers));
+                
                 // Parse PGN and save moves
                 loadedGameMoves = PgnService.ParsePgnMoves(historicalGame.PgnNotation);
                 IsGameLoaded = true;
@@ -705,6 +728,10 @@ namespace ChessWPF.ViewModels
         {
             try
             {
+                // Loaded games don't have timers
+                currentGameHasTimers = false;
+                OnPropertyChanged(nameof(ShowTimers));
+                
                 // Parse PGN and save moves
                 loadedGameMoves = PgnService.ParsePgnMoves(gameRecord.PgnNotation);
                 IsGameLoaded = true;
@@ -1158,6 +1185,17 @@ namespace ChessWPF.ViewModels
             }
             else
             {
+                // Check if game ended due to time expiration
+                if (currentGameHasTimers && !gameTimer.IsEnabled)
+                {
+                    // Check if any player's time is 0
+                    if (whitePlayerTime.TotalSeconds <= 0 || blackPlayerTime.TotalSeconds <= 0)
+                    {
+                        MessageBox.Show("Игра завершена из-за истечения времени. Начните новую игру.", "Игра завершена", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
+                }
+                
                 var fromPos = new ChessLib.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
                 var result = gameService.MakeMove(fromPos, currentPos);
                 
@@ -1193,6 +1231,17 @@ namespace ChessWPF.ViewModels
                     
                     UpdateViewFromGameState();
                     
+                    // Switch timer to next player after move
+                    if (currentGameHasTimers)
+                    {
+                        // Mark that first move is done
+                        isFirstMove = false;
+                        
+                        // Switch to next player's timer
+                        isWhitePlayerActive = !isWhitePlayerActive;
+                        // Timer continues running for the next player (no need to stop/start)
+                    }
+                    
                     if (result.IsCheck)
                     {
                         MessageBox.Show("Check!");
@@ -1202,6 +1251,10 @@ namespace ChessWPF.ViewModels
                     {
                         MessageBox.Show("Checkmate!");
                         soundService.PlayCheckmateSound();
+                        if (currentGameHasTimers)
+                        {
+                            StopTimer();
+                        }
                     }
                     
                     var fen = gameService.GetFen();
@@ -1334,6 +1387,26 @@ namespace ChessWPF.ViewModels
 
             SetupBoard();
             
+            // Apply timer settings from checkbox to current game
+            currentGameHasTimers = isTimerEnabled && selectedTimeOption != null;
+            OnPropertyChanged(nameof(ShowTimers));
+            
+            // Initialize timers after board setup (but don't start yet - will start when white player selects a piece for first move)
+            if (currentGameHasTimers)
+            {
+                WhitePlayerTime = selectedTimeOption.Time;
+                BlackPlayerTime = selectedTimeOption.Time;
+                // White player starts, so white timer should be active when they select a piece
+                isWhitePlayerActive = true;
+                isFirstMove = true; // Reset first move flag
+                StopTimer(); // Don't start timer yet - wait for player to select a piece for first move
+            }
+            else
+            {
+                StopTimer();
+                isFirstMove = false;
+            }
+            
             // Close game panel after starting new game
             IsGamePanelVisible = false;
         });
@@ -1343,11 +1416,41 @@ namespace ChessWPF.ViewModels
         /// </summary>
         private void SelectPiece(CellViewModel cell)
         {
+            // Check if game ended due to time expiration
+            if (currentGameHasTimers && !gameTimer.IsEnabled)
+            {
+                if (whitePlayerTime.TotalSeconds <= 0 || blackPlayerTime.TotalSeconds <= 0)
+                {
+                    MessageBox.Show("Игра завершена из-за истечения времени. Начните новую игру.", "Игра завершена", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+            }
+            
             // Clear previous available moves
             ClearAvailableMoves();
             
             var pos = new ChessLib.Position(cell.Position.Horizontal, cell.Position.Vertical);
             var validMoves = gameService.GetValidMoves(pos);
+            
+            // Start timer when white player selects a piece for the FIRST move only
+            if (currentGameHasTimers && isFirstMove && !gameTimer.IsEnabled)
+            {
+                var boardState = gameService.GetBoardState();
+                // Check if selected piece belongs to current player (should be white for first move)
+                bool isWhitePiece = cell.State == CellUIState.WhitePawn ||
+                                   cell.State == CellUIState.WhiteRook ||
+                                   cell.State == CellUIState.WhiteKnight ||
+                                   cell.State == CellUIState.WhiteBishop ||
+                                   cell.State == CellUIState.WhiteQueen ||
+                                   cell.State == CellUIState.WhiteKing;
+                
+                // Only start timer if it's white's first move and they selected a white piece
+                if (isWhitePiece && boardState.CurrentPlayerColor == PieceColor.White)
+                {
+                    isWhitePlayerActive = true;
+                    StartTimer();
+                }
+            }
             
             // Highlight valid moves on board if enabled in settings
             if (settingsViewModel.ShowAvailableMoves)
@@ -1526,5 +1629,145 @@ namespace ChessWPF.ViewModels
             // Clear any highlights
             ClearAvailableMoves();
         }
+
+        // Timer properties and methods
+        public Models.TimeOption SelectedTimeOption
+        {
+            get => selectedTimeOption;
+            set
+            {
+                selectedTimeOption = value;
+                if (value != null)
+                {
+                    initialTimePerPlayer = value.Time;
+                    OnPropertyChanged(nameof(InitialTimePerPlayer));
+                }
+                OnPropertyChanged();
+            }
+        }
+
+        public TimeSpan InitialTimePerPlayer
+        {
+            get => initialTimePerPlayer;
+            set
+            {
+                initialTimePerPlayer = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public TimeSpan WhitePlayerTime
+        {
+            get => whitePlayerTime;
+            set
+            {
+                whitePlayerTime = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WhitePlayerTimeFormatted));
+            }
+        }
+
+        public TimeSpan BlackPlayerTime
+        {
+            get => blackPlayerTime;
+            set
+            {
+                blackPlayerTime = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(BlackPlayerTimeFormatted));
+            }
+        }
+
+        public string WhitePlayerTimeFormatted => FormatTime(whitePlayerTime);
+        public string BlackPlayerTimeFormatted => FormatTime(blackPlayerTime);
+
+        public bool IsTimerEnabled
+        {
+            get => isTimerEnabled;
+            set
+            {
+                isTimerEnabled = value;
+                OnPropertyChanged();
+                // This setting only applies to next game, not current game
+            }
+        }
+
+        /// <summary>
+        /// Whether timers should be displayed (current game has timers enabled)
+        /// </summary>
+        public bool ShowTimers
+        {
+            get => currentGameHasTimers;
+        }
+
+        private string FormatTime(TimeSpan time)
+        {
+            if (time.TotalHours >= 1)
+            {
+                return $"{(int)time.TotalHours}:{time.Minutes:D2}:{time.Seconds:D2}";
+            }
+            return $"{time.Minutes:D2}:{time.Seconds:D2}";
+        }
+
+        private void GameTimer_Tick(object sender, EventArgs e)
+        {
+            if (isWhitePlayerActive)
+            {
+                if (whitePlayerTime.TotalSeconds > 0)
+                {
+                    WhitePlayerTime = whitePlayerTime.Subtract(TimeSpan.FromSeconds(1));
+                }
+                else
+                {
+                    // Time expired - white loses
+                    StopTimer();
+                    EndGameByTime(PieceColor.White);
+                    MessageBox.Show("Время белых истекло! Черные выиграли по времени.", "Время истекло", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            else
+            {
+                if (blackPlayerTime.TotalSeconds > 0)
+                {
+                    BlackPlayerTime = blackPlayerTime.Subtract(TimeSpan.FromSeconds(1));
+                }
+                else
+                {
+                    // Time expired - black loses
+                    StopTimer();
+                    EndGameByTime(PieceColor.Black);
+                    MessageBox.Show("Время черных истекло! Белые выиграли по времени.", "Время истекло", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ends the game due to time expiration
+        /// </summary>
+        private void EndGameByTime(PieceColor losingColor)
+        {
+            // Stop the timer
+            StopTimer();
+            
+            // Mark game as over in the game service
+            gameService.EndGameByTime(losingColor);
+            
+            // Play sound for game over
+            soundService.PlayCheckmateSound();
+        }
+
+        private void StartTimer()
+        {
+            if (isTimerEnabled)
+            {
+                gameTimer.Start();
+            }
+        }
+
+        private void StopTimer()
+        {
+            gameTimer.Stop();
+        }
+
     }
 }

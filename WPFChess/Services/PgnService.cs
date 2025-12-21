@@ -33,14 +33,23 @@ namespace ChessWPF.Services
             string result = "*";
             if (game.IsGameOver)
             {
-                var lastMove = game.MoveHistory.LastOrDefault();
-                if (lastMove?.IsCheckmate == true)
+                // Check if game ended by time
+                if (game.TimeLoser.HasValue)
                 {
-                    result = lastMove.PlayerColor == PieceColor.White ? "1-0" : "0-1";
+                    // Player who lost by time - opposite player wins
+                    result = game.TimeLoser.Value == PieceColor.White ? "0-1" : "1-0";
                 }
                 else
                 {
-                    result = "1/2-1/2";
+                    var lastMove = game.MoveHistory.LastOrDefault();
+                    if (lastMove?.IsCheckmate == true)
+                    {
+                        result = lastMove.PlayerColor == PieceColor.White ? "1-0" : "0-1";
+                    }
+                    else
+                    {
+                        result = "1/2-1/2";
+                    }
                 }
             }
             pgn.AppendLine($"[Result \"{result}\"]");

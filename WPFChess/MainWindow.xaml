@@ -97,6 +97,35 @@
                             <!-- New Game -->
                             <TextBlock Text="🆕 New Game" FontSize="18" Margin="0,0,0,10"/>
                             <TextBlock Text="Start a fresh chess game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            
+                            <!-- Timer Settings -->
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <CheckBox Content="Включить таймер" 
+                                              IsChecked="{Binding IsTimerEnabled}"
+                                              FontSize="13"
+                                              Margin="0,0,0,10"/>
+                                    <StackPanel IsEnabled="{Binding IsTimerEnabled}">
+                                        <TextBlock Text="Время на игрока:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
+                                        <ComboBox SelectedItem="{Binding SelectedTimeOption}" 
+                                                  FontSize="12"
+                                                  DisplayMemberPath="Display">
+                                            <ComboBox.ItemsSource>
+                                                <x:Array Type="{x:Type models:TimeOption}">
+                                                    <models:TimeOption Time="00:01:00" Display="1 минута"/>
+                                                    <models:TimeOption Time="00:03:00" Display="3 минуты"/>
+                                                    <models:TimeOption Time="00:05:00" Display="5 минут"/>
+                                                    <models:TimeOption Time="00:10:00" Display="10 минут"/>
+                                                    <models:TimeOption Time="00:15:00" Display="15 минут"/>
+                                                    <models:TimeOption Time="00:30:00" Display="30 минут"/>
+                                                    <models:TimeOption Time="01:00:00" Display="1 час"/>
+                                                </x:Array>
+                                            </ComboBox.ItemsSource>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="New Game" 
                                         Command="{Binding NewGameCommand}"
@@ -777,6 +806,30 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- Black Player Timer (above board) -->
+            <Border Grid.Row="0" Grid.Column="2" 
+                    Background="#2C3E50" 
+                    CornerRadius="5" 
+                    Padding="10,8" 
+                    Margin="0,0,0,5"
+                    HorizontalAlignment="Right"
+                    Visibility="{Binding ShowTimers, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⏱ Черные: " 
+                               Foreground="White" 
+                               FontSize="14" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,5,0"/>
+                    <TextBlock Text="{Binding BlackPlayerTimeFormatted}" 
+                               Foreground="White" 
+                               FontSize="16" 
+                               FontWeight="Bold"
+                               FontFamily="Consolas"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+            
             <!-- Captured by Black (above board) -->
             <ItemsControl Grid.Row="0" Grid.Column="2" 
                           ItemsSource="{Binding CapturedByBlack}"
@@ -915,6 +968,30 @@
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
 
+            <!-- White Player Timer (below board) -->
+            <Border Grid.Row="4" Grid.Column="2" 
+                    Background="#2C3E50" 
+                    CornerRadius="5" 
+                    Padding="10,8" 
+                    Margin="0,5,0,0"
+                    HorizontalAlignment="Right"
+                    Visibility="{Binding ShowTimers, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⏱ Белые: " 
+                               Foreground="White" 
+                               FontSize="14" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,5,0"/>
+                    <TextBlock Text="{Binding WhitePlayerTimeFormatted}" 
+                               Foreground="White" 
+                               FontSize="16" 
+                               FontWeight="Bold"
+                               FontFamily="Consolas"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+            
             <!-- Captured by White (below board) -->
             <ItemsControl Grid.Row="4" Grid.Column="2" 
                           ItemsSource="{Binding CapturedByWhite}"
@@ -1207,6 +1284,36 @@
                             <!-- New Game -->
                             <TextBlock Text="🆕 New Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
                             <TextBlock Text="Start a fresh chess game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            
+                            <!-- Timer Settings -->
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <CheckBox Content="Включить таймер" 
+                                              IsChecked="{Binding IsTimerEnabled}"
+                                              FontSize="13"
+                                              Margin="0,0,0,10"/>
+                                    <StackPanel IsEnabled="{Binding IsTimerEnabled}">
+                                        <TextBlock Text="Время на игрока:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
+                                        <ComboBox SelectedItem="{Binding SelectedTimeOption}" 
+                                                  FontSize="12"
+                                                  DisplayMemberPath="Display"
+                                                  SelectedValuePath="Time">
+                                            <ComboBox.ItemsSource>
+                                                <x:Array Type="{x:Type models:TimeOption}">
+                                                    <models:TimeOption Time="00:01:00" Display="1 минута"/>
+                                                    <models:TimeOption Time="00:03:00" Display="3 минуты"/>
+                                                    <models:TimeOption Time="00:05:00" Display="5 минут"/>
+                                                    <models:TimeOption Time="00:10:00" Display="10 минут"/>
+                                                    <models:TimeOption Time="00:15:00" Display="15 минут"/>
+                                                    <models:TimeOption Time="00:30:00" Display="30 минут"/>
+                                                    <models:TimeOption Time="01:00:00" Display="1 час"/>
+                                                </x:Array>
+                                            </ComboBox.ItemsSource>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="New Game" 
                                         Command="{Binding NewGameCommand}"

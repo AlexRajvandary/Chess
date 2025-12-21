@@ -16,3 +16,4 @@ namespace ChessLib
         public PieceColor PlayerColor { get; set; }
     }
 }
+

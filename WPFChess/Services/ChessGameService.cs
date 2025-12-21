@@ -98,6 +98,14 @@ namespace ChessWPF.Services
         }
 
         /// <summary>
+        /// Ends the game due to time expiration
+        /// </summary>
+        public void EndGameByTime(PieceColor losingColor)
+        {
+            _game.EndGameByTime(losingColor);
+        }
+
+        /// <summary>
         /// Converts IPiece to PieceType enum
         /// </summary>
         private PieceType GetPieceType(IPiece piece)
