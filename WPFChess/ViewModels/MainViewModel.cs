@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using ChessWPF.Models;
@@ -180,30 +179,7 @@ namespace ChessWPF.ViewModels
                 OnPropertyChanged();
             }
         }
-        
-        private string FormatMovesFromPgn(List<string> moves)
-        {
-            if (moves == null || moves.Count == 0)
-                return string.Empty;
-            var result = new System.Text.StringBuilder();
-            int moveNumber = 1;
-            for (int i = 0; i < moves.Count; i += 2)
-            {
-                result.Append($"{moveNumber}. ");
-                if (i < moves.Count)
-                {
-                    result.Append(moves[i]);
-                }
-                if (i + 1 < moves.Count)
-                {
-                    result.Append($" {moves[i + 1]}");
-                }
-                result.Append(" ");
-                moveNumber++;
-            }
-            return result.ToString().Trim();
-        }
-        
+            
         private void LoadGameFromHistoricalGame(HistoricalGame historicalGame)
         {
             try
