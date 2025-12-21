@@ -20,6 +20,7 @@
         <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBooleanToVisibilityConverter"/>
         <converters:BooleanToGridLengthConverter x:Key="BooleanToGridLengthConverter"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <converters:YearDisplayConverter x:Key="YearDisplayConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -101,24 +102,24 @@
                             <!-- Timer Settings -->
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
                                 <StackPanel>
-                                    <CheckBox Content="Включить таймер" 
+                                    <CheckBox Content="Enable Timer" 
                                               IsChecked="{Binding Timer.IsTimerEnabled}"
                                               FontSize="13"
                                               Margin="0,0,0,10"/>
                                     <StackPanel IsEnabled="{Binding Timer.IsTimerEnabled}">
-                                        <TextBlock Text="Время на игрока:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
+                                        <TextBlock Text="Time per player:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
                                         <ComboBox SelectedItem="{Binding Timer.SelectedTimeOption}" 
                                                   FontSize="12"
                                                   DisplayMemberPath="Display">
                                             <ComboBox.ItemsSource>
                                                 <x:Array Type="{x:Type models:TimeOption}">
-                                                    <models:TimeOption Time="00:01:00" Display="1 минута"/>
-                                                    <models:TimeOption Time="00:03:00" Display="3 минуты"/>
-                                                    <models:TimeOption Time="00:05:00" Display="5 минут"/>
-                                                    <models:TimeOption Time="00:10:00" Display="10 минут"/>
-                                                    <models:TimeOption Time="00:15:00" Display="15 минут"/>
-                                                    <models:TimeOption Time="00:30:00" Display="30 минут"/>
-                                                    <models:TimeOption Time="01:00:00" Display="1 час"/>
+                                                    <models:TimeOption Time="00:01:00" Display="1 minute"/>
+                                                    <models:TimeOption Time="00:03:00" Display="3 minutes"/>
+                                                    <models:TimeOption Time="00:05:00" Display="5 minutes"/>
+                                                    <models:TimeOption Time="00:10:00" Display="10 minutes"/>
+                                                    <models:TimeOption Time="00:15:00" Display="15 minutes"/>
+                                                    <models:TimeOption Time="00:30:00" Display="30 minutes"/>
+                                                    <models:TimeOption Time="01:00:00" Display="1 hour"/>
                                                 </x:Array>
                                             </ComboBox.ItemsSource>
                                         </ComboBox>
@@ -376,7 +377,7 @@
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="📚 Historical Games" FontSize="18" Margin="0,0,0,5"/>
                                     <TextBlock FontSize="13" FontWeight="SemiBold" Margin="0,0,0,3">
-                                        <Run Text="Всего партий: " Foreground="#333"/>
+                                        <Run Text="Total games: " Foreground="#333"/>
                                         <Run Text="{Binding HistoricalGames.TotalCount, Mode=OneWay}" Foreground="#3498DB" FontWeight="Bold"/>
                                         <Run Text=" (" Foreground="#999"/>
                                         <Run Text="{Binding HistoricalGames.DatabaseSizeFormatted, Mode=OneWay}" Foreground="#999"/>
@@ -408,6 +409,79 @@
                                     </Button.Style>
                                 </Button>
                             </Grid>
+                            <!-- Filters and Sorting -->
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <TextBlock Text="🔍 Filters and Sorting" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        
+                                        <!-- Year Filter -->
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,5,10">
+                                            <TextBlock Text="Year:" FontSize="11" Foreground="#666" Margin="0,0,0,3"/>
+                                            <ComboBox SelectedItem="{Binding HistoricalGames.SelectedYearFilter}" 
+                                                     ItemsSource="{Binding HistoricalGames.AvailableYearsWithAll}" 
+                                                     FontSize="12" Padding="5">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock>
+                                                            <TextBlock.Text>
+                                                                <Binding>
+                                                                    <Binding.Converter>
+                                                                        <converters:YearDisplayConverter/>
+                                                                    </Binding.Converter>
+                                                                </Binding>
+                                                            </TextBlock.Text>
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        
+                                        <!-- Sort By -->
+                                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="5,0,5,10">
+                                            <TextBlock Text="Sort By:" FontSize="11" Foreground="#666" Margin="0,0,0,3"/>
+                                            <ComboBox SelectedValue="{Binding HistoricalGames.SortBy}" SelectedValuePath="Tag" FontSize="12" Padding="5">
+                                                <ComboBoxItem Content="Date" Tag="Date"/>
+                                                <ComboBoxItem Content="White Player" Tag="WhitePlayer"/>
+                                                <ComboBoxItem Content="Black Player" Tag="BlackPlayer"/>
+                                                <ComboBoxItem Content="Event" Tag="Event"/>
+                                                <ComboBoxItem Content="Move Count" Tag="MoveCount"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        
+                                        <!-- Sort Direction -->
+                                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="5,0,0,10">
+                                            <TextBlock Text="Sort Direction:" FontSize="11" Foreground="#666" Margin="0,0,0,3"/>
+                                            <CheckBox Content="Descending" 
+                                                     IsChecked="{Binding HistoricalGames.SortDescending}" 
+                                                     FontSize="12" 
+                                                     VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        
+                                        <!-- Filter Buttons -->
+                                        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <Button Content="Clear Filters" 
+                                                   Command="{Binding HistoricalGames.ClearFiltersCommand}"
+                                                   Background="#95A5A6" 
+                                                   Foreground="White" 
+                                                   BorderThickness="0" 
+                                                   FontSize="12" 
+                                                   Padding="15,5" 
+                                                   Cursor="Hand"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="0" Margin="0,0,0,20">
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -816,10 +890,31 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- Event and Date (above board, first row) -->
+            <TextBlock Grid.Row="0" Grid.Column="2"
+                       Text="{Binding Game.EventAndDate}"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,5"
+                       Visibility="{Binding Game.IsHistoricalGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+            <!-- Black Player Name (above board, second row) -->
+            <TextBlock Grid.Row="1" Grid.Column="2"
+                       Text="{Binding Game.BlackPlayerName}"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,5"
+                       Visibility="{Binding Game.IsHistoricalGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
             <!-- Black Player Timer (above board) -->
-            <Border Grid.Row="0" Grid.Column="2" 
+            <Border Grid.Row="2" Grid.Column="2" 
                     Background="#2C3E50" 
                     CornerRadius="5" 
                     Padding="10,8" 
@@ -827,7 +922,7 @@
                     HorizontalAlignment="Right"
                     Visibility="{Binding Timer.ShowTimers, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="⏱ Черные: " 
+                    <TextBlock Text="⏱ Black: " 
                                Foreground="White" 
                                FontSize="14" 
                                FontWeight="Bold"
@@ -843,7 +938,7 @@
             </Border>
             
             <!-- Captured by Black (above board) -->
-            <ItemsControl Grid.Row="0" Grid.Column="2" 
+            <ItemsControl Grid.Row="2" Grid.Column="2" 
                           ItemsSource="{Binding CapturedPieces.CapturedByBlack}"
                           HorizontalAlignment="Left"
                           Margin="0,0,0,5">
@@ -873,7 +968,7 @@
             </ItemsControl>
 
             <!-- Top letters -->
-            <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Game.Letters}" Height="21" HorizontalAlignment="Center">
+            <ItemsControl Grid.Row="3" Grid.Column="2" ItemsSource="{Binding Game.Letters}" Height="21" HorizontalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="60">
@@ -889,7 +984,7 @@
             </ItemsControl>
 
             <!-- Left numbers -->
-            <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Game.Numbers}" Width="21" VerticalAlignment="Center">
+            <ItemsControl Grid.Row="4" Grid.Column="1" ItemsSource="{Binding Game.Numbers}" Width="21" VerticalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="60">
@@ -900,7 +995,7 @@
             </ItemsControl>
 
             <!-- Chess Board -->
-            <ItemsControl Grid.Row="2" Grid.Column="2" ItemsSource="{Binding Game.Board}" AlternationCount="64">
+            <ItemsControl Grid.Row="4" Grid.Column="2" ItemsSource="{Binding Game.Board}" AlternationCount="64">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Button Width="60" Height="60" Command="{Binding DataContext.Game.CellCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" >
@@ -954,7 +1049,7 @@
             </ItemsControl>
 
             <!-- Right numbers -->
-            <ItemsControl Grid.Row="2" Grid.Column="3" ItemsSource="{Binding Game.Numbers}" Width="21" VerticalAlignment="Center">
+            <ItemsControl Grid.Row="4" Grid.Column="3" ItemsSource="{Binding Game.Numbers}" Width="21" VerticalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="60">
@@ -965,7 +1060,7 @@
             </ItemsControl>
 
             <!-- Bottom letters -->
-            <ItemsControl Grid.Row="3" Grid.Column="2" ItemsSource="{Binding Game.Letters}" Height="21" HorizontalAlignment="Center">
+            <ItemsControl Grid.Row="5" Grid.Column="2" ItemsSource="{Binding Game.Letters}" Height="21" HorizontalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="60">
@@ -980,8 +1075,17 @@
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
 
+            <!-- White Player Name (below board, between board and captured pieces) -->
+            <TextBlock Grid.Row="6" Grid.Column="2"
+                       Text="{Binding Game.WhitePlayerName}"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       Margin="0,5,0,0"
+                       Visibility="{Binding Game.IsHistoricalGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
             <!-- White Player Timer (below board) -->
-            <Border Grid.Row="4" Grid.Column="2" 
+            <Border Grid.Row="7" Grid.Column="2" 
                     Background="#2C3E50" 
                     CornerRadius="5" 
                     Padding="10,8" 
@@ -989,7 +1093,7 @@
                     HorizontalAlignment="Right"
                     Visibility="{Binding Timer.ShowTimers, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="⏱ Белые: " 
+                    <TextBlock Text="⏱ White: " 
                                Foreground="White" 
                                FontSize="14" 
                                FontWeight="Bold"
@@ -1005,7 +1109,7 @@
             </Border>
             
             <!-- Captured by White (below board) -->
-            <ItemsControl Grid.Row="4" Grid.Column="2" 
+            <ItemsControl Grid.Row="7" Grid.Column="2" 
                           ItemsSource="{Binding CapturedPieces.CapturedByWhite}"
                           HorizontalAlignment="Left"
                           Margin="0,5,0,0">
@@ -1300,25 +1404,25 @@
                             <!-- Timer Settings -->
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
                                 <StackPanel>
-                                    <CheckBox Content="Включить таймер" 
+                                    <CheckBox Content="Enable Timer" 
                                               IsChecked="{Binding Timer.IsTimerEnabled}"
                                               FontSize="13"
                                               Margin="0,0,0,10"/>
                                     <StackPanel IsEnabled="{Binding Timer.IsTimerEnabled}">
-                                        <TextBlock Text="Время на игрока:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
+                                        <TextBlock Text="Time per player:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
                                         <ComboBox SelectedItem="{Binding Timer.SelectedTimeOption}" 
                                                   FontSize="12"
                                                   DisplayMemberPath="Display"
                                                   SelectedValuePath="Time">
                                             <ComboBox.ItemsSource>
                                                 <x:Array Type="{x:Type models:TimeOption}">
-                                                    <models:TimeOption Time="00:01:00" Display="1 минута"/>
-                                                    <models:TimeOption Time="00:03:00" Display="3 минуты"/>
-                                                    <models:TimeOption Time="00:05:00" Display="5 минут"/>
-                                                    <models:TimeOption Time="00:10:00" Display="10 минут"/>
-                                                    <models:TimeOption Time="00:15:00" Display="15 минут"/>
-                                                    <models:TimeOption Time="00:30:00" Display="30 минут"/>
-                                                    <models:TimeOption Time="01:00:00" Display="1 час"/>
+                                                    <models:TimeOption Time="00:01:00" Display="1 minute"/>
+                                                    <models:TimeOption Time="00:03:00" Display="3 minutes"/>
+                                                    <models:TimeOption Time="00:05:00" Display="5 minutes"/>
+                                                    <models:TimeOption Time="00:10:00" Display="10 minutes"/>
+                                                    <models:TimeOption Time="00:15:00" Display="15 minutes"/>
+                                                    <models:TimeOption Time="00:30:00" Display="30 minutes"/>
+                                                    <models:TimeOption Time="01:00:00" Display="1 hour"/>
                                                 </x:Array>
                                             </ComboBox.ItemsSource>
                                         </ComboBox>
