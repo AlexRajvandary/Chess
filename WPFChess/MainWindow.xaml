@@ -30,7 +30,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition>
                 <ColumnDefinition.Width>
-                    <Binding Path="IsSidePanelVisible" Converter="{StaticResource BooleanToGridLengthConverter}"/>
+                    <Binding Path="Panels.IsSidePanelVisible" Converter="{StaticResource BooleanToGridLengthConverter}"/>
                 </ColumnDefinition.Width>
             </ColumnDefinition>
             <ColumnDefinition Width="Auto"/>
@@ -54,7 +54,7 @@
                 <Style TargetType="Button">
                     <Setter Property="Content" Value="✕"/>
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsSidePanelVisible}" Value="False">
+                        <DataTrigger Binding="{Binding Panels.IsSidePanelVisible}" Value="False">
                             <Setter Property="Content" Value="▶"/>
                         </DataTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -97,9 +97,38 @@
                             <!-- New Game -->
                             <TextBlock Text="🆕 New Game" FontSize="18" Margin="0,0,0,10"/>
                             <TextBlock Text="Start a fresh chess game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            
+                            <!-- Timer Settings -->
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <CheckBox Content="Включить таймер" 
+                                              IsChecked="{Binding Timer.IsTimerEnabled}"
+                                              FontSize="13"
+                                              Margin="0,0,0,10"/>
+                                    <StackPanel IsEnabled="{Binding Timer.IsTimerEnabled}">
+                                        <TextBlock Text="Время на игрока:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
+                                        <ComboBox SelectedItem="{Binding Timer.SelectedTimeOption}" 
+                                                  FontSize="12"
+                                                  DisplayMemberPath="Display">
+                                            <ComboBox.ItemsSource>
+                                                <x:Array Type="{x:Type models:TimeOption}">
+                                                    <models:TimeOption Time="00:01:00" Display="1 минута"/>
+                                                    <models:TimeOption Time="00:03:00" Display="3 минуты"/>
+                                                    <models:TimeOption Time="00:05:00" Display="5 минут"/>
+                                                    <models:TimeOption Time="00:10:00" Display="10 минут"/>
+                                                    <models:TimeOption Time="00:15:00" Display="15 минут"/>
+                                                    <models:TimeOption Time="00:30:00" Display="30 минут"/>
+                                                    <models:TimeOption Time="01:00:00" Display="1 час"/>
+                                                </x:Array>
+                                            </ComboBox.ItemsSource>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="New Game" 
-                                        Command="{Binding NewGameCommand}"
+                                        Command="{Binding Game.NewGameCommand}"
                                         Background="#27AE60" 
                                         Foreground="White" 
                                         BorderThickness="0" 
@@ -115,7 +144,7 @@
                             <TextBlock Text="Save the current game state" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="Save Game" 
-                                        Command="{Binding SaveGameCommand}"
+                                        Command="{Binding GameStorage.SaveGameCommand}"
                                         Background="#E67E22" 
                                         Foreground="White" 
                                         BorderThickness="0" 
@@ -138,7 +167,7 @@
                                 </StackPanel>
                                 <Button Grid.Column="1" 
                                         Content="🔄" 
-                                        Command="{Binding RefreshGamesCommand}"
+                                        Command="{Binding GameStorage.RefreshGamesCommand}"
                                         ToolTip="Refresh list"
                                         Background="Transparent" 
                                         BorderThickness="0" 
@@ -169,8 +198,8 @@
                                     
                                     <!-- Games List -->
                                     <ListBox Grid.Row="0" 
-                                             ItemsSource="{Binding SavedGames}"
-                                             SelectedItem="{Binding SelectedGame}"
+                                             ItemsSource="{Binding GameStorage.SavedGames}"
+                                             SelectedItem="{Binding GameStorage.SelectedGame}"
                                              MaxHeight="300"
                                              BorderThickness="0"
                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -229,7 +258,7 @@
                                             BorderThickness="0,1,0,0" 
                                             Padding="10">
                                         <Button Content="Load" 
-                                                Command="{Binding LoadSelectedGameCommand}"
+                                                Command="{Binding GameStorage.LoadSelectedGameCommand}"
                                                 Background="#27AE60" 
                                                 Foreground="White" 
                                                 BorderThickness="0" 
@@ -270,7 +299,7 @@
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <StackPanel>
                                     <Button Content="Select PGN File" 
-                                            Command="{Binding ImportPgnFileCommand}"
+                                            Command="{Binding HistoricalGames.ImportPgnFileCommand}"
                                             Background="#3498DB" 
                                             Foreground="White" 
                                             BorderThickness="0" 
@@ -295,19 +324,31 @@
                                     </Button>
                                     
                                     <!-- Progress Section -->
-                                    <StackPanel Visibility="{Binding IsImporting, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <TextBlock Text="{Binding ImportProgressText}" 
+                                    <StackPanel Visibility="{Binding HistoricalGames.IsImporting, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="{Binding HistoricalGames.ImportProgressText}" 
                                                    FontSize="13" 
                                                    Foreground="#555" 
                                                    Margin="0,0,0,10"
                                                    TextWrapping="Wrap"/>
                                         <Grid Margin="0,0,0,5">
-                                            <ProgressBar Value="{Binding ImportProgress}" 
+                                            <ProgressBar Value="{Binding HistoricalGames.ImportProgress}" 
                                                         Maximum="100" 
                                                         Height="25"
                                                         BorderThickness="1"
-                                                        BorderBrush="#DDD"/>
-                                            <TextBlock Text="{Binding ImportProgress, StringFormat='{}{0}%'}" 
+                                                        BorderBrush="#DDD">
+                                                <ProgressBar.Style>
+                                                    <Style TargetType="ProgressBar">
+                                                        <Setter Property="Background" Value="#E0E0E0"/>
+                                                        <Setter Property="Foreground" Value="#27AE60"/>
+                                                        <Style.Triggers>
+                                                            <Trigger Property="Value" Value="100">
+                                                                <Setter Property="Foreground" Value="#2ECC71"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ProgressBar.Style>
+                                            </ProgressBar>
+                                            <TextBlock Text="{Binding HistoricalGames.ImportProgress, StringFormat='{}{0}%'}" 
                                                        HorizontalAlignment="Center" 
                                                        VerticalAlignment="Center"
                                                        FontSize="12"
@@ -317,12 +358,12 @@
                                     </StackPanel>
                                     
                                     <!-- Import Result Message -->
-                                    <TextBlock Text="{Binding ImportResultMessage}" 
+                                    <TextBlock Text="{Binding HistoricalGames.ImportResultMessage}" 
                                                FontSize="12" 
-                                               Foreground="{Binding ImportResultColor}"
+                                               Foreground="{Binding HistoricalGames.ImportResultColor}"
                                                Margin="0,5,0,0"
                                                TextWrapping="Wrap"
-                                               Visibility="{Binding ImportResultMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                               Visibility="{Binding HistoricalGames.ImportResultMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                                 </StackPanel>
                             </Border>
                             
@@ -336,16 +377,16 @@
                                     <TextBlock Text="📚 Historical Games" FontSize="18" Margin="0,0,0,5"/>
                                     <TextBlock FontSize="13" FontWeight="SemiBold" Margin="0,0,0,3">
                                         <Run Text="Всего партий: " Foreground="#333"/>
-                                        <Run Text="{Binding HistoricalGamesTotalCount, Mode=OneWay}" Foreground="#3498DB" FontWeight="Bold"/>
+                                        <Run Text="{Binding HistoricalGames.TotalCount, Mode=OneWay}" Foreground="#3498DB" FontWeight="Bold"/>
                                         <Run Text=" (" Foreground="#999"/>
-                                        <Run Text="{Binding HistoricalGamesDatabaseSizeFormatted, Mode=OneWay}" Foreground="#999"/>
+                                        <Run Text="{Binding HistoricalGames.DatabaseSizeFormatted, Mode=OneWay}" Foreground="#999"/>
                                         <Run Text=")" Foreground="#999"/>
                                     </TextBlock>
                                     <TextBlock Text="Select a historical game to load" FontSize="12" Foreground="#555"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" 
                                         Content="🔄" 
-                                        Command="{Binding RefreshHistoricalGamesCommand}"
+                                        Command="{Binding HistoricalGames.RefreshHistoricalGamesCommand}"
                                         ToolTip="Refresh list"
                                         Background="Transparent" 
                                         BorderThickness="0" 
@@ -376,8 +417,8 @@
                                     
                                     <!-- Historical Games List -->
                                     <ListBox Grid.Row="0" 
-                                             ItemsSource="{Binding HistoricalGames}"
-                                             SelectedItem="{Binding SelectedHistoricalGame}"
+                                             ItemsSource="{Binding HistoricalGames.HistoricalGames}"
+                                             SelectedItem="{Binding HistoricalGames.SelectedHistoricalGame}"
                                              MaxHeight="500"
                                              BorderThickness="0"
                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -461,7 +502,7 @@
                                                 
                                                 <!-- Page Info -->
                                                 <TextBlock Grid.Column="0" 
-                                                           Text="{Binding HistoricalGamesPageInfo}" 
+                                                           Text="{Binding HistoricalGames.PageInfo}" 
                                                            FontSize="11" 
                                                            Foreground="#666"
                                                            VerticalAlignment="Center"/>
@@ -469,7 +510,7 @@
                                                 <!-- Previous Page Button -->
                                                 <Button Grid.Column="1" 
                                                         Content="◄" 
-                                                        Command="{Binding PreviousHistoricalGamesPageCommand}"
+                                                        Command="{Binding HistoricalGames.PreviousPageCommand}"
                                                         Background="#3498DB" 
                                                         Foreground="White" 
                                                         BorderThickness="0" 
@@ -479,7 +520,7 @@
                                                         Cursor="Hand"
                                                         Margin="5,0"
                                                         MinWidth="35"
-                                                        IsEnabled="{Binding CanGoToPreviousHistoricalGamesPage}">
+                                                        IsEnabled="{Binding HistoricalGames.CanGoToPreviousPage}">
                                                     <Button.Style>
                                                         <Style TargetType="Button">
                                                             <Style.Triggers>
@@ -495,7 +536,7 @@
                                                 <!-- Next Page Button -->
                                                 <Button Grid.Column="2" 
                                                         Content="►" 
-                                                        Command="{Binding NextHistoricalGamesPageCommand}"
+                                                        Command="{Binding HistoricalGames.NextPageCommand}"
                                                         Background="#3498DB" 
                                                         Foreground="White" 
                                                         BorderThickness="0" 
@@ -521,7 +562,7 @@
                                             <!-- Load Button -->
                                             <Button Grid.Row="1" 
                                                     Content="Load" 
-                                                    Command="{Binding LoadSelectedHistoricalGameCommand}"
+                                                    Command="{Binding HistoricalGames.LoadSelectedHistoricalGameCommand}"
                                                     Background="#27AE60" 
                                                     Foreground="White" 
                                                     BorderThickness="0" 
@@ -777,9 +818,33 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- Black Player Timer (above board) -->
+            <Border Grid.Row="0" Grid.Column="2" 
+                    Background="#2C3E50" 
+                    CornerRadius="5" 
+                    Padding="10,8" 
+                    Margin="0,0,0,5"
+                    HorizontalAlignment="Right"
+                    Visibility="{Binding Timer.ShowTimers, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⏱ Черные: " 
+                               Foreground="White" 
+                               FontSize="14" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,5,0"/>
+                    <TextBlock Text="{Binding Timer.BlackPlayerTimeFormatted}" 
+                               Foreground="White" 
+                               FontSize="16" 
+                               FontWeight="Bold"
+                               FontFamily="Consolas"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+            
             <!-- Captured by Black (above board) -->
             <ItemsControl Grid.Row="0" Grid.Column="2" 
-                          ItemsSource="{Binding CapturedByBlack}"
+                          ItemsSource="{Binding CapturedPieces.CapturedByBlack}"
                           HorizontalAlignment="Left"
                           Margin="0,0,0,5">
                 <ItemsControl.ItemsPanel>
@@ -808,7 +873,7 @@
             </ItemsControl>
 
             <!-- Top letters -->
-            <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
+            <ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding Game.Letters}" Height="21" HorizontalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="60">
@@ -824,7 +889,7 @@
             </ItemsControl>
 
             <!-- Left numbers -->
-            <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
+            <ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Game.Numbers}" Width="21" VerticalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="60">
@@ -835,10 +900,10 @@
             </ItemsControl>
 
             <!-- Chess Board -->
-            <ItemsControl Grid.Row="2" Grid.Column="2" ItemsSource="{Binding Board}" AlternationCount="64">
+            <ItemsControl Grid.Row="2" Grid.Column="2" ItemsSource="{Binding Game.Board}" AlternationCount="64">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Button Width="60" Height="60" Command="{Binding DataContext.CellCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" >
+                        <Button Width="60" Height="60" Command="{Binding DataContext.Game.CellCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" >
                             <Button.Style>
                                 <Style TargetType="{x:Type Button}">
                                     <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -889,7 +954,7 @@
             </ItemsControl>
 
             <!-- Right numbers -->
-            <ItemsControl Grid.Row="2" Grid.Column="3" ItemsSource="{Binding Numbers}" Width="21" VerticalAlignment="Center">
+            <ItemsControl Grid.Row="2" Grid.Column="3" ItemsSource="{Binding Game.Numbers}" Width="21" VerticalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="60">
@@ -900,7 +965,7 @@
             </ItemsControl>
 
             <!-- Bottom letters -->
-            <ItemsControl Grid.Row="3" Grid.Column="2" ItemsSource="{Binding Letters}" Height="21" HorizontalAlignment="Center">
+            <ItemsControl Grid.Row="3" Grid.Column="2" ItemsSource="{Binding Game.Letters}" Height="21" HorizontalAlignment="Center">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Width="60">
@@ -915,9 +980,33 @@
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
 
+            <!-- White Player Timer (below board) -->
+            <Border Grid.Row="4" Grid.Column="2" 
+                    Background="#2C3E50" 
+                    CornerRadius="5" 
+                    Padding="10,8" 
+                    Margin="0,5,0,0"
+                    HorizontalAlignment="Right"
+                    Visibility="{Binding Timer.ShowTimers, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="⏱ Белые: " 
+                               Foreground="White" 
+                               FontSize="14" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,5,0"/>
+                    <TextBlock Text="{Binding Timer.WhitePlayerTimeFormatted}" 
+                               Foreground="White" 
+                               FontSize="16" 
+                               FontWeight="Bold"
+                               FontFamily="Consolas"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+            
             <!-- Captured by White (below board) -->
             <ItemsControl Grid.Row="4" Grid.Column="2" 
-                          ItemsSource="{Binding CapturedByWhite}"
+                          ItemsSource="{Binding CapturedPieces.CapturedByWhite}"
                           HorizontalAlignment="Left"
                           Margin="0,5,0,0">
                 <ItemsControl.ItemsPanel>
@@ -967,7 +1056,7 @@
                             Padding="6,3" 
                             CornerRadius="3"
                             Margin="0,0,0,15"
-                            Visibility="{Binding IsGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            Visibility="{Binding MoveHistoryViewModel.IsGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock Text="READ ONLY" 
                                    FontSize="9" 
                                    FontWeight="Bold" 
@@ -979,7 +1068,7 @@
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                               Background="White" BorderBrush="#DDD" BorderThickness="1" Padding="10">
                     <Border Background="#F8F8F8" BorderBrush="#E0E0E0" BorderThickness="1" Padding="8">
-                        <ItemsControl ItemsSource="{Binding MoveHistoryItems}">
+                        <ItemsControl ItemsSource="{Binding MoveHistoryViewModel.MoveHistoryItems}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,2">
@@ -1069,9 +1158,9 @@
                             Orientation="Horizontal" 
                             HorizontalAlignment="Center"
                             Margin="0,10,0,0"
-                            Visibility="{Binding IsGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            Visibility="{Binding MoveHistoryViewModel.IsGameLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <Button Content="◄"
-                            Command="{Binding PreviousMoveCommand}"
+                            Command="{Binding MoveHistoryViewModel.PreviousMoveCommand}"
                             Background="#4A90E2"
                             Foreground="White"
                             FontSize="14"
@@ -1093,8 +1182,8 @@
                         </Button.Template>
                     </Button>
                     
-                    <Button Content="{Binding AutoPlayButtonText}"
-                            Command="{Binding ToggleAutoPlayCommand}"
+                    <Button Content="{Binding MoveHistoryViewModel.AutoPlayButtonText}"
+                            Command="{Binding MoveHistoryViewModel.ToggleAutoPlayCommand}"
                             Foreground="White"
                             FontSize="11"
                             FontWeight="Bold"
@@ -1108,7 +1197,7 @@
                             <Style TargetType="Button">
                                 <Setter Property="Background" Value="#4A90E2"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsAutoPlaying}" Value="True">
+                                    <DataTrigger Binding="{Binding MoveHistoryViewModel.IsAutoPlaying}" Value="True">
                                         <Setter Property="Background" Value="#E74C3C"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -1126,7 +1215,7 @@
                     </Button>
                     
                     <Button Content="►"
-                            Command="{Binding NextMoveCommand}"
+                            Command="{Binding MoveHistoryViewModel.NextMoveCommand}"
                             Background="#4A90E2"
                             Foreground="White"
                             FontSize="14"
@@ -1159,7 +1248,7 @@
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Text="FEN Notation:" FontWeight="Bold" FontSize="12" Margin="0,0,0,8" Foreground="#2C3E50"/>
                 <Border Grid.Row="1" Background="#F8F8F8" BorderBrush="#E0E0E0" BorderThickness="1" Padding="8">
-                    <TextBlock Text="{Binding Fen}" FontFamily="Consolas" TextWrapping="Wrap" FontSize="11" />
+                    <TextBlock Text="{Binding Game.Fen}" FontFamily="Consolas" TextWrapping="Wrap" FontSize="11" />
                 </Border>
             </Grid>
         </Border>
@@ -1168,7 +1257,7 @@
         <!-- Game Panel Overlay -->
         <Grid Grid.RowSpan="5" Grid.ColumnSpan="3" 
               Background="#80000000" 
-              Visibility="{Binding IsGamePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+              Visibility="{Binding Panels.IsGamePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
               MouseDown="GameOverlay_MouseDown">
             <Border x:Name="GamePanel" 
                     Width="400" 
@@ -1190,7 +1279,7 @@
                         <Grid>
                             <TextBlock Text="🎮 Game" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                             <Button HorizontalAlignment="Right" 
-                                    Command="{Binding CloseGameCommand}"
+                                    Command="{Binding Panels.CloseGameCommand}"
                                     Background="Transparent" 
                                     BorderThickness="0" 
                                     Foreground="White" 
@@ -1207,9 +1296,39 @@
                             <!-- New Game -->
                             <TextBlock Text="🆕 New Game" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
                             <TextBlock Text="Start a fresh chess game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                            
+                            <!-- Timer Settings -->
+                            <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <CheckBox Content="Включить таймер" 
+                                              IsChecked="{Binding Timer.IsTimerEnabled}"
+                                              FontSize="13"
+                                              Margin="0,0,0,10"/>
+                                    <StackPanel IsEnabled="{Binding Timer.IsTimerEnabled}">
+                                        <TextBlock Text="Время на игрока:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
+                                        <ComboBox SelectedItem="{Binding Timer.SelectedTimeOption}" 
+                                                  FontSize="12"
+                                                  DisplayMemberPath="Display"
+                                                  SelectedValuePath="Time">
+                                            <ComboBox.ItemsSource>
+                                                <x:Array Type="{x:Type models:TimeOption}">
+                                                    <models:TimeOption Time="00:01:00" Display="1 минута"/>
+                                                    <models:TimeOption Time="00:03:00" Display="3 минуты"/>
+                                                    <models:TimeOption Time="00:05:00" Display="5 минут"/>
+                                                    <models:TimeOption Time="00:10:00" Display="10 минут"/>
+                                                    <models:TimeOption Time="00:15:00" Display="15 минут"/>
+                                                    <models:TimeOption Time="00:30:00" Display="30 минут"/>
+                                                    <models:TimeOption Time="01:00:00" Display="1 час"/>
+                                                </x:Array>
+                                            </ComboBox.ItemsSource>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="New Game" 
-                                        Command="{Binding NewGameCommand}"
+                                        Command="{Binding Game.NewGameCommand}"
                                         Background="#27AE60" 
                                         Foreground="White" 
                                         BorderThickness="0" 
@@ -1242,7 +1361,7 @@
                             <TextBlock Text="Save the current game state" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="Save Game" 
-                                        Command="{Binding SaveGameCommand}"
+                                        Command="{Binding GameStorage.SaveGameCommand}"
                                         Background="#E67E22" 
                                         Foreground="White" 
                                         BorderThickness="0" 
@@ -1261,11 +1380,11 @@
         <!-- Settings Panel Overlay -->
         <Grid Grid.RowSpan="5" Grid.ColumnSpan="3" 
               Background="#80000000" 
-              Visibility="{Binding IsSettingsPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+              Visibility="{Binding Panels.IsSettingsPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
               MouseDown="SettingsOverlay_MouseDown">
             <Border x:Name="SettingsPanel" 
                     Width="400" 
-                    HorizontalAlignment="{Binding SettingsPanelAlignment}" 
+                    HorizontalAlignment="{Binding Panels.SettingsPanelAlignment}" 
                     Background="#F5F5F5"
                     MouseDown="SettingsPanel_MouseDown">
                 <Border.Effect>
@@ -1283,7 +1402,7 @@
                         <Grid>
                             <TextBlock Text="⚙️ Settings" FontSize="20" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                             <Button HorizontalAlignment="Right" 
-                                    Command="{Binding CloseSettingsCommand}"
+                                    Command="{Binding Panels.CloseSettingsCommand}"
                                     Background="Transparent" 
                                     BorderThickness="0" 
                                     Foreground="White" 
@@ -1436,11 +1555,11 @@
         <!-- About Panel Overlay -->
         <Grid Grid.RowSpan="5" Grid.ColumnSpan="3" 
               Background="#80000000" 
-              Visibility="{Binding IsAboutPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+              Visibility="{Binding Panels.IsAboutPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
               MouseDown="AboutOverlay_MouseDown">
             <Border x:Name="AboutPanel" 
                     Width="500" 
-                    HorizontalAlignment="{Binding AboutPanelAlignment}" 
+                    HorizontalAlignment="{Binding Panels.AboutPanelAlignment}" 
                     Background="#F5F5F5"
                     MouseDown="AboutPanel_MouseDown">
                 <Border.Effect>
@@ -1461,7 +1580,7 @@
                                 <TextBlock Text="Version 1.0" FontSize="12" Foreground="#ECF0F1" HorizontalAlignment="Center" Margin="0,5,0,0"/>
                             </StackPanel>
                             <Button HorizontalAlignment="Right" 
-                                    Command="{Binding CloseAboutCommand}"
+                                    Command="{Binding Panels.CloseAboutCommand}"
                                     Background="Transparent" 
                                     BorderThickness="0" 
                                     Foreground="White" 

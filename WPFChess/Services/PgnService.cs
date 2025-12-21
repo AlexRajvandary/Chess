@@ -33,14 +33,23 @@ namespace ChessWPF.Services
             string result = "*";
             if (game.IsGameOver)
             {
-                var lastMove = game.MoveHistory.LastOrDefault();
-                if (lastMove?.IsCheckmate == true)
+                // Check if game ended by time
+                if (game.TimeLoser.HasValue)
                 {
-                    result = lastMove.PlayerColor == PieceColor.White ? "1-0" : "0-1";
+                    // Player who lost by time - opposite player wins
+                    result = game.TimeLoser.Value == PieceColor.White ? "0-1" : "1-0";
                 }
                 else
                 {
-                    result = "1/2-1/2";
+                    var lastMove = game.MoveHistory.LastOrDefault();
+                    if (lastMove?.IsCheckmate == true)
+                    {
+                        result = lastMove.PlayerColor == PieceColor.White ? "1-0" : "0-1";
+                    }
+                    else
+                    {
+                        result = "1/2-1/2";
+                    }
                 }
             }
             pgn.AppendLine($"[Result \"{result}\"]");
@@ -68,7 +77,7 @@ namespace ChessWPF.Services
         public static List<string> ParsePgnMoves(string pgn)
         {
             var moves = new List<string>();
-            var lines = pgn.Split('\n');
+            var lines = pgn.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             var inMovesSection = false;
             var movesText = new StringBuilder();
 
@@ -105,8 +114,12 @@ namespace ChessWPF.Services
             // Remove result at the end (1-0, 0-1, 1/2-1/2, *)
             movesString = System.Text.RegularExpressions.Regex.Replace(movesString, @"\s+(1-0|0-1|1/2-1/2|\*)\s*$", "");
 
-            // Split by move numbers (e.g., "1. ", "2. ", etc.)
+            // Normalize whitespace
+            movesString = System.Text.RegularExpressions.Regex.Replace(movesString, @"\s+", " ");
+
+            // Split by move numbers (e.g., "1. ", "2. ", "1.d4", etc.)
             // Pattern: number, dot, optional space, then moves until next number or end
+            // This pattern handles both "1. e4" and "1.e4" formats
             var movePattern = @"(\d+)\.\s*([^\d]+?)(?=\s*\d+\.|$)";
             var matches = System.Text.RegularExpressions.Regex.Matches(movesString, movePattern);
             
@@ -123,13 +136,29 @@ namespace ChessWPF.Services
                     foreach (var move in individualMoves)
                     {
                         var cleanMove = move.Trim();
-                        // Skip if it's a move number (shouldn't happen, but just in case)
+                        
+                        // Skip if it's a move number (e.g., "1.", "2.", "1", "2")
                         if (System.Text.RegularExpressions.Regex.IsMatch(cleanMove, @"^\d+\.?$"))
                         {
                             continue;
                         }
+                        
+                        // Skip if it starts with a number and dot (e.g., "1.d4" should become "d4")
+                        var numberDotMatch = System.Text.RegularExpressions.Regex.Match(cleanMove, @"^(\d+)\.(.+)$");
+                        if (numberDotMatch.Success && numberDotMatch.Groups.Count >= 3)
+                        {
+                            cleanMove = numberDotMatch.Groups[2].Value.Trim();
+                        }
+                        
+                        // Skip results
+                        if (cleanMove == "1-0" || cleanMove == "0-1" || cleanMove == "1/2-1/2" || cleanMove == "*")
+                        {
+                            continue;
+                        }
+                        
                         // Remove check/checkmate symbols for parsing
                         cleanMove = cleanMove.TrimEnd('+', '#');
+                        
                         if (!string.IsNullOrEmpty(cleanMove))
                         {
                             moves.Add(cleanMove);
@@ -146,18 +175,29 @@ namespace ChessWPF.Services
                 foreach (var part in parts)
                 {
                     var trimmed = part.Trim();
-                    // Skip if it's a move number (e.g., "1.", "2.")
+                    
+                    // Skip if it's a move number (e.g., "1.", "2.", "1", "2")
                     if (System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^\d+\.?$"))
                     {
                         continue;
                     }
+                    
+                    // Skip if it starts with a number and dot (e.g., "1.d4" should become "d4")
+                    var numberDotMatch = System.Text.RegularExpressions.Regex.Match(trimmed, @"^(\d+)\.(.+)$");
+                    if (numberDotMatch.Success && numberDotMatch.Groups.Count >= 3)
+                    {
+                        trimmed = numberDotMatch.Groups[2].Value.Trim();
+                    }
+                    
                     // Skip results
                     if (trimmed == "1-0" || trimmed == "0-1" || trimmed == "1/2-1/2" || trimmed == "*")
                     {
                         continue;
                     }
+                    
                     // Remove check/checkmate symbols
                     trimmed = trimmed.TrimEnd('+', '#');
+                    
                     if (!string.IsNullOrEmpty(trimmed))
                     {
                         moves.Add(trimmed);

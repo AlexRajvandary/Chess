@@ -21,7 +21,7 @@ namespace ChessWPF
             // Close settings panel when clicking on overlay (but not on the panel itself)
             if (e.OriginalSource == sender && DataContext is MainViewModel viewModel)
             {
-                viewModel.IsSettingsPanelVisible = false;
+                viewModel.Panels.IsSettingsPanelVisible = false;
             }
         }
 
@@ -47,7 +47,7 @@ namespace ChessWPF
             // Close game panel when clicking on overlay (but not on the panel itself)
             if (e.OriginalSource == sender && DataContext is MainViewModel viewModel)
             {
-                viewModel.IsGamePanelVisible = false;
+                viewModel.Panels.IsGamePanelVisible = false;
             }
         }
 
@@ -62,7 +62,7 @@ namespace ChessWPF
             // Close game panel after starting new game
             if (DataContext is MainViewModel viewModel)
             {
-                viewModel.IsGamePanelVisible = false;
+                viewModel.Panels.IsGamePanelVisible = false;
             }
         }
 
@@ -71,7 +71,7 @@ namespace ChessWPF
             // Close about panel when clicking on overlay (but not on the panel itself)
             if (e.OriginalSource == sender && DataContext is MainViewModel viewModel)
             {
-                viewModel.IsAboutPanelVisible = false;
+                viewModel.Panels.IsAboutPanelVisible = false;
             }
         }
 

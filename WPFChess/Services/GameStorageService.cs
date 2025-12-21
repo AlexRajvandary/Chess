@@ -151,9 +151,11 @@ namespace ChessWPF.Services
                     FinalFen = finalFen,
                     MoveCount = game.MoveHistory?.Count ?? 0,
                     Result = game.IsGameOver 
-                        ? (game.MoveHistory?.LastOrDefault()?.IsCheckmate == true
-                            ? (game.MoveHistory.Last().PlayerColor == PieceColor.White ? "1-0" : "0-1")
-                            : "1/2-1/2")
+                        ? (game.TimeLoser.HasValue
+                            ? (game.TimeLoser.Value == PieceColor.White ? "0-1" : "1-0")
+                            : (game.MoveHistory?.LastOrDefault()?.IsCheckmate == true
+                                ? (game.MoveHistory.Last().PlayerColor == PieceColor.White ? "1-0" : "0-1")
+                                : "1/2-1/2"))
                         : "*"
                 };
 

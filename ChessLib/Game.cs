@@ -34,6 +34,11 @@ namespace ChessLib
         public bool IsGameOver { get; private set; }
 
         /// <summary>
+        /// Color of the player who lost by time (null if game didn't end by time)
+        /// </summary>
+        public PieceColor? TimeLoser { get; private set; }
+
+        /// <summary>
         /// Move history
         /// </summary>
         public List<MoveNotation> MoveHistory { get; private set; }
@@ -138,6 +143,7 @@ namespace ChessLib
             };
 
             IsGameOver = false;
+            TimeLoser = null;
         }
 
         /// <summary>
@@ -490,12 +496,22 @@ namespace ChessLib
             GameField = new GameField();
             MoveHistory = new List<MoveNotation>();
             IsGameOver = false;
+            TimeLoser = null;
 
             Players = new List<Player>
             {
                 new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1"),
                 new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2")
             };
+        }
+
+        /// <summary>
+        /// Ends the game due to time expiration
+        /// </summary>
+        public void EndGameByTime(PieceColor losingColor)
+        {
+            IsGameOver = true;
+            TimeLoser = losingColor;
         }
 
         /// <summary>
