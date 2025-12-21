@@ -76,11 +76,12 @@ namespace ChessWPF.ViewModels
                 timerViewModel.ResetForLoadedGame();
                 var moves = PgnService.ParsePgnMoves(historicalGame.PgnNotation);
                 moveHistoryViewModel.LoadGame(moves);
+                gameViewModel.SetHistoricalGameInfo(historicalGame);
                 historicalGamesViewModel.SelectedHistoricalGame = null;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке исторической партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading historical game: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         
@@ -91,11 +92,12 @@ namespace ChessWPF.ViewModels
                 timerViewModel.ResetForLoadedGame();
                 var moves = PgnService.ParsePgnMoves(gameRecord.PgnNotation);
                 moveHistoryViewModel.LoadGame(moves);
+                gameViewModel.SetHistoricalGameInfo(null);
                 gameStorageViewModel.SelectedGame = null;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading game: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

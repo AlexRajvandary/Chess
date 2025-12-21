@@ -56,7 +56,7 @@ namespace ChessWPF.Windows
             }
             else
             {
-                MessageBox.Show("Пожалуйста, выберите партию для загрузки.", "Внимание", 
+                MessageBox.Show("Please select a game to load.", "Attention", 
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         });

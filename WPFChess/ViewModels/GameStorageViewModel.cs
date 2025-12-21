@@ -53,14 +53,14 @@ namespace ChessWPF.ViewModels
                 );
                 if (gameRecord != null)
                 {
-                    MessageBox.Show($"Партия успешно сохранена!\nID: {gameRecord.Id}\nХодов: {gameRecord.MoveCount}", 
-                        "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"Game saved successfully!\nID: {gameRecord.Id}\nMoves: {gameRecord.MoveCount}", 
+                        "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                     LoadSavedGames();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error saving: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         });
 
@@ -99,7 +99,7 @@ namespace ChessWPF.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке сохраненных партий: {ex.Message}", "Ошибка", 
+                MessageBox.Show($"Error loading saved games: {ex.Message}", "Error", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

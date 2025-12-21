@@ -26,10 +26,25 @@ namespace ChessWPF.ViewModels
         private ICommand refreshHistoricalGamesCommand;
         private HistoricalGame selectedHistoricalGame;
         private int totalCount = 0;
+        private string whitePlayerFilter = "";
+        private string blackPlayerFilter = "";
+        private string eventFilter = "";
+        private DateTime? dateFromFilter;
+        private DateTime? dateToFilter;
+        private string sortBy = "Date";
+        private bool sortDescending = true;
+        private ICommand applyFiltersCommand;
+        private ICommand clearFiltersCommand;
+        private ObservableCollection<int> availableYears;
+        private ObservableCollection<object> availableYearsWithAll;
+        private int? selectedYearFilter;
         
         public HistoricalGamesViewModel()
         {
             HistoricalGames = new ObservableCollection<HistoricalGame>();
+            availableYears = new ObservableCollection<int>();
+            availableYearsWithAll = new ObservableCollection<object> { null };
+            LoadAvailableYears();
         }
         
         public Action<HistoricalGame> OnGameLoadRequested { get; set; }
@@ -50,8 +65,8 @@ namespace ChessWPF.ViewModels
             get
             {
                 if (totalCount == 0)
-                    return "Нет партий";
-                return $"{totalCount} партий ({DatabaseSizeFormatted})";
+                    return "No games";
+                return $"{totalCount} games ({DatabaseSizeFormatted})";
             }
         }
         
@@ -186,11 +201,11 @@ namespace ChessWPF.ViewModels
             get
             {
                 if (totalCount == 0)
-                    return "Нет партий";
+                    return "No games";
                 int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
                 int startIndex = (currentPage - 1) * pageSize + 1;
                 int endIndex = Math.Min(currentPage * pageSize, totalCount);
-                return $"Страница {currentPage} из {totalPages} ({startIndex}-{endIndex} из {totalCount})";
+                return $"Page {currentPage} of {totalPages} ({startIndex}-{endIndex} of {totalCount})";
             }
         }
         
@@ -216,6 +231,118 @@ namespace ChessWPF.ViewModels
         
         public ICommand RefreshHistoricalGamesCommand => refreshHistoricalGamesCommand ??= new RelayCommand(parameter =>
         {
+            CurrentPage = 1;
+            LoadHistoricalGames();
+        });
+        public string WhitePlayerFilter
+        {
+            get => whitePlayerFilter;
+            set
+            {
+                whitePlayerFilter = value ?? "";
+                OnPropertyChanged();
+                CurrentPage = 1;
+                LoadHistoricalGames();
+            }
+        }
+        public string BlackPlayerFilter
+        {
+            get => blackPlayerFilter;
+            set
+            {
+                blackPlayerFilter = value ?? "";
+                OnPropertyChanged();
+                CurrentPage = 1;
+                LoadHistoricalGames();
+            }
+        }
+        public string EventFilter
+        {
+            get => eventFilter;
+            set
+            {
+                eventFilter = value ?? "";
+                OnPropertyChanged();
+                CurrentPage = 1;
+                LoadHistoricalGames();
+            }
+        }
+        public ObservableCollection<object> AvailableYearsWithAll
+        {
+            get => availableYearsWithAll;
+            set
+            {
+                availableYearsWithAll = value;
+                OnPropertyChanged();
+            }
+        }
+        public ObservableCollection<int> AvailableYears
+        {
+            get => availableYears;
+            set
+            {
+                availableYears = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AvailableYearsWithAll));
+            }
+        }
+        public object SelectedYearFilter
+        {
+            get => selectedYearFilter;
+            set
+            {
+                if (value == null)
+                {
+                    selectedYearFilter = null;
+                    dateFromFilter = null;
+                    dateToFilter = null;
+                }
+                else if (value is int year)
+                {
+                    selectedYearFilter = year;
+                    dateFromFilter = new DateTime(year, 1, 1);
+                    dateToFilter = new DateTime(year, 12, 31);
+                }
+                OnPropertyChanged();
+                CurrentPage = 1;
+                LoadHistoricalGames();
+            }
+        }
+        public string SortBy
+        {
+            get => sortBy;
+            set
+            {
+                sortBy = value;
+                OnPropertyChanged();
+                CurrentPage = 1;
+                LoadHistoricalGames();
+            }
+        }
+        public bool SortDescending
+        {
+            get => sortDescending;
+            set
+            {
+                sortDescending = value;
+                OnPropertyChanged();
+                CurrentPage = 1;
+                LoadHistoricalGames();
+            }
+        }
+        public ICommand ApplyFiltersCommand => applyFiltersCommand ??= new RelayCommand(parameter =>
+        {
+            CurrentPage = 1;
+            LoadHistoricalGames();
+        });
+        public ICommand ClearFiltersCommand => clearFiltersCommand ??= new RelayCommand(parameter =>
+        {
+            WhitePlayerFilter = "";
+            BlackPlayerFilter = "";
+            EventFilter = "";
+            SelectedYearFilter = null;
+            SortBy = "Date";
+            SortDescending = true;
             CurrentPage = 1;
             LoadHistoricalGames();
         });
@@ -249,7 +376,16 @@ namespace ChessWPF.ViewModels
         {
             try
             {
-                var (games, totalCount) = GameStorageService.GetHistoricalGamesPaginated(currentPage, pageSize);
+                var (games, totalCount) = GameStorageService.GetHistoricalGamesPaginated(
+                    currentPage, 
+                    pageSize,
+                    string.IsNullOrWhiteSpace(whitePlayerFilter) ? null : whitePlayerFilter,
+                    string.IsNullOrWhiteSpace(blackPlayerFilter) ? null : blackPlayerFilter,
+                    string.IsNullOrWhiteSpace(eventFilter) ? null : eventFilter,
+                    dateFromFilter,
+                    dateToFilter,
+                    sortBy,
+                    sortDescending);
                 TotalCount = totalCount;
                 DatabaseSize = GameStorageService.GetDatabaseSize();
                 HistoricalGames.Clear();
@@ -264,7 +400,29 @@ namespace ChessWPF.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке исторических партий: {ex.Message}", "Ошибка", 
+                MessageBox.Show($"Error loading historical games: {ex.Message}", "Error", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void LoadAvailableYears()
+        {
+            try
+            {
+                var years = GameStorageService.GetAvailableYears();
+                availableYears.Clear();
+                availableYearsWithAll.Clear();
+                availableYearsWithAll.Add(null);
+                foreach (var year in years)
+                {
+                    availableYears.Add(year);
+                    availableYearsWithAll.Add(year);
+                }
+                OnPropertyChanged(nameof(AvailableYears));
+                OnPropertyChanged(nameof(AvailableYearsWithAll));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading years: {ex.Message}", "Error", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -289,13 +447,13 @@ namespace ChessWPF.ViewModels
                     var fileName = System.IO.Path.GetFileName(filePath);
                     if (GameStorageService.IsFileParsed(fileName))
                     {
-                        ImportResultMessage = $"Файл {fileName} уже был импортирован ранее.";
+                        ImportResultMessage = $"File {fileName} has already been imported.";
                         ImportResultColor = Brushes.Orange;
                         return;
                     }
                     IsImporting = true;
                     ImportProgress = 0;
-                    ImportProgressText = "Начинаем импорт...";
+                    ImportProgressText = "Starting import...";
                     ImportResultMessage = "";
                     System.Threading.Tasks.Task.Run(() =>
                     {
@@ -306,19 +464,20 @@ namespace ChessWPF.ViewModels
                                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                                 {
                                     ImportProgress = progress;
-                                    ImportProgressText = $"Импортировано: {current} из {total}";
+                                    ImportProgressText = $"Imported: {current} of {total}";
                                 });
                             });
                             System.Windows.Application.Current.Dispatcher.Invoke(() =>
                             {
                                 IsImporting = false;
                                 ImportProgress = 100;
-                                ImportProgressText = "Импорт завершен";
+                                ImportProgressText = "Import completed";
                                 if (result.Success)
                                 {
                                     ImportResultMessage = result.Message;
                                     ImportResultColor = Brushes.Green;
                                     CurrentPage = 1;
+                                    LoadAvailableYears();
                                     LoadHistoricalGames();
                                 }
                                 else
@@ -333,7 +492,7 @@ namespace ChessWPF.ViewModels
                             System.Windows.Application.Current.Dispatcher.Invoke(() =>
                             {
                                 IsImporting = false;
-                                ImportResultMessage = $"Ошибка при импорте: {ex.Message}";
+                                ImportResultMessage = $"Import error: {ex.Message}";
                                 ImportResultColor = Brushes.Red;
                             });
                         }
@@ -343,7 +502,7 @@ namespace ChessWPF.ViewModels
             catch (Exception ex)
             {
                 IsImporting = false;
-                MessageBox.Show($"Ошибка при открытии файла: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

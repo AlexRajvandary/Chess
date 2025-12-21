@@ -50,8 +50,8 @@ namespace ChessWPF.Services
                     catch
                     {
                         // If that fails, show error
-                        MessageBox.Show($"Не удалось создать таблицу GameRecords. Ошибка: {tableEx.Message}", 
-                            "Ошибка базы данных", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Failed to create GameRecords table. Error: {tableEx.Message}", 
+                            "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
 
@@ -74,8 +74,8 @@ namespace ChessWPF.Services
                     }
                     catch
                     {
-                        MessageBox.Show($"Не удалось создать таблицу HistoricalGames. Ошибка: {tableEx.Message}", 
-                            "Ошибка базы данных", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Failed to create HistoricalGames table. Error: {tableEx.Message}", 
+                            "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
 
@@ -96,8 +96,8 @@ namespace ChessWPF.Services
                     }
                     catch
                     {
-                        MessageBox.Show($"Не удалось создать таблицу ParsedFiles. Ошибка: {tableEx.Message}", 
-                            "Ошибка базы данных", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"Failed to create ParsedFiles table. Error: {tableEx.Message}", 
+                            "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
                 
@@ -117,7 +117,7 @@ namespace ChessWPF.Services
             {
                 // Log error but don't crash the application
                 System.Diagnostics.Debug.WriteLine($"Database initialization error: {ex.Message}");
-                MessageBox.Show($"Ошибка при инициализации базы данных: {ex.Message}", "Ошибка", 
+                MessageBox.Show($"Database initialization error: {ex.Message}", "Error", 
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -167,7 +167,7 @@ namespace ChessWPF.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при сохранении партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error saving game: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
         }
@@ -181,7 +181,7 @@ namespace ChessWPF.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке партий: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading games: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return [];
             }
         }
@@ -195,7 +195,7 @@ namespace ChessWPF.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading game: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
         }
@@ -216,7 +216,7 @@ namespace ChessWPF.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при удалении партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error deleting game: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
         }
@@ -230,27 +230,94 @@ namespace ChessWPF.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке исторических партий: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading historical games: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return [];
             }
         }
 
         /// <summary>
-        /// Gets historical games with pagination
+        /// Gets historical games with pagination, filters and sorting
         /// </summary>
-        public static (List<HistoricalGame> Games, int TotalCount) GetHistoricalGamesPaginated(int pageNumber, int pageSize)
+        public static (List<HistoricalGame> Games, int TotalCount) GetHistoricalGamesPaginated(
+            int pageNumber, 
+            int pageSize,
+            string whitePlayerFilter = null,
+            string blackPlayerFilter = null,
+            string eventFilter = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null,
+            string sortBy = "Date",
+            bool sortDescending = true)
         {
             try
             {
                 using var context = new ChessDbContext();
-                var query = context.HistoricalGames.OrderByDescending(g => g.PlayedAt ?? DateTime.MinValue);
+                var query = context.HistoricalGames.AsQueryable();
+                
+                if (!string.IsNullOrWhiteSpace(whitePlayerFilter))
+                {
+                    query = query.Where(g => g.WhitePlayer != null && EF.Functions.Like(g.WhitePlayer.ToLower(), $"%{whitePlayerFilter.ToLower()}%"));
+                }
+                
+                if (!string.IsNullOrWhiteSpace(blackPlayerFilter))
+                {
+                    query = query.Where(g => g.BlackPlayer != null && EF.Functions.Like(g.BlackPlayer.ToLower(), $"%{blackPlayerFilter.ToLower()}%"));
+                }
+                
+                if (!string.IsNullOrWhiteSpace(eventFilter))
+                {
+                    query = query.Where(g => g.Event != null && EF.Functions.Like(g.Event.ToLower(), $"%{eventFilter.ToLower()}%"));
+                }
+                
+                if (dateFrom.HasValue)
+                {
+                    query = query.Where(g => g.PlayedAt.HasValue && g.PlayedAt.Value >= dateFrom.Value);
+                }
+                
+                if (dateTo.HasValue)
+                {
+                    query = query.Where(g => g.PlayedAt.HasValue && g.PlayedAt.Value <= dateTo.Value);
+                }
+                
+                switch (sortBy)
+                {
+                    case "Date":
+                        query = sortDescending 
+                            ? query.OrderByDescending(g => g.PlayedAt ?? DateTime.MinValue)
+                            : query.OrderBy(g => g.PlayedAt ?? DateTime.MinValue);
+                        break;
+                    case "WhitePlayer":
+                        query = sortDescending 
+                            ? query.OrderByDescending(g => g.WhitePlayer ?? "")
+                            : query.OrderBy(g => g.WhitePlayer ?? "");
+                        break;
+                    case "BlackPlayer":
+                        query = sortDescending 
+                            ? query.OrderByDescending(g => g.BlackPlayer ?? "")
+                            : query.OrderBy(g => g.BlackPlayer ?? "");
+                        break;
+                    case "Event":
+                        query = sortDescending 
+                            ? query.OrderByDescending(g => g.Event ?? "")
+                            : query.OrderBy(g => g.Event ?? "");
+                        break;
+                    case "MoveCount":
+                        query = sortDescending 
+                            ? query.OrderByDescending(g => g.MoveCount)
+                            : query.OrderBy(g => g.MoveCount);
+                        break;
+                    default:
+                        query = query.OrderByDescending(g => g.PlayedAt ?? DateTime.MinValue);
+                        break;
+                }
+                
                 var totalCount = query.Count();
                 var games = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
                 return (games, totalCount);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке исторических партий: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading historical games: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return ([], 0);
             }
         }
@@ -285,8 +352,27 @@ namespace ChessWPF.Services
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при загрузке исторической партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading historical game: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
+            }
+        }
+        public static List<int> GetAvailableYears()
+        {
+            try
+            {
+                using var context = new ChessDbContext();
+                var years = context.HistoricalGames
+                    .Where(g => g.PlayedAt.HasValue)
+                    .Select(g => g.PlayedAt.Value.Year)
+                    .Distinct()
+                    .OrderByDescending(y => y)
+                    .ToList();
+                return years;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading years: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return new List<int>();
             }
         }
 
@@ -480,7 +566,7 @@ namespace ChessWPF.Services
                 if (IsFileParsed(fileName))
                 {
                     result.Success = false;
-                    result.Message = $"Файл {fileName} уже был импортирован ранее.";
+                    result.Message = $"File {fileName} has already been imported.";
                     return result;
                 }
 
@@ -488,7 +574,7 @@ namespace ChessWPF.Services
                 if (!System.IO.File.Exists(filePath))
                 {
                     result.Success = false;
-                    result.Message = $"Файл не найден: {filePath}";
+                    result.Message = $"File not found: {filePath}";
                     return result;
                 }
 
@@ -501,7 +587,7 @@ namespace ChessWPF.Services
                 if (gameStrings.Count == 0)
                 {
                     result.Success = false;
-                    result.Message = "В файле не найдено ни одной игры.";
+                    result.Message = "No games found in file.";
                     return result;
                 }
 
@@ -586,7 +672,7 @@ namespace ChessWPF.Services
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Ошибка при импорте игры {i + 1}: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Error importing game {i + 1}: {ex.Message}");
                         skippedCount++;
                     }
 
@@ -609,12 +695,12 @@ namespace ChessWPF.Services
                 result.Success = true;
                 result.ImportedGames = importedCount;
                 result.SkippedGames = skippedCount;
-                result.Message = $"Импортировано игр: {importedCount}, пропущено: {skippedCount}";
+                result.Message = $"Imported games: {importedCount}, skipped: {skippedCount}";
             }
             catch (Exception ex)
             {
                 result.Success = false;
-                result.Message = $"Ошибка при импорте файла: {ex.Message}";
+                result.Message = $"Error importing file: {ex.Message}";
             }
 
             return result;

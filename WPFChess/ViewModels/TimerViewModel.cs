@@ -28,7 +28,7 @@ namespace ChessWPF.ViewModels
             gameTimer = new DispatcherTimer();
             gameTimer.Interval = TimeSpan.FromSeconds(1);
             gameTimer.Tick += GameTimer_Tick;
-            SelectedTimeOption = new TimeOption { Time = TimeSpan.FromMinutes(10), Display = "10 минут" };
+            SelectedTimeOption = new TimeOption { Time = TimeSpan.FromMinutes(10), Display = "10 minutes" };
         }
 
         public TimeSpan BlackPlayerTime
@@ -192,7 +192,7 @@ namespace ChessWPF.ViewModels
                 {
                     StopTimer();
                     EndGameByTime(PieceColor.White);
-                    MessageBox.Show("Время белых истекло! Черные выиграли по времени.", "Время истекло", 
+                    MessageBox.Show("White's time expired! Black wins on time.", "Time Expired", 
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -206,7 +206,7 @@ namespace ChessWPF.ViewModels
                 {
                     StopTimer();
                     EndGameByTime(PieceColor.Black);
-                    MessageBox.Show("Время черных истекло! Белые выиграли по времени.", "Время истекло", 
+                    MessageBox.Show("Black's time expired! White wins on time.", "Time Expired", 
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }

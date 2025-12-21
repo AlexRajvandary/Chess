@@ -25,6 +25,10 @@ namespace ChessWPF.ViewModels
         private readonly SoundService soundService;
         private bool showFenNotation = true;
         private ICommand toggleNotationCommand;
+        private string blackPlayerName;
+        private string eventAndDate;
+        private bool isHistoricalGameLoaded = false;
+        private string whitePlayerName;
 
         public GameViewModel(
             ChessGameService gameService,
@@ -87,7 +91,7 @@ namespace ChessWPF.ViewModels
             {
                 if (timerViewModel.IsTimeExpired)
                 {
-                    MessageBox.Show("Игра завершена из-за истечения времени. Начните новую игру.", "Игра завершена", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Game ended due to time expiration. Start a new game.", "Game Ended", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
                 var fromPos = new ChessLib.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
@@ -202,6 +206,10 @@ namespace ChessWPF.ViewModels
             MoveHistory = string.Empty;
             capturedPiecesViewModel.Clear();
             moveHistoryViewModel.ClearLoadedGame();
+            IsHistoricalGameLoaded = false;
+            EventAndDate = null;
+            WhitePlayerName = null;
+            BlackPlayerName = null;
             SetupBoard();
             OnPropertyChanged(nameof(Board));
             moveHistoryViewModel.UpdateMoveHistoryItems();
@@ -234,7 +242,42 @@ namespace ChessWPF.ViewModels
         }
 
         public bool ShowMoveHistory => !showFenNotation;
-
+        public string BlackPlayerName
+        {
+            get => blackPlayerName;
+            set
+            {
+                blackPlayerName = value;
+                OnPropertyChanged();
+            }
+        }
+        public string EventAndDate
+        {
+            get => eventAndDate;
+            set
+            {
+                eventAndDate = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool IsHistoricalGameLoaded
+        {
+            get => isHistoricalGameLoaded;
+            set
+            {
+                isHistoricalGameLoaded = value;
+                OnPropertyChanged();
+            }
+        }
+        public string WhitePlayerName
+        {
+            get => whitePlayerName;
+            set
+            {
+                whitePlayerName = value;
+                OnPropertyChanged();
+            }
+        }
         public ICommand ToggleNotationCommand => toggleNotationCommand ??= new RelayCommand(parameter =>
         {
             ShowFenNotation = !ShowFenNotation;
@@ -300,6 +343,49 @@ namespace ChessWPF.ViewModels
             OnPropertyChanged(nameof(Board));
         }
 
+        public void SetHistoricalGameInfo(HistoricalGame historicalGame)
+        {
+            if (historicalGame == null)
+            {
+                IsHistoricalGameLoaded = false;
+                EventAndDate = null;
+                WhitePlayerName = null;
+                BlackPlayerName = null;
+                return;
+            }
+            IsHistoricalGameLoaded = true;
+            WhitePlayerName = historicalGame.WhitePlayer ?? "White";
+            BlackPlayerName = historicalGame.BlackPlayer ?? "Black";
+            string eventText = string.IsNullOrWhiteSpace(historicalGame.Event) ? null : historicalGame.Event;
+            string dateText = FormatHistoricalDate(historicalGame.PlayedAt);
+            if (!string.IsNullOrWhiteSpace(eventText) && !string.IsNullOrWhiteSpace(dateText))
+            {
+                EventAndDate = $"{eventText} • {dateText}";
+            }
+            else if (!string.IsNullOrWhiteSpace(eventText))
+            {
+                EventAndDate = eventText;
+            }
+            else if (!string.IsNullOrWhiteSpace(dateText))
+            {
+                EventAndDate = dateText;
+            }
+            else
+            {
+                EventAndDate = null;
+            }
+        }
+        private static string FormatHistoricalDate(DateTime? playedAt)
+        {
+            if (!playedAt.HasValue)
+                return null;
+            var date = playedAt.Value;
+            if (date.Month == 1 && date.Day == 1)
+            {
+                return date.Year.ToString();
+            }
+            return date.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("en-US"));
+        }
         private static void IncorrectMoveMessage(CellViewModel currentCell, List<ChessLib.Position> validMoves)
         {
             string info = "";
@@ -307,13 +393,13 @@ namespace ChessWPF.ViewModels
             {
                 info += $"\t{"ABCDEFGH"[move.X]}{move.Y + 1}\n";
             }
-            MessageBox.Show($"Данная фигура не может пойти на клетку:{currentCell.Position}\nДоступные ходы: \n{info}");
+            MessageBox.Show($"This piece cannot move to cell: {currentCell.Position}\nAvailable moves: \n{info}");
         }
         private void SelectPiece(CellViewModel cell)
         {
             if (timerViewModel.IsTimeExpired)
             {
-                MessageBox.Show("Игра завершена из-за истечения времени. Начните новую игру.", "Игра завершена", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Game ended due to time expiration. Start a new game.", "Game Ended", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             ClearAvailableMoves();
