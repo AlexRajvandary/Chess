@@ -1,8 +1,8 @@
 # Describtion
 Classical Chess.
 Supports FEN, algebraic notation, PGN games import, saving games to SQLite, autoplaying loaded games.
-## Tech Stack
-MVVM, WPF, EF Core, DI, SQLite
+Cleand MVVM without code-behind.
+MVVM, WPF, EF Core, DI Container, SQLite
 
 ### WPF
 ### Autoplaying imported game
