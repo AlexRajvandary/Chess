@@ -10,10 +10,10 @@ namespace ChessWPF
     /// </summary>
     public partial class MainWindow
     {
-        public MainWindow()
+        public MainWindow(MainViewModel viewModel)
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+            DataContext = viewModel;
         }
 
         private void SettingsOverlay_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

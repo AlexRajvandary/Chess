@@ -10,76 +10,36 @@ namespace ChessWPF.ViewModels
     {
         private Brush darkSquareColor;
         private Brush lightSquareColor;
-        private readonly SoundService soundService;
-        private readonly GameStorageService gameStorageService;
-        private SettingsViewModel settingsViewModel;
-        private CapturedPiecesViewModel capturedPiecesViewModel;
-        private GameStorageViewModel gameStorageViewModel;
-        private GameViewModel gameViewModel;
-        private HistoricalGamesViewModel historicalGamesViewModel;
-        private MoveHistoryViewModel moveHistoryViewModel;
-        private PanelManagementViewModel panelManagementViewModel;
-        private TimerViewModel timerViewModel;
-        
-        public MainViewModel()
+        private readonly GameViewModel gameViewModel;
+        private readonly TimerViewModel timerViewModel;
+        private readonly CapturedPiecesViewModel capturedPiecesViewModel;
+        private readonly GameStorageViewModel gameStorageViewModel;
+        private readonly HistoricalGamesViewModel historicalGamesViewModel;
+        private readonly MoveHistoryViewModel moveHistoryViewModel;
+        private readonly PanelManagementViewModel panelManagementViewModel;
+        private readonly SettingsViewModel settingsViewModel;
+        public MainViewModel(
+            GameViewModel gameViewModel,
+            TimerViewModel timerViewModel,
+            CapturedPiecesViewModel capturedPiecesViewModel,
+            GameStorageViewModel gameStorageViewModel,
+            HistoricalGamesViewModel historicalGamesViewModel,
+            MoveHistoryViewModel moveHistoryViewModel,
+            PanelManagementViewModel panelManagementViewModel,
+            SettingsViewModel settingsViewModel)
         {
-            soundService = new SoundService();
-            var gameService = new ChessGameService();
-            gameStorageService = new GameStorageService();
-            gameViewModel = new GameViewModel(gameService, soundService);
-            timerViewModel = new TimerViewModel(gameViewModel.GameService, soundService);
-            capturedPiecesViewModel = new CapturedPiecesViewModel(gameViewModel.GameService);
-            gameViewModel.GetTimerViewModel = () => timerViewModel;
-            gameViewModel.GetCapturedPiecesViewModel = () => capturedPiecesViewModel;
-            gameViewModel.GetSettingsViewModel = () => settingsViewModel;
-            gameViewModel.GetPanelManagementViewModel = () => panelManagementViewModel;
-            LightSquareColor = new SolidColorBrush(Color.FromRgb(240, 217, 181));
-            DarkSquareColor = new SolidColorBrush(Color.FromRgb(181, 136, 99));
-            gameStorageViewModel = new GameStorageViewModel(gameViewModel.GameService, gameStorageService);
-            gameStorageViewModel.OnGameLoadRequested = (gameRecord) => LoadGameFromRecord(gameRecord);
-            OnPropertyChanged(nameof(GameStorage));
-            settingsViewModel = new SettingsViewModel();
-            settingsViewModel.OnColorSchemeChanged += (scheme) =>
-            {
-                LightSquareColor = scheme.LightSquareColor;
-                DarkSquareColor = scheme.DarkSquareColor;
-            };
-            panelManagementViewModel = new PanelManagementViewModel();
-            panelManagementViewModel.OnGamePanelOpened = () => gameStorageViewModel?.LoadSavedGames();
-            settingsViewModel.OnPanelPositionChanged += (position) =>
-            {
-                panelManagementViewModel.UpdateSettingsPanelAlignment(position);
-            };
-            settingsViewModel.OnShowAvailableMovesChanged += (show) =>
-            {
-                if (!show)
-                {
-                    gameViewModel.ClearAvailableMoves();
-                }
-            };
-            moveHistoryViewModel = new MoveHistoryViewModel(gameViewModel.GameService);
-            moveHistoryViewModel.OnBoardUpdateRequired = () =>
-            {
-                gameViewModel.UpdateViewFromGameState();
-                gameViewModel.Fen = gameViewModel.GameService.GetFen();
-                gameViewModel.SetupBoard();
-            };
-            moveHistoryViewModel.OnCapturedPiecesUpdateRequired = () =>
-            {
-                capturedPiecesViewModel?.UpdateFromMoveHistory(gameViewModel.GetStateFromPiece);
-            };
-            moveHistoryViewModel.GetMoveHistoryString = () => gameViewModel.MoveHistory;
-            moveHistoryViewModel.GetStateFromPiece = gameViewModel.GetStateFromPiece;
-            gameViewModel.GetMoveHistoryViewModel = () => moveHistoryViewModel;
-            OnPropertyChanged(nameof(MoveHistoryViewModel));
-            gameStorageViewModel.LoadSavedGames();
-            historicalGamesViewModel = new HistoricalGamesViewModel();
-            historicalGamesViewModel.OnGameLoadRequested = (historicalGame) => LoadGameFromHistoricalGame(historicalGame);
-            OnPropertyChanged(nameof(HistoricalGames));
-            OnPropertyChanged(nameof(Game));
-            historicalGamesViewModel.LoadHistoricalGames();
+            this.gameViewModel = gameViewModel ?? throw new ArgumentNullException(nameof(gameViewModel));
+            this.timerViewModel = timerViewModel ?? throw new ArgumentNullException(nameof(timerViewModel));
+            this.capturedPiecesViewModel = capturedPiecesViewModel ?? throw new ArgumentNullException(nameof(capturedPiecesViewModel));
+            this.gameStorageViewModel = gameStorageViewModel ?? throw new ArgumentNullException(nameof(gameStorageViewModel));
+            this.historicalGamesViewModel = historicalGamesViewModel ?? throw new ArgumentNullException(nameof(historicalGamesViewModel));
+            this.moveHistoryViewModel = moveHistoryViewModel ?? throw new ArgumentNullException(nameof(moveHistoryViewModel));
+            this.panelManagementViewModel = panelManagementViewModel ?? throw new ArgumentNullException(nameof(panelManagementViewModel));
+            this.settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
+
+            Init();
         }
-        
+
         public Brush DarkSquareColor
         {
             get => darkSquareColor;
@@ -100,93 +60,22 @@ namespace ChessWPF.ViewModels
             }
         }
         
-        public CapturedPiecesViewModel CapturedPieces
-        {
-            get => capturedPiecesViewModel;
-            set
-            {
-                capturedPiecesViewModel = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public GameViewModel Game
-        {
-            get => gameViewModel;
-            set
-            {
-                gameViewModel = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public GameStorageViewModel GameStorage
-        {
-            get => gameStorageViewModel;
-            set
-            {
-                gameStorageViewModel = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public HistoricalGamesViewModel HistoricalGames
-        {
-            get => historicalGamesViewModel;
-            set
-            {
-                historicalGamesViewModel = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public MoveHistoryViewModel MoveHistoryViewModel
-        {
-            get => moveHistoryViewModel;
-            set
-            {
-                moveHistoryViewModel = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public PanelManagementViewModel Panels
-        {
-            get => panelManagementViewModel;
-            set
-            {
-                panelManagementViewModel = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public SettingsViewModel SettingsViewModel
-        {
-            get => settingsViewModel;
-            set
-            {
-                settingsViewModel = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public TimerViewModel Timer
-        {
-            get => timerViewModel;
-            set
-            {
-                timerViewModel = value;
-                OnPropertyChanged();
-            }
-        }
+        public CapturedPiecesViewModel CapturedPieces => capturedPiecesViewModel;
+        public GameViewModel Game => gameViewModel;
+        public GameStorageViewModel GameStorage => gameStorageViewModel;
+        public HistoricalGamesViewModel HistoricalGames => historicalGamesViewModel;
+        public MoveHistoryViewModel MoveHistoryViewModel => moveHistoryViewModel;
+        public PanelManagementViewModel Panels => panelManagementViewModel;
+        public SettingsViewModel SettingsViewModel => settingsViewModel;
+        public TimerViewModel Timer => timerViewModel;
             
         private void LoadGameFromHistoricalGame(HistoricalGame historicalGame)
         {
             try
             {
-                timerViewModel?.ResetForLoadedGame();
+                timerViewModel.ResetForLoadedGame();
                 var moves = PgnService.ParsePgnMoves(historicalGame.PgnNotation);
-                moveHistoryViewModel?.LoadGame(moves);
+                moveHistoryViewModel.LoadGame(moves);
                 historicalGamesViewModel.SelectedHistoricalGame = null;
             }
             catch (Exception ex)
@@ -199,15 +88,58 @@ namespace ChessWPF.ViewModels
         {
             try
             {
-                timerViewModel?.ResetForLoadedGame();
+                timerViewModel.ResetForLoadedGame();
                 var moves = PgnService.ParsePgnMoves(gameRecord.PgnNotation);
-                moveHistoryViewModel?.LoadGame(moves);
+                moveHistoryViewModel.LoadGame(moves);
                 gameStorageViewModel.SelectedGame = null;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при загрузке партии: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void Init()
+        {
+            LightSquareColor = new SolidColorBrush(Color.FromRgb(240, 217, 181));
+            DarkSquareColor = new SolidColorBrush(Color.FromRgb(181, 136, 99));
+
+            gameStorageViewModel.OnGameLoadRequested = (gameRecord) => LoadGameFromRecord(gameRecord);
+
+            settingsViewModel.OnColorSchemeChanged += (scheme) =>
+            {
+                LightSquareColor = scheme.LightSquareColor;
+                DarkSquareColor = scheme.DarkSquareColor;
+            };
+
+            panelManagementViewModel.OnGamePanelOpened = () => gameStorageViewModel?.LoadSavedGames();
+            settingsViewModel.OnPanelPositionChanged += (position) =>
+            {
+                panelManagementViewModel.UpdateSettingsPanelAlignment(position);
+            };
+            settingsViewModel.OnShowAvailableMovesChanged += (show) =>
+            {
+                if (!show)
+                {
+                    gameViewModel.ClearAvailableMoves();
+                }
+            };
+            moveHistoryViewModel.OnBoardUpdateRequired = () =>
+            {
+                gameViewModel.UpdateViewFromGameState();
+                gameViewModel.Fen = gameViewModel.GameService.GetFen();
+                gameViewModel.SetupBoard();
+            };
+            moveHistoryViewModel.OnCapturedPiecesUpdateRequired = () =>
+            {
+                capturedPiecesViewModel.UpdateFromMoveHistory(gameViewModel.GetStateFromPiece);
+            };
+            moveHistoryViewModel.GetMoveHistoryString = () => gameViewModel.MoveHistory;
+            moveHistoryViewModel.GetStateFromPiece = gameViewModel.GetStateFromPiece;
+            gameViewModel.OnGameStateUpdated = () => OnPropertyChanged(nameof(Game));
+            gameStorageViewModel.LoadSavedGames();
+            historicalGamesViewModel.OnGameLoadRequested = (historicalGame) => LoadGameFromHistoricalGame(historicalGame);
+            historicalGamesViewModel.LoadHistoricalGames();
         }
     }
 }

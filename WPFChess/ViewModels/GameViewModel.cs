@@ -26,22 +26,34 @@ namespace ChessWPF.ViewModels
         private bool showFenNotation = true;
         private ICommand toggleNotationCommand;
 
-        public GameViewModel(ChessGameService gameService, SoundService soundService)
+        public GameViewModel(
+            ChessGameService gameService,
+            SoundService soundService,
+            TimerViewModel timerViewModel,
+            CapturedPiecesViewModel capturedPiecesViewModel,
+            MoveHistoryViewModel moveHistoryViewModel,
+            SettingsViewModel settingsViewModel,
+            PanelManagementViewModel panelManagementViewModel)
         {
             this.gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));
             this.soundService = soundService ?? throw new ArgumentNullException(nameof(soundService));
+            this.timerViewModel = timerViewModel ?? throw new ArgumentNullException(nameof(timerViewModel));
+            this.capturedPiecesViewModel = capturedPiecesViewModel ?? throw new ArgumentNullException(nameof(capturedPiecesViewModel));
+            this.moveHistoryViewModel = moveHistoryViewModel ?? throw new ArgumentNullException(nameof(moveHistoryViewModel));
+            this.settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
+            this.panelManagementViewModel = panelManagementViewModel ?? throw new ArgumentNullException(nameof(panelManagementViewModel));
             Board = new BoardViewModel();
             moves = new ObservableCollection<string>();
             playerMoves = new ObservableCollection<string>();
             SetupBoard();
         }
 
+        private readonly TimerViewModel timerViewModel;
+        private readonly CapturedPiecesViewModel capturedPiecesViewModel;
+        private readonly MoveHistoryViewModel moveHistoryViewModel;
+        private readonly SettingsViewModel settingsViewModel;
+        private readonly PanelManagementViewModel panelManagementViewModel;
         public Action OnGameStateUpdated { get; set; }
-        public Func<TimerViewModel> GetTimerViewModel { get; set; }
-        public Func<CapturedPiecesViewModel> GetCapturedPiecesViewModel { get; set; }
-        public Func<MoveHistoryViewModel> GetMoveHistoryViewModel { get; set; }
-        public Func<SettingsViewModel> GetSettingsViewModel { get; set; }
-        public Func<PanelManagementViewModel> GetPanelManagementViewModel { get; set; }
         
         public BoardViewModel Board
         {
@@ -73,8 +85,7 @@ namespace ChessWPF.ViewModels
             }
             else
             {
-                var timer = GetTimerViewModel?.Invoke();
-                if (timer?.IsTimeExpired == true)
+                if (timerViewModel.IsTimeExpired)
                 {
                     MessageBox.Show("Игра завершена из-за истечения времени. Начните новую игру.", "Игра завершена", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
@@ -86,24 +97,19 @@ namespace ChessWPF.ViewModels
                     soundService.PlayMoveSound(result);
                     if (result.CapturedPiece != null)
                     {
-                        var capturedPieces = GetCapturedPiecesViewModel?.Invoke();
-                        if (capturedPieces != null)
-                        {
-                            var capturedState = GetStateFromPiece(result.CapturedPiece);
-                            bool isWhiteCapturing = previousActiveCell.State == CellUIState.WhitePawn ||
-                                                   previousActiveCell.State == CellUIState.WhiteRook ||
-                                                   previousActiveCell.State == CellUIState.WhiteKnight ||
-                                                   previousActiveCell.State == CellUIState.WhiteBishop ||
-                                                   previousActiveCell.State == CellUIState.WhiteQueen ||
-                                                   previousActiveCell.State == CellUIState.WhiteKing;
-                            var capturingColor = isWhiteCapturing ? PieceColor.White : PieceColor.Black;
-                            capturedPieces.AddCapturedPiece(capturingColor, capturedState);
-                        }
+                        var capturedState = GetStateFromPiece(result.CapturedPiece);
+                        bool isWhiteCapturing = previousActiveCell.State == CellUIState.WhitePawn ||
+                                               previousActiveCell.State == CellUIState.WhiteRook ||
+                                               previousActiveCell.State == CellUIState.WhiteKnight ||
+                                               previousActiveCell.State == CellUIState.WhiteBishop ||
+                                               previousActiveCell.State == CellUIState.WhiteQueen ||
+                                               previousActiveCell.State == CellUIState.WhiteKing;
+                        var capturingColor = isWhiteCapturing ? PieceColor.White : PieceColor.Black;
+                        capturedPiecesViewModel.AddCapturedPiece(capturingColor, capturedState);
                     }
                     UpdateViewFromGameState();
-                    var moveHistory = GetMoveHistoryViewModel?.Invoke();
-                    moveHistory?.UpdateMoveHistoryItems();
-                    timer?.SwitchToNextPlayer();
+                    moveHistoryViewModel.UpdateMoveHistoryItems();
+                    timerViewModel.SwitchToNextPlayer();
                     if (result.IsCheck)
                     {
                         MessageBox.Show("Check!");
@@ -112,7 +118,7 @@ namespace ChessWPF.ViewModels
                     {
                         MessageBox.Show("Checkmate!");
                         soundService.PlayCheckmateSound();
-                        timer?.OnGameEnd();
+                        timerViewModel.OnGameEnd();
                     }
                     var fen = gameService.GetFen();
                     File.AppendAllText(pathOfFenFile, $"{fen}\n");
@@ -138,7 +144,7 @@ namespace ChessWPF.ViewModels
                     ClearAvailableMoves();
                 }
             }
-        }, parameter => parameter is CellViewModel && !(GetMoveHistoryViewModel?.Invoke()?.IsGameLoaded ?? false));
+        }, parameter => parameter is CellViewModel && !moveHistoryViewModel.IsGameLoaded);
         
         public string Fen
         {
@@ -177,8 +183,7 @@ namespace ChessWPF.ViewModels
                 moveHistory = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(FormattedMoveHistory));
-                var moveHistoryVm = GetMoveHistoryViewModel?.Invoke();
-                moveHistoryVm?.UpdateMoveHistoryItems();
+                moveHistoryViewModel.UpdateMoveHistoryItems();
             }
         }
 
@@ -195,20 +200,13 @@ namespace ChessWPF.ViewModels
             File.WriteAllText(pathOfFenFile, $"{DateTime.Now}\n{initialFen}\n");
             Fen = initialFen;
             MoveHistory = string.Empty;
-            var capturedPieces = GetCapturedPiecesViewModel?.Invoke();
-            capturedPieces?.Clear();
-            var moveHistory = GetMoveHistoryViewModel?.Invoke();
-            moveHistory?.ClearLoadedGame();
+            capturedPiecesViewModel.Clear();
+            moveHistoryViewModel.ClearLoadedGame();
             SetupBoard();
             OnPropertyChanged(nameof(Board));
-            moveHistory?.UpdateMoveHistoryItems();
-            var timer = GetTimerViewModel?.Invoke();
-            timer?.InitializeForNewGame();
-            var panels = GetPanelManagementViewModel?.Invoke();
-            if (panels != null)
-            {
-                panels.IsGamePanelVisible = false;
-            }
+            moveHistoryViewModel.UpdateMoveHistoryItems();
+            timerViewModel.InitializeForNewGame();
+            panelManagementViewModel.IsGamePanelVisible = false;
             System.Windows.Input.CommandManager.InvalidateRequerySuggested();
             OnGameStateUpdated?.Invoke();
         });
@@ -279,8 +277,7 @@ namespace ChessWPF.ViewModels
             ClearAvailableMoves();
             Fen = gameService.GetFen();
             MoveHistory = gameService.GetMoveHistory();
-            var moveHistory = GetMoveHistoryViewModel?.Invoke();
-            moveHistory?.UpdateMoveHistoryItems();
+            moveHistoryViewModel.UpdateMoveHistoryItems();
         }
 
         private void ApplyBoardState(BoardStateSnapshot boardState)
@@ -314,8 +311,7 @@ namespace ChessWPF.ViewModels
         }
         private void SelectPiece(CellViewModel cell)
         {
-            var timer = GetTimerViewModel?.Invoke();
-            if (timer?.IsTimeExpired == true)
+            if (timerViewModel.IsTimeExpired)
             {
                 MessageBox.Show("Игра завершена из-за истечения времени. Начните новую игру.", "Игра завершена", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
@@ -330,9 +326,8 @@ namespace ChessWPF.ViewModels
                                cell.State == CellUIState.WhiteBishop ||
                                cell.State == CellUIState.WhiteQueen ||
                                cell.State == CellUIState.WhiteKing;
-            timer?.OnFirstPieceSelected(isWhitePiece, boardState.CurrentPlayerColor);
-            var settings = GetSettingsViewModel?.Invoke();
-            if (settings?.ShowAvailableMoves == true)
+            timerViewModel.OnFirstPieceSelected(isWhitePiece, boardState.CurrentPlayerColor);
+            if (settingsViewModel.ShowAvailableMoves)
             {
                 foreach (var move in validMoves)
                 {
