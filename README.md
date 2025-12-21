@@ -1,6 +1,6 @@
 # Describtion
 Classical Chess.
-Supports FEN, algebraetic notation, PGN games import, saving games to SQLite, autoplaying loaded games.
+Supports FEN, algebraic notation, PGN games import, saving games to SQLite, autoplaying loaded games.
 ## Tech Stack
 MVVM, WPF, EF Core, DI, SQLite
 
