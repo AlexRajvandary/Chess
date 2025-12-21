@@ -844,6 +844,11 @@ namespace ChessWPF.ViewModels
                 {
                     ParseMoveHistoryString(MoveHistory);
                 }
+                else
+                {
+                    // If MoveHistory is empty, clear the items
+                    MoveHistoryItems.Clear();
+                }
             }
             
             // Force UI update if collection changed
@@ -867,10 +872,12 @@ namespace ChessWPF.ViewModels
             moveHistory = System.Text.RegularExpressions.Regex.Replace(moveHistory, @"\s+", " ").Trim();
 
             // Pattern: "1. e4 e5" or "1.e4 e5" or "1. e4" (if only white move)
-            // Matches: number, dot, optional space, then white move (non-whitespace, non-digit), optionally black move
-            // This pattern handles moves like "e4", "Nf3", "O-O", "e8=Q", etc.
-            // Note: explicitly excludes digits to avoid matching move numbers in the move text
-            var regex = new System.Text.RegularExpressions.Regex(@"(\d+)\.\s*([^\s\d]+(?:\+|\#)?)(?:\s+([^\s\d]+(?:\+|\#)?))?");
+            // Matches: number, dot, optional space, then white move, optionally black move
+            // This pattern handles moves like "e4", "Nf3", "O-O", "O-O-O", "e8=Q", "exd5", etc.
+            // Move can contain: letters, digits (for ranks/files), x (capture), = (promotion), + (check), # (checkmate), - (castling)
+            // Note: we need to match until next move number or end of string
+            // Updated pattern: match number, dot, then capture everything until next number or end
+            var regex = new System.Text.RegularExpressions.Regex(@"(\d+)\.\s*(.+?)(?=\s*\d+\.|$)");
             var matches = regex.Matches(moveHistory);
 
             foreach (System.Text.RegularExpressions.Match match in matches)
@@ -878,10 +885,13 @@ namespace ChessWPF.ViewModels
                 if (match.Success && match.Groups.Count >= 3)
                 {
                     int moveNumber = int.Parse(match.Groups[1].Value);
-                    string whiteMove = match.Groups[2].Value.TrimEnd('+', '#');
-                    string blackMove = match.Groups.Count > 3 && match.Groups[3].Success && !string.IsNullOrWhiteSpace(match.Groups[3].Value)
-                        ? match.Groups[3].Value.TrimEnd('+', '#')
-                        : null;
+                    string movesPair = match.Groups[2].Value.Trim();
+                    
+                    // Split moves pair by spaces to get individual moves
+                    var moves = movesPair.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    
+                    string whiteMove = moves.Length > 0 ? moves[0].TrimEnd('+', '#') : null;
+                    string blackMove = moves.Length > 1 ? moves[1].TrimEnd('+', '#') : null;
 
                     // Only add if we have at least a white move
                     if (!string.IsNullOrWhiteSpace(whiteMove))
