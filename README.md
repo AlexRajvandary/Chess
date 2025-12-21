@@ -6,6 +6,7 @@ MVVM, WPF, EF Core, DI, SQLite
 
 ### WPF
 ### Autoplaying imported game
+![img](images/magnus.gif)
 ![img](images/autoplay.gif)
 ### Selecting different color themes
 ![img](images/colors2.gif)
