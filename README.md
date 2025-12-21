@@ -1,7 +1,7 @@
 # Describtion
 Classical Chess.
 Supports FEN, algebraic notation, PGN games import, saving games to SQLite, autoplaying loaded games.
-Cleand MVVM without code-behind.
+Clean MVVM without code-behind.
 MVVM, WPF, EF Core, DI Container, SQLite
 
 ### WPF
