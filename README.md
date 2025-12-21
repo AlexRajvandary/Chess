@@ -1,7 +1,8 @@
 # Describtion
-
-## Описание
-Простая игра Шахматы. Реализована как консольная версия, так и оконная версия игры (WPF). Реализованы все шахматные правила, импорт партий в PGN, алгебраическая и FEN нотации. Пользовательские и исторические партии храняться в SQLite.
+Classical Chess.
+Supports FEN, algebraetic notation, PGN games import, saving games to SQLite, autoplaying loaded games.
+## Tech Stack
+MVVM, WPF, EF Core, DI, SQLite
 
 ### WPF
 ### Autoplaying imported game
