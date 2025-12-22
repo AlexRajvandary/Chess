@@ -36,9 +36,30 @@ namespace ChessLib
             if (!allPossibleMoves.Contains(destination))
                 return false;
 
+            // Check if king is currently in check
+            var king = allPieces.FirstOrDefault(p => p.Color == piece.Color && p is King && !p.IsDead) as King;
+            bool isCurrentlyInCheck = false;
+            if (king != null)
+            {
+                var enemyPieces = allPieces.Where(p => p.Color != piece.Color && !p.IsDead).ToList();
+                isCurrentlyInCheck = gameField.GetAtackStatus(enemyPieces, king.Position, gameFieldString);
+            }
+
             // Check if move would leave own king in check
-            if (WouldMoveCauseCheck(allPieces, piece, destination, gameFieldString))
-                return false;
+            bool wouldCauseCheck = WouldMoveCauseCheck(allPieces, piece, destination, gameFieldString);
+
+            // If king is currently in check, the move MUST remove the check (i.e., NOT cause check)
+            if (isCurrentlyInCheck)
+            {
+                // Move is valid only if it removes the check
+                return !wouldCauseCheck;
+            }
+            else
+            {
+                // If king is not in check, move is invalid if it would cause check
+                if (wouldCauseCheck)
+                    return false;
+            }
 
             return true;
         }
