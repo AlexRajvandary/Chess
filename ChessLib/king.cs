@@ -57,7 +57,7 @@ namespace ChessLib
                         isAttacked = true;
                     }
 
-                    if (!gameField.IsCellFree(checkPos, gameFieldStr))
+                    if (!GameField.IsCellFree(checkPos, gameFieldStr))
                     {
                         isFree = false;
                     }
@@ -83,7 +83,7 @@ namespace ChessLib
                         isAttacked = true;
                     }
 
-                    if (!gameField.IsCellFree(checkPos, gameFieldStr))
+                    if (!GameField.IsCellFree(checkPos, gameFieldStr))
                     {
                         isFree = false;
                     }
