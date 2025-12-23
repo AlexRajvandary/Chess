@@ -17,6 +17,8 @@ namespace ChessWPF.ViewModels
         private ObservableCollection<GameRecord> savedGames;
         private GameRecord selectedGame;
 
+        public GameStorageViewModel() { }
+
         public GameStorageViewModel(ChessGameService gameService, GameStorageService gameStorageService)
         {
             this.gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));

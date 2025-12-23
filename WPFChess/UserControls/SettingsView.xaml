@@ -93,7 +93,7 @@
                                         Checked="ColorSchemeRadioButton_Checked">
                                 <RadioButton.IsChecked>
                                     <MultiBinding Converter="{StaticResource ColorSchemeEqualityConverter}">
-                                        <Binding Path="SelectedColorScheme"/>
+                                        <Binding Path="DataContext.SelectedColorScheme" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
                                         <Binding Path="Tag" RelativeSource="{RelativeSource Self}"/>
                                     </MultiBinding>
                                 </RadioButton.IsChecked>
