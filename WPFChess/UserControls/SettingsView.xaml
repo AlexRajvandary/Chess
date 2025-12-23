@@ -7,7 +7,7 @@
              xmlns:converters="clr-namespace:ChessWPF.Converters"
              xmlns:models="clr-namespace:ChessWPF.Models"
              mc:Ignorable="d" 
-             d:DataContext="{d:DesignInstance viewModels:MainViewModel, IsDesignTimeCreatable=True}">
+             d:DataContext="{d:DesignInstance viewModels:SettingsViewModel, IsDesignTimeCreatable=True}">
     <UserControl.Resources>
         <converters:ColorSchemeEqualityConverter x:Key="ColorSchemeEqualityConverter"/>
     </UserControl.Resources>
@@ -88,7 +88,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                                <RadioButton GroupName="ColorSchemes" Margin="5" 
+                            <RadioButton GroupName="ColorSchemes" Margin="5" 
                                         Tag="{Binding}"
                                         Checked="ColorSchemeRadioButton_Checked">
                                 <RadioButton.IsChecked>
@@ -148,4 +148,3 @@
         </ScrollViewer>
     </Border>
 </UserControl>
-

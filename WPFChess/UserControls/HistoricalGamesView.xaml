@@ -6,7 +6,7 @@
              xmlns:viewModels="clr-namespace:ChessWPF.ViewModels"
              xmlns:converters="clr-namespace:ChessWPF.Converters"
              mc:Ignorable="d" 
-             d:DataContext="{d:DesignInstance viewModels:MainViewModel, IsDesignTimeCreatable=True}">
+             d:DataContext="{d:DesignInstance viewModels:HistoricalGamesViewModel, IsDesignTimeCreatable=True}">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
@@ -43,7 +43,7 @@
                                 </Style>
                             </Button.Style>
                         </Button>
-                        
+
                         <!-- Progress Section -->
                         <StackPanel Visibility="{Binding IsImporting, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <TextBlock Text="{Binding ImportProgressText}" 
@@ -77,7 +77,7 @@
                                            Foreground="White"/>
                             </Grid>
                         </StackPanel>
-                        
+
                         <!-- Import Result Message -->
                         <TextBlock Text="{Binding ImportResultMessage}" 
                                    FontSize="12" 
@@ -87,7 +87,7 @@
                                    Visibility="{Binding ImportResultMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
                     </StackPanel>
                 </Border>
-                
+
                 <!-- Historical Games List -->
                 <Grid Margin="0,0,0,15">
                     <Grid.ColumnDefinitions>
@@ -143,7 +143,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            
+
                             <!-- Year Filter -->
                             <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,5,10">
                                 <TextBlock Text="Year:" FontSize="11" Foreground="#666" Margin="0,0,0,3"/>
@@ -165,7 +165,7 @@
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
                             </StackPanel>
-                            
+
                             <!-- Sort By -->
                             <StackPanel Grid.Row="0" Grid.Column="1" Margin="5,0,5,10">
                                 <TextBlock Text="Sort By:" FontSize="11" Foreground="#666" Margin="0,0,0,3"/>
@@ -177,7 +177,7 @@
                                     <ComboBoxItem Content="Move Count" Tag="MoveCount"/>
                                 </ComboBox>
                             </StackPanel>
-                            
+
                             <!-- Sort Direction -->
                             <StackPanel Grid.Row="0" Grid.Column="2" Margin="5,0,0,10">
                                 <TextBlock Text="Sort Direction:" FontSize="11" Foreground="#666" Margin="0,0,0,3"/>
@@ -186,7 +186,7 @@
                                          FontSize="12" 
                                          VerticalAlignment="Center"/>
                             </StackPanel>
-                            
+
                             <!-- Filter Buttons -->
                             <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                                 <Button Content="Clear Filters" 
@@ -201,14 +201,14 @@
                         </Grid>
                     </StackPanel>
                 </Border>
-                
+
                 <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="0" Margin="0,0,0,20">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        
+
                         <!-- Historical Games List -->
                         <ListBox Grid.Row="0" 
                                  ItemsSource="{Binding HistoricalGames}"
@@ -273,7 +273,7 @@
                                 </Style>
                             </ListBox.ItemContainerStyle>
                         </ListBox>
-                        
+
                         <!-- Pagination and Load Button -->
                         <Border Grid.Row="1" 
                                 Background="#F5F5F5" 
@@ -285,7 +285,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                
+
                                 <!-- Pagination Controls -->
                                 <Grid Grid.Row="0" Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
@@ -293,14 +293,14 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    
+
                                     <!-- Page Info -->
                                     <TextBlock Grid.Column="0" 
                                                Text="{Binding PageInfo}" 
                                                FontSize="11" 
                                                Foreground="#666"
                                                VerticalAlignment="Center"/>
-                                    
+
                                     <!-- Previous Page Button -->
                                     <Button Grid.Column="1" 
                                             Content="◄" 
@@ -326,7 +326,7 @@
                                             </Style>
                                         </Button.Style>
                                     </Button>
-                                    
+
                                     <!-- Next Page Button -->
                                     <Button Grid.Column="2" 
                                             Content="►" 
@@ -351,7 +351,7 @@
                                         </Button.Style>
                                     </Button>
                                 </Grid>
-                                
+
                                 <!-- Load Button -->
                                 <Button Grid.Row="1" 
                                         Content="Load" 
@@ -385,4 +385,3 @@
         </ScrollViewer>
     </Border>
 </UserControl>
-

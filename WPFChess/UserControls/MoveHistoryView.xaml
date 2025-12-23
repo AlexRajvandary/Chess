@@ -64,7 +64,7 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        
+
                                         <!-- Move Number -->
                                         <TextBlock Grid.Column="0" 
                                                    Text="{Binding MoveNumber, StringFormat='{}{0}.'}" 
@@ -74,7 +74,7 @@
                                                    Margin="0,0,10,0"
                                                    VerticalAlignment="Center"
                                                    MinWidth="30"/>
-                                        
+
                                         <!-- White Move -->
                                         <TextBlock Grid.Column="1" 
                                                    Text="{Binding WhiteMoveText}" 
@@ -104,7 +104,7 @@
                                                 <MouseBinding Gesture="LeftClick" Command="{Binding SelectWhiteMoveCommand}"/>
                                             </TextBlock.InputBindings>
                                         </TextBlock>
-                                        
+
                                         <!-- Black Move -->
                                         <TextBlock Grid.Column="2" 
                                                    Text="{Binding BlackMoveText}" 
@@ -168,7 +168,7 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                    
+
                     <Button Content="{Binding AutoPlayButtonText}"
                             Command="{Binding ToggleAutoPlayCommand}"
                             Foreground="White"
@@ -200,7 +200,7 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                    
+
                     <Button Content="►"
                             Command="{Binding NextMoveCommand}"
                             Background="#4A90E2"
@@ -241,4 +241,3 @@
         </Border>
     </Grid>
 </UserControl>
-
