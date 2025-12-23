@@ -29,6 +29,11 @@ namespace ChessWPF.ViewModels
         private string eventAndDate;
         private bool isHistoricalGameLoaded = false;
         private string whitePlayerName;
+        private readonly TimerViewModel timerViewModel;
+        private readonly CapturedPiecesViewModel capturedPiecesViewModel;
+        private readonly MoveHistoryViewModel moveHistoryViewModel;
+        private readonly SettingsViewModel settingsViewModel;
+        private readonly PanelManagementViewModel panelManagementViewModel;
 
         public GameViewModel(
             ChessGameService gameService,
@@ -52,13 +57,8 @@ namespace ChessWPF.ViewModels
             SetupBoard();
         }
 
-        private readonly TimerViewModel timerViewModel;
-        private readonly CapturedPiecesViewModel capturedPiecesViewModel;
-        private readonly MoveHistoryViewModel moveHistoryViewModel;
-        private readonly SettingsViewModel settingsViewModel;
-        private readonly PanelManagementViewModel panelManagementViewModel;
         public Action OnGameStateUpdated { get; set; }
-        
+
         public BoardViewModel Board
         {
             get => board;
@@ -69,87 +69,18 @@ namespace ChessWPF.ViewModels
             }
         }
 
-        public ICommand CellCommand => cellCommand ??= new RelayCommand(parameter =>
-        {
-            CellViewModel currentCell = (CellViewModel)parameter;
-            CellViewModel previousActiveCell = Board.FirstOrDefault(x => x.Active);
-            var currentPos = new ChessLib.Position(currentCell.Position.Horizontal, currentCell.Position.Vertical);
-            if (previousActiveCell == null)
+        public ICommand CellCommand => cellCommand ??= new RelayCommand(
+            parameter =>
             {
-                if (currentCell.State == CellUIState.Empty)
+                if (parameter is not CellViewModel currentCell)
                 {
                     return;
                 }
-                SelectPiece(currentCell);
-            }
-            else if (previousActiveCell == currentCell)
-            {
-                previousActiveCell.Active = false;
-                ClearAvailableMoves();
-            }
-            else
-            {
-                if (timerViewModel.IsTimeExpired)
-                {
-                    MessageBox.Show("Game ended due to time expiration. Start a new game.", "Game Ended", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-                var fromPos = new ChessLib.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
-                var result = gameService.MakeMove(fromPos, currentPos);
-                if (result.IsValid)
-                {
-                    soundService.PlayMoveSound(result);
-                    if (result.CapturedPiece != null)
-                    {
-                        var capturedState = GetStateFromPiece(result.CapturedPiece);
-                        bool isWhiteCapturing = previousActiveCell.State == CellUIState.WhitePawn ||
-                                               previousActiveCell.State == CellUIState.WhiteRook ||
-                                               previousActiveCell.State == CellUIState.WhiteKnight ||
-                                               previousActiveCell.State == CellUIState.WhiteBishop ||
-                                               previousActiveCell.State == CellUIState.WhiteQueen ||
-                                               previousActiveCell.State == CellUIState.WhiteKing;
-                        var capturingColor = isWhiteCapturing ? PieceColor.White : PieceColor.Black;
-                        capturedPiecesViewModel.AddCapturedPiece(capturingColor, capturedState);
-                    }
-                    UpdateViewFromGameState();
-                    moveHistoryViewModel.UpdateMoveHistoryItems();
-                    timerViewModel.SwitchToNextPlayer();
-                    if (result.IsCheck)
-                    {
-                        MessageBox.Show("Check!");
-                    }
-                    if (result.IsCheckmate)
-                    {
-                        MessageBox.Show("Checkmate!");
-                        soundService.PlayCheckmateSound();
-                        timerViewModel.OnGameEnd();
-                    }
-                    var fen = gameService.GetFen();
-                    File.AppendAllText(pathOfFenFile, $"{fen}\n");
-                    ClearAvailableMoves();
-                }
-                else
-                {
-                    if (currentCell.State != CellUIState.Empty)
-                    {
-                        previousActiveCell.Active = false;
-                        ClearAvailableMoves();
-                        SelectPiece(currentCell);
-                    }
-                    else
-                    {
-                        var validMoves = gameService.GetValidMoves(fromPos);
-                        IncorrectMoveMessage(currentCell, validMoves);
-                    }
-                }
-                if (previousActiveCell.Active)
-                {
-                    previousActiveCell.Active = false;
-                    ClearAvailableMoves();
-                }
-            }
-        }, parameter => parameter is CellViewModel && !moveHistoryViewModel.IsGameLoaded);
-        
+
+                HandleCellClick(currentCell);
+            },
+            parameter => parameter is CellViewModel && !moveHistoryViewModel.IsGameLoaded);
+
         public string Fen
         {
             get => fen;
@@ -159,7 +90,7 @@ namespace ChessWPF.ViewModels
                 OnPropertyChanged();
             }
         }
-        
+
         public string FormattedMoveHistory
         {
             get
@@ -194,7 +125,7 @@ namespace ChessWPF.ViewModels
         public IEnumerable<char> Numbers => "87654321";
 
         public string NotationToggleText => showFenNotation ? "Show Moves" : "Show FEN";
-        
+
         public ICommand NewGameCommand => newGameCommand ??= new RelayCommand(parameter =>
         {
             gameService.StartNewGame();
@@ -375,6 +306,152 @@ namespace ChessWPF.ViewModels
                 EventAndDate = null;
             }
         }
+
+        private void HandleCellClick(CellViewModel currentCell)
+        {
+            var previousActiveCell = Board.FirstOrDefault(x => x.Active);
+            var currentPos = new ChessLib.Position(currentCell.Position.Horizontal, currentCell.Position.Vertical);
+
+            if (previousActiveCell is null)
+            {
+                HandleNoActiveCellClick(currentCell);
+                return;
+            }
+
+            if (ReferenceEquals(previousActiveCell, currentCell))
+            {
+                DeselectCurrent(previousActiveCell);
+                return;
+            }
+
+            HandleMoveOrReselect(previousActiveCell, currentCell, currentPos);
+        }
+
+        private void HandleNoActiveCellClick(CellViewModel currentCell)
+        {
+            if (currentCell.State == CellUIState.Empty)
+            {
+                return;
+            }
+
+            SelectPiece(currentCell);
+        }
+
+        private void DeselectCurrent(CellViewModel previousActiveCell)
+        {
+            previousActiveCell.Active = false;
+            ClearAvailableMoves();
+        }
+
+        private void HandleMoveOrReselect(
+            CellViewModel previousActiveCell,
+            CellViewModel currentCell,
+            ChessLib.Position currentPos)
+        {
+            if (timerViewModel.IsTimeExpired)
+            {
+                MessageBox.Show(
+                    "Game ended due to time expiration. Start a new game.",
+                    "Game Ended",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                return;
+            }
+
+            var fromPos = new ChessLib.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
+            var result = gameService.MakeMove(fromPos, currentPos);
+
+            if (result.IsValid)
+            {
+                HandleValidMove(previousActiveCell, result);
+                return;
+            }
+
+            HandleInvalidMove(previousActiveCell, currentCell, fromPos);
+        }
+
+        private void HandleValidMove(CellViewModel previousActiveCell, MoveResult result)
+        {
+            soundService.PlayMoveSound(result);
+
+            if (result.CapturedPiece is not null)
+            {
+                AddCapturedPiece(previousActiveCell, result.CapturedPiece);
+            }
+
+            UpdateViewFromGameState();
+            moveHistoryViewModel.UpdateMoveHistoryItems();
+            timerViewModel.SwitchToNextPlayer();
+
+            if (result.IsCheck)
+            {
+                MessageBox.Show("Check!");
+            }
+
+            if (result.IsCheckmate)
+            {
+                MessageBox.Show("Checkmate!");
+                soundService.PlayCheckmateSound();
+                timerViewModel.OnGameEnd();
+            }
+
+            var fen = gameService.GetFen();
+            File.AppendAllText(pathOfFenFile, $"{fen}\n");
+
+            // Консистентно завершаем ход
+            CleanupAfterAction();
+        }
+
+        private void HandleInvalidMove(CellViewModel previousActiveCell, CellViewModel currentCell, ChessLib.Position fromPos)
+        {
+            if (currentCell.State != CellUIState.Empty)
+            {
+                // Перевыбор фигуры
+                previousActiveCell.Active = false;
+                ClearAvailableMoves();
+                SelectPiece(currentCell);
+                return;
+            }
+
+            var validMoves = gameService.GetValidMoves(fromPos);
+            IncorrectMoveMessage(currentCell, validMoves);
+
+            CleanupAfterAction();
+        }
+
+        private void AddCapturedPiece(CellViewModel previousActiveCell, IPiece capturedPiece)
+        {
+            var capturedState = GetStateFromPiece(capturedPiece);
+
+            var capturingColor = IsWhiteCellState(previousActiveCell.State)
+                ? PieceColor.White
+                : PieceColor.Black;
+
+            capturedPiecesViewModel.AddCapturedPiece(capturingColor, capturedState);
+        }
+
+        private static bool IsWhiteCellState(CellUIState state)
+        {
+            return state == CellUIState.WhitePawn
+                || state == CellUIState.WhiteRook
+                || state == CellUIState.WhiteKnight
+                || state == CellUIState.WhiteBishop
+                || state == CellUIState.WhiteQueen
+                || state == CellUIState.WhiteKing;
+        }
+
+        private void CleanupAfterAction()
+        {
+            ClearAvailableMoves();
+
+            var active = Board.FirstOrDefault(x => x.Active);
+            if (active is not null)
+            {
+                active.Active = false;
+            }
+        }
+
         private static string FormatHistoricalDate(DateTime? playedAt)
         {
             if (!playedAt.HasValue)
@@ -386,6 +463,7 @@ namespace ChessWPF.ViewModels
             }
             return date.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("en-US"));
         }
+
         private static void IncorrectMoveMessage(CellViewModel currentCell, List<ChessLib.Position> validMoves)
         {
             string info = "";
@@ -395,6 +473,7 @@ namespace ChessWPF.ViewModels
             }
             MessageBox.Show($"This piece cannot move to cell: {currentCell.Position}\nAvailable moves: \n{info}");
         }
+
         private void SelectPiece(CellViewModel cell)
         {
             if (timerViewModel.IsTimeExpired)
@@ -402,6 +481,7 @@ namespace ChessWPF.ViewModels
                 MessageBox.Show("Game ended due to time expiration. Start a new game.", "Game Ended", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
+
             ClearAvailableMoves();
             var pos = new ChessLib.Position(cell.Position.Horizontal, cell.Position.Vertical);
             var validMoves = gameService.GetValidMoves(pos);
@@ -412,6 +492,7 @@ namespace ChessWPF.ViewModels
                                cell.State == CellUIState.WhiteBishop ||
                                cell.State == CellUIState.WhiteQueen ||
                                cell.State == CellUIState.WhiteKing;
+
             timerViewModel.OnFirstPieceSelected(isWhitePiece, boardState.CurrentPlayerColor);
             if (settingsViewModel.ShowAvailableMoves)
             {
@@ -424,8 +505,8 @@ namespace ChessWPF.ViewModels
                     }
                 }
             }
+
             cell.Active = true;
         }
-
     }
 }
