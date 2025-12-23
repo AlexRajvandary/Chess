@@ -3,13 +3,14 @@ using System.Windows.Controls;
 namespace ChessWPF.UserControls
 {
     /// <summary>
-    /// Interaction logic for MoveHistoryView.xaml
+    /// Interaction logic for GamePlayView.xaml
     /// </summary>
-    public partial class MoveHistoryView : UserControl
+    public partial class GamePlayView : UserControl
     {
-        public MoveHistoryView()
+        public GamePlayView()
         {
             InitializeComponent();
         }
     }
 }
+

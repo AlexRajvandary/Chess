@@ -123,7 +123,7 @@
         </TabControl>
 
         <!-- Right Side - Chess Board and Notation -->
-        <userControls:MoveHistoryView Grid.Row="0" Grid.Column="2" DataContext="{Binding MoveHistoryViewModel}"/>
+        <userControls:GamePlayView Grid.Row="0" Grid.Column="2" DataContext="{Binding}"/>
 
         <!-- Game Panel Overlay -->
         <Grid Grid.RowSpan="5" Grid.ColumnSpan="3" 
