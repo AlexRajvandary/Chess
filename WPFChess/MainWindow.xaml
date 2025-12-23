@@ -40,7 +40,7 @@
         
         <!-- Toggle Side Panel Button -->
         <Button Grid.Row="0" Grid.Column="1" 
-                Command="{Binding ToggleSidePanelCommand}"
+                Command="{Binding Panels.ToggleSidePanelCommand}"
                 Width="30" 
                 Background="Transparent" 
                 Foreground="#555" 
@@ -70,7 +70,7 @@
         <TabControl Grid.Row="0" Grid.Column="0" 
                     BorderThickness="0" 
                     Background="#F5F5F5"
-                    Visibility="{Binding IsSidePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    Visibility="{Binding Panels.IsSidePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <TabControl.Resources>
                 <Style TargetType="TabItem">
                     <Setter Property="Padding" Value="20,10"/>
@@ -619,7 +619,7 @@
                                                         Padding="8,4" 
                                                         Cursor="Hand"
                                                         MinWidth="35"
-                                                        IsEnabled="{Binding CanGoToNextHistoricalGamesPage}">
+                                                        >
                                                     <Button.Style>
                                                         <Style TargetType="Button">
                                                             <Style.Triggers>
@@ -752,7 +752,7 @@
                                             <RadioButton.IsChecked>
                                                 <MultiBinding Converter="{StaticResource ColorSchemeEqualityConverter}">
                                                     <Binding Path="DataContext.SettingsViewModel.SelectedColorScheme" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                                                    <Binding Path="Tag" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
+                                                    <Binding Path="Tag" RelativeSource="{RelativeSource Self}"/>
                                                 </MultiBinding>
                                             </RadioButton.IsChecked>
                                             <RadioButton.Content>
@@ -1365,7 +1365,6 @@
               MouseDown="GameOverlay_MouseDown">
             <Border x:Name="GamePanel" 
                     Width="400" 
-                    HorizontalAlignment="{Binding GamePanelAlignment}" 
                     Background="#F5F5F5"
                     MouseDown="GamePanel_MouseDown">
                 <Border.Effect>
@@ -1449,7 +1448,7 @@
                             <TextBlock Text="Load a previously saved game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
                             <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
                                 <Button Content="Load Game" 
-                                        Command="{Binding LoadGameCommand}"
+                                        Command="{Binding Panels.OpenGameCommand}"
                                         Background="#3498DB" 
                                         Foreground="White" 
                                         BorderThickness="0" 
@@ -1600,7 +1599,7 @@
                                             <RadioButton.IsChecked>
                                                 <MultiBinding Converter="{StaticResource ColorSchemeEqualityConverter}">
                                                     <Binding Path="DataContext.SettingsViewModel.SelectedColorScheme" RelativeSource="{RelativeSource AncestorType=Window}"/>
-                                                    <Binding Path="Tag" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
+                                                    <Binding Path="Tag" RelativeSource="{RelativeSource Self}"/>
                                                 </MultiBinding>
                                             </RadioButton.IsChecked>
                                             <RadioButton.Content>

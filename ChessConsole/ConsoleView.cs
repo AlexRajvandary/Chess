@@ -1,7 +1,7 @@
 using ChessLib;
 using System;
 
-namespace chess
+namespace ChessConsole
 {
     /// <summary>
     /// Class for visualizing the game in console

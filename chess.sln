@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.1.11304.174
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "chess", "chess\chess.csproj", "{24C706F4-3785-4330-A911-100D4843F8E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChessConsole", "ChessConsole\ChessConsole.csproj", "{24C706F4-3785-4330-A911-100D4843F8E3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChessLib", "ChessLib\ChessLib.csproj", "{45358B55-5F62-46A3-90AF-267C00C15E7D}"
 EndProject
