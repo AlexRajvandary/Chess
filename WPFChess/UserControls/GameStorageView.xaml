@@ -1,0 +1,206 @@
+<UserControl x:Class="ChessWPF.UserControls.GameStorageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:ChessWPF.Models"
+             xmlns:viewModels="clr-namespace:ChessWPF.ViewModels"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance viewModels:MainViewModel, IsDesignTimeCreatable=True}">
+    <Border Background="#F5F5F5" Padding="20">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- New Game -->
+                <TextBlock Text="🆕 New Game" FontSize="18" Margin="0,0,0,10"/>
+                <TextBlock Text="Start a fresh chess game" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                
+                <!-- Timer Settings -->
+                <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,15">
+                    <StackPanel>
+                        <CheckBox Content="Enable Timer" 
+                                  IsChecked="{Binding DataContext.Timer.IsTimerEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  FontSize="13"
+                                  Margin="0,0,0,10"/>
+                        <StackPanel IsEnabled="{Binding DataContext.Timer.IsTimerEnabled, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <TextBlock Text="Time per player:" FontSize="12" Margin="0,0,0,5" Foreground="#555"/>
+                            <ComboBox SelectedItem="{Binding DataContext.Timer.SelectedTimeOption, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                      FontSize="12"
+                                      DisplayMemberPath="Display">
+                                <ComboBox.ItemsSource>
+                                    <x:Array Type="{x:Type models:TimeOption}">
+                                        <models:TimeOption Time="00:01:00" Display="1 minute"/>
+                                        <models:TimeOption Time="00:03:00" Display="3 minutes"/>
+                                        <models:TimeOption Time="00:05:00" Display="5 minutes"/>
+                                        <models:TimeOption Time="00:10:00" Display="10 minutes"/>
+                                        <models:TimeOption Time="00:15:00" Display="15 minutes"/>
+                                        <models:TimeOption Time="00:30:00" Display="30 minutes"/>
+                                        <models:TimeOption Time="01:00:00" Display="1 hour"/>
+                                    </x:Array>
+                                </ComboBox.ItemsSource>
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                
+                <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                    <Button Content="New Game" 
+                            Command="{Binding DataContext.Game.NewGameCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            Background="#27AE60" 
+                            Foreground="White" 
+                            BorderThickness="0" 
+                            FontSize="14" 
+                            FontWeight="Bold"
+                            Padding="20,10" 
+                            Cursor="Hand"
+                            HorizontalAlignment="Stretch"/>
+                </Border>
+
+                <!-- Save Game -->
+                <TextBlock Text="💾 Save Game" FontSize="18" Margin="0,0,0,10"/>
+                <TextBlock Text="Save the current game state" FontSize="12" Margin="0,0,0,15" Foreground="#555"/>
+                <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+                    <Button Content="Save Game" 
+                            Command="{Binding SaveGameCommand}"
+                            Background="#E67E22" 
+                            Foreground="White" 
+                            BorderThickness="0" 
+                            FontSize="14" 
+                            FontWeight="Bold"
+                            Padding="20,10" 
+                            Cursor="Hand"
+                            HorizontalAlignment="Stretch"/>
+                </Border>
+
+                <!-- Saved Games List -->
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="📋 Saved Games" FontSize="18" Margin="0,0,0,5"/>
+                        <TextBlock Text="Select a game to load" FontSize="12" Foreground="#555"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" 
+                            Content="🔄" 
+                            Command="{Binding RefreshGamesCommand}"
+                            ToolTip="Refresh list"
+                            Background="Transparent" 
+                            BorderThickness="0" 
+                            FontSize="16" 
+                            Padding="8"
+                            Cursor="Hand"
+                            VerticalAlignment="Top"
+                            Margin="0,0,0,5">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Foreground" Value="#555"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="#3498DB"/>
+                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+                <Border Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="5" Padding="0" Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Games List -->
+                        <ListBox Grid.Row="0" 
+                                 ItemsSource="{Binding SavedGames}"
+                                 SelectedItem="{Binding SelectedGame}"
+                                 MaxHeight="300"
+                                 BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" Padding="10,8" Margin="0,2">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding WhitePlayer, StringFormat='{}{0} vs '}" 
+                                                           FontWeight="Bold" FontSize="13"/>
+                                                <TextBlock>
+                                                    <Run Text="{Binding BlackPlayer}"/>
+                                                    <Run Text=" • " Foreground="#999"/>
+                                                    <Run Text="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Foreground="#999"/>
+                                                    <Run Text=" • " Foreground="#999"/>
+                                                    <Run Text="{Binding MoveCount, StringFormat='{}{0} moves'}" Foreground="#999"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" 
+                                                       Text="{Binding Result}" 
+                                                       FontWeight="Bold" 
+                                                       FontSize="12"
+                                                       Foreground="#3498DB"
+                                                       VerticalAlignment="Center"
+                                                       Margin="10,0,0,0"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#F0F0F0"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#E3F2FD"/>
+                                            <Setter Property="BorderBrush" Value="#3498DB"/>
+                                            <Setter Property="BorderThickness" Value="0,0,3,0"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                        
+                        <!-- Load Button -->
+                        <Border Grid.Row="1" 
+                                Background="#F5F5F5" 
+                                BorderBrush="#DDD" 
+                                BorderThickness="0,1,0,0" 
+                                Padding="10">
+                            <Button Content="Load" 
+                                    Command="{Binding LoadSelectedGameCommand}"
+                                    Background="#27AE60" 
+                                    Foreground="White" 
+                                    BorderThickness="0" 
+                                    FontSize="13" 
+                                    FontWeight="Bold"
+                                    Padding="15,8" 
+                                    Cursor="Hand"
+                                    HorizontalAlignment="Stretch">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Background" Value="#95A5A6"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="True">
+                                                <Setter Property="Background" Value="#27AE60"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Border>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>
+

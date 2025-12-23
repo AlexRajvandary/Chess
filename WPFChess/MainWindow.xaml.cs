@@ -31,16 +31,6 @@ namespace ChessWPF
             e.Handled = true;
         }
 
-        private void ColorSchemeRadioButton_Checked(object sender, RoutedEventArgs e)
-        {
-            if (sender is RadioButton radioButton && radioButton.DataContext is ColorScheme scheme)
-            {
-                if (DataContext is MainViewModel mainViewModel && mainViewModel.SettingsViewModel != null)
-                {
-                    mainViewModel.SettingsViewModel.SelectedColorScheme = scheme;
-                }
-            }
-        }
 
         private void GameOverlay_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
