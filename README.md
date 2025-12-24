@@ -14,7 +14,6 @@ MVVM, WPF, EF Core, DI Container, SQLite
 ![img](images/import_games.gif)
 ### Basic game
 ![img](images/basic_play.gif)
-Enpassant pawn capture
 ![img](images/enpassant.gif)
 ### Console
 ![img](images/chessConsolePlay.gif)
