@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace chess
+namespace ChessConsole
 {
     public class ConsoleGameController
     {

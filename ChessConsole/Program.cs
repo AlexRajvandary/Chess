@@ -1,7 +1,7 @@
 ﻿using ChessLib;
 using System;
 
-namespace chess
+namespace ChessConsole
 {
     class Program
     {

@@ -54,6 +54,7 @@ namespace ChessLib
             }
             return AvailableMovesList;
         }
+
         public bool EnPassantAvailable { get; set; }
 
         public override string ToString()
@@ -140,7 +141,6 @@ namespace ChessLib
 
         private void GetOppositeAndFriendPieces()
         {
-
             if (Color == PieceColor.White)
             {
                 pieces = "kbnpqr";
@@ -149,8 +149,6 @@ namespace ChessLib
             {
                 pieces = "KBNPQR";
             }
-
-
         }
 
         public void ChangePosition(Position position)
@@ -192,7 +190,6 @@ namespace ChessLib
             StartPos = position;
             Position = StartPos;
             IsDead = false;
-            EnPassantAvailable = false;
         }
     }
 }

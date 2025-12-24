@@ -5,7 +5,7 @@ namespace ChessLib
 {
     public class GameField
     {
-        Cell[,] Field { get; }
+        private Cell[,] Field { get; }
 
         public Cell this[int i, int j]
         {
@@ -226,10 +226,16 @@ namespace ChessLib
             return StringFromGameField;
         }
 
+        public bool IsCellFree(Position Cell)
+        {
+            return !Field[Cell.X, Cell.Y].IsFilled;
+        }
+
         public static bool IsCellFree(Position Cell, string[,] gameField)
         {
             return gameField[Cell.X, Cell.Y] == " ";
         }
+
         public bool IsCheck()
         {
             for (int i = 0; i < 8; i++)

@@ -18,6 +18,9 @@ namespace ChessWPF.ViewModels
         private readonly MoveHistoryViewModel moveHistoryViewModel;
         private readonly PanelManagementViewModel panelManagementViewModel;
         private readonly SettingsViewModel settingsViewModel;
+
+        public MainViewModel() { }
+
         public MainViewModel(
             GameViewModel gameViewModel,
             TimerViewModel timerViewModel,

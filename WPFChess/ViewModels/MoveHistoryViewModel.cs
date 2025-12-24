@@ -23,6 +23,10 @@ namespace ChessWPF.ViewModels
         private int selectedMoveIndex = -1;
         private ICommand toggleAutoPlayCommand;
 
+        public MoveHistoryViewModel() 
+        {
+        }
+
         public MoveHistoryViewModel(ChessGameService gameService)
         {
             this.gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));
@@ -33,10 +37,15 @@ namespace ChessWPF.ViewModels
         }
 
         public Action OnBoardUpdateRequired { get; set; }
+
         public Action OnCapturedPiecesUpdateRequired { get; set; }
+
         public Func<string> GetMoveHistoryString { get; set; }
+
         public Func<IPiece, CellUIState> GetStateFromPiece { get; set; }
+
         public string AutoPlayButtonText => isAutoPlaying ? "⏸ Pause" : "▶ Play";
+
         public bool IsAutoPlaying
         {
             get => isAutoPlaying;
@@ -137,6 +146,7 @@ namespace ChessWPF.ViewModels
             {
                 return;
             }
+
             gameService.StartNewGame();
             for (int i = 0; i <= moveIndex; i++)
             {
@@ -147,6 +157,7 @@ namespace ChessWPF.ViewModels
                     _ = gameService.MakeMove(moveInfo.From, moveInfo.To);
                 }
             }
+
             SelectedMoveIndex = moveIndex;
             OnBoardUpdateRequired?.Invoke();
             OnCapturedPiecesUpdateRequired?.Invoke();
