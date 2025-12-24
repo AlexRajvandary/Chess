@@ -54,7 +54,6 @@ namespace ChessWPF.ViewModels
             Board = new BoardViewModel();
             moves = new ObservableCollection<string>();
             playerMoves = new ObservableCollection<string>();
-            SetupBoard();
         }
 
         public Action OnGameStateUpdated { get; set; }

@@ -70,7 +70,9 @@ namespace ChessLib
             string[,] GameField = new string[8, 8];
             foreach (var piece in pieces)
             {
-                GameField[piece.Position.X, piece.Position.Y] = piece.Color == PieceColor.White ? piece.ToString().ToUpper() : piece.ToString();
+                GameField[piece.Position.X, piece.Position.Y] = piece.Color == PieceColor.White 
+                    ? piece.ToString().ToUpper()
+                    : piece.ToString();
             }
             for (int i = 0; i < 8; i++)
             {
@@ -237,7 +239,7 @@ namespace ChessLib
 
             var nextPlayerColor = CurrentPlayerColor;
             result.IsCheck = IsCheck(nextPlayerColor);
-            result.IsCheckmate = result.IsCheck && IsCheckmate(nextPlayerColor);
+            result.IsCheckmate = result.IsCheck && IsCheckmate(nextPlayerColor, result.IsCheck);
 
             moveNotation.IsCheck = result.IsCheck;
             moveNotation.IsCheckmate = result.IsCheckmate;
@@ -441,12 +443,12 @@ namespace ChessLib
             }
 
             var enemyPieces = Pieces.Where(p => p.Color != color && !p.IsDead).ToList();
-            return GameField.GetAtackStatusStatic(enemyPieces, king.Position, gameFieldString);
+            return GameField.GetAtackStatus(enemyPieces, king.Position, gameFieldString);
         }
 
-        public bool IsCheckmate(PieceColor color)
+        public bool IsCheckmate(PieceColor color, bool? isCheck = null)
         {
-            if (!IsCheck(color))
+            if (isCheck != true && !IsCheck(color))
             {
                 return false;
             }
@@ -474,13 +476,14 @@ namespace ChessLib
 
         public GameState GetState()
         {
+            var isCheck = IsCheck(CurrentPlayerColor);
             var state = new GameState
             {
                 CurrentPlayerColor = CurrentPlayerColor,
                 Pieces = Pieces.ToList(), // Create a copy
                 BoardRepresentation = GetGameField(Pieces),
-                IsCheck = IsCheck(CurrentPlayerColor),
-                IsCheckmate = IsCheckmate(CurrentPlayerColor),
+                IsCheck = isCheck,
+                IsCheckmate = IsCheckmate(CurrentPlayerColor, isCheck),
                 IsGameOver = IsGameOver
             };
 
