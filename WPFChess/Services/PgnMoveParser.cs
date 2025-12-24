@@ -158,7 +158,7 @@ namespace ChessWPF.Services
             // Find piece that can reach destination
             foreach (var candidate in candidates)
             {
-                var validMoves = game.GetValidMovesForPiece(candidate);
+                var validMoves = game.GetValidMoves(candidate);
                 if (validMoves != null && validMoves.Contains(to))
                 {
                     return candidate;
@@ -189,7 +189,7 @@ namespace ChessWPF.Services
             // Find pawn that can reach destination
             foreach (var pawn in pawns)
             {
-                var validMoves = game.GetValidMovesForPiece(pawn);
+                var validMoves = game.GetValidMoves(pawn);
                 if (validMoves != null && validMoves.Contains(to))
                 {
                     return pawn;

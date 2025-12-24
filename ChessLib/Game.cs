@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -110,7 +110,9 @@ namespace ChessLib
         public MoveResult MakeMove(Position from, Position to)
         {
             if (IsGameOver)
+            {
                 return MoveResult.Failure("Game is over");
+            }
 
             var piece = Pieces.FirstOrDefault(p => p.Position == from && !p.IsDead);
             if (piece == null)
@@ -124,23 +126,65 @@ namespace ChessLib
             }
 
             var gameFieldString = GetGameField(Pieces);
+
             MoveResult result;
 
-            if (piece is King king && !king.IsMoved)
+            switch (piece)
             {
-                var castlingResult = TryCastling(king, to, gameFieldString);
-                if (castlingResult != null)
-                {
-                    result = castlingResult;
-                }
-                else
-                {
-                    var enPassantResult = TryEnPassant(piece, to, gameFieldString);
-                    if (enPassantResult != null)
+                case King king:
                     {
-                        result = enPassantResult;
+                        if (!king.IsMoved)
+                        {
+                            var castlingResult = TryCastling(king, to, gameFieldString);
+                            if (castlingResult != null)
+                            {
+                                result = castlingResult;
+                                king.IsMoved = true;
+                                break;
+                            }
+                        }
+
+                        if (!moveValidator.IsValidMove(Pieces, king, to, gameFieldString))
+                        {
+                            return MoveResult.Failure("Invalid move");
+                        }
+
+                        result = moveExecutor.ExecuteMove(Pieces, king, to, gameFieldString);
+                        king.IsMoved = true;
+                        break;
                     }
-                    else
+
+                case Rook rook:
+                    {
+                        if (!moveValidator.IsValidMove(Pieces, rook, to, gameFieldString))
+                        {
+                            return MoveResult.Failure("Invalid move");
+                        }
+
+                        result = moveExecutor.ExecuteMove(Pieces, rook, to, gameFieldString);
+                        rook.IsMoved = true;
+                        break;
+                    }
+
+                case Pawn pawn:
+                    {
+                        var enPassantResult = TryEnPassant(pawn, to, gameFieldString);
+                        if (enPassantResult != null)
+                        {
+                            result = enPassantResult;
+                            break;
+                        }
+
+                        if (!moveValidator.IsValidMove(Pieces, pawn, to, gameFieldString))
+                        {
+                            return MoveResult.Failure("Invalid move");
+                        }
+
+                        result = moveExecutor.ExecuteMove(Pieces, pawn, to, gameFieldString);
+                        break;
+                    }
+
+                default:
                     {
                         if (!moveValidator.IsValidMove(Pieces, piece, to, gameFieldString))
                         {
@@ -148,42 +192,35 @@ namespace ChessLib
                         }
 
                         result = moveExecutor.ExecuteMove(Pieces, piece, to, gameFieldString);
+                        break;
                     }
-                }
             }
-            else
+
+            ResetEnPassantStateIfExists();
+            if (piece is Pawn movedPawn)
             {
-                var enPassantResult = TryEnPassant(piece, to, gameFieldString);
-                if (enPassantResult != null)
+                CheckAndSetEnPassant(movedPawn, from, to);
+            }
+
+            FinalizeMove(from, to, piece, result);
+            return result;
+        }
+
+        private void ResetEnPassantStateIfExists()
+        {
+            foreach (var piece in Pieces)
+            {
+                if (piece is Pawn pawn)
                 {
-                    result = enPassantResult;
-                }
-                else
-                {
-                    if (!moveValidator.IsValidMove(Pieces, piece, to, gameFieldString))
-                    {
-                        return MoveResult.Failure("Invalid move");
-                    }
-
-                    result = moveExecutor.ExecuteMove(Pieces, piece, to, gameFieldString);
-
-                    if (piece is Pawn pawn)
-                    {
-                        CheckAndSetEnPassant(pawn, from, to);
-                    }
+                    pawn.EnPassantAvailable = false;
                 }
             }
+        }
 
-            if (piece is King k)
-            {
-                k.IsMoved = true;
-            }
-            else if (piece is Rook r)
-            {
-                r.IsMoved = true;
-            }
-
+        private void FinalizeMove(Position from, Position to, IPiece piece, MoveResult result)
+        {
             moveExecutor.RemoveDeadPieces(Pieces);
+
             var moveNotation = new MoveNotation
             {
                 From = from,
@@ -197,19 +234,20 @@ namespace ChessLib
 
             UpdateGameField();
             SwitchPlayer();
+
             var nextPlayerColor = CurrentPlayerColor;
             result.IsCheck = IsCheck(nextPlayerColor);
             result.IsCheckmate = result.IsCheck && IsCheckmate(nextPlayerColor);
+
             moveNotation.IsCheck = result.IsCheck;
             moveNotation.IsCheckmate = result.IsCheckmate;
+
             MoveHistory.Add(moveNotation);
 
             if (result.IsCheckmate)
             {
                 IsGameOver = true;
             }
-
-            return result;
         }
 
         private MoveResult TryCastling(King king, Position to, string[,] gameFieldString)
@@ -305,7 +343,12 @@ namespace ChessLib
         public List<Position> GetValidMoves(Position piecePosition)
         {
             var piece = Pieces.FirstOrDefault(p => p.Position == piecePosition && !p.IsDead);
-            if (piece == null)
+            return GetValidMoves(piece);
+        }
+
+        public List<Position> GetValidMoves(IPiece piece)
+        {
+            if (piece == null || piece.IsDead)
             {
                 return [];
             }
@@ -335,7 +378,7 @@ namespace ChessLib
                             p.Color == pawn.Color ||
                             p.IsDead ||
                             (pawn.Color == PieceColor.White
-                                ? pawn.Position.Y != 4 
+                                ? pawn.Position.Y != 4
                                 : pawn.Position.Y != 3) ||
                             (p.Color == PieceColor.White
                                 ? p.Position.Y != 3
@@ -369,26 +412,6 @@ namespace ChessLib
                 var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
                 return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
             }
-        }
-
-        public List<Position> GetValidMovesForPiece(IPiece piece)
-        {
-            if (piece == null || piece.IsDead)
-            {
-                return [];
-            }
-
-            if (piece.Color != CurrentPlayerColor)
-            {
-                return [];
-            }
-
-            var gameFieldString = GetGameField(Pieces);
-            var possibleMoves = piece.AvailableMoves(gameFieldString);
-            var possibleKills = piece.AvailableKills(gameFieldString);
-            var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
-
-            return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
         }
 
         public bool IsValidMove(Position from, Position to)
