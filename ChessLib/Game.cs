@@ -9,6 +9,28 @@ namespace ChessLib
         private readonly MoveValidator moveValidator;
         private readonly MoveExecutor moveExecutor;
 
+        public Game()
+        {
+            CurrentPlayer = 0;
+            Pieces = new List<IPiece>();
+            Pieces = GetPiecesStartPosition();
+            GameField = new GameField();
+            moveValidator = new MoveValidator(GameField);
+            moveExecutor = new MoveExecutor(GameField);
+            MoveHistory = [];
+            Player player1 = new(PieceColor.White, [.. Pieces.Where(x => x.Color == PieceColor.White)], "user1");
+            Player player2 = new(PieceColor.Black, [.. Pieces.Where(x => x.Color == PieceColor.Black)], "user2");
+
+            Players = new List<Player>
+            {
+                player1,
+                player2
+            };
+
+            IsGameOver = false;
+            TimeLoser = null;
+        }
+
         public GameField GameField { get; private set; }
 
         public int CurrentPlayer { get; private set; }
@@ -85,28 +107,6 @@ namespace ChessLib
                 }
             }
             return GameField;
-        }
-
-        public Game()
-        {
-            CurrentPlayer = 0;
-            Pieces = new List<IPiece>();
-            Pieces = GetPiecesStartPosition();
-            GameField = new GameField();
-            moveValidator = new MoveValidator(GameField);
-            moveExecutor = new MoveExecutor(GameField);
-            MoveHistory = [];
-            Player player1 = new(PieceColor.White, [.. Pieces.Where(x => x.Color == PieceColor.White)], "user1");
-            Player player2 = new(PieceColor.Black, [.. Pieces.Where(x => x.Color == PieceColor.Black)], "user2");
-
-            Players = new List<Player>
-            {
-                player1,
-                player2
-            };
-
-            IsGameOver = false;
-            TimeLoser = null;
         }
 
         public MoveResult MakeMove(Position from, Position to)
