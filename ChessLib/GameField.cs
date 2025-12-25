@@ -35,20 +35,6 @@ namespace ChessLib
             return isAttacked;
         }
         
-        public static bool GetAtackStatusStatic(List<IPiece> pieces, Position cell, string[,] gameField)
-        {
-            var AllPossibleMoves = new List<Position>();
-            foreach (var piece in pieces)
-            {
-                if (piece != null && !piece.IsDead)
-                {
-                    AllPossibleMoves.AddRange(piece.AvailableMoves(gameField));
-                    AllPossibleMoves.AddRange(piece.AvailableKills(gameField));
-                }
-            }
-            return AllPossibleMoves.Contains(cell);
-        }
-
         public static bool GetCheckStatusAfterMove(List<IPiece> pieces, IPiece chosenPiece, Position destinationCell)
         {
             pieces.Find(piece => piece == chosenPiece).Position = destinationCell;

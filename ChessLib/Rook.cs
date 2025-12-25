@@ -3,11 +3,6 @@ using System.Collections.Generic;
 
 namespace ChessLib
 {
-    public enum RookKind
-    {
-        Royal,
-        Queen
-    }
     public class Rook : IPiece
     {
         /// <summary>
