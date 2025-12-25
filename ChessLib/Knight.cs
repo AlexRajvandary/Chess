@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace ChessLib
 {
-    public class Knight : IPiece
+    public class Knight : PieceBase
     {
-        public PieceColor Color { get; set; }
-        public Position Position { get; set; }
-        public bool IsDead { get; set; }
+        public override PieceColor Color { get; set; }
+        public override Position Position { get; set; }
+        public override bool IsDead { get; set; }
         /// <summary>
         /// Direction for move
         /// </summary>
@@ -40,8 +40,11 @@ namespace ChessLib
         /// </summary>
         /// <param name="GameField">Game field</param>
         /// <returns>List of available cells for move</returns>
-        public List<Position> AvailableMoves(string[,] GameField)
+        public override List<Position> AvailableMoves(string[,] GameField)
         {
+#if DEBUG
+            TrackAvailableMoves();
+#endif
             var AvailableMovesList = new List<Position>();
 
             for (int i = 0; i < 8; i++)
@@ -83,7 +86,7 @@ namespace ChessLib
         /// </summary>
         /// <param name="GameField"></param>
         /// <returns></returns>
-        public List<Position> AvailableKills(string[,] GameField)
+        public override List<Position> AvailableKills(string[,] GameField)
         {
             var result = new List<Position>();
 
@@ -108,7 +111,7 @@ namespace ChessLib
                 pieces = "KBNPQR";
             }
         }
-        public void ChangePosition(Position position)
+        public override void ChangePosition(Position position)
         {
             this.Position = position;
         }
@@ -133,7 +136,7 @@ namespace ChessLib
             }
         }
 
-        public object Clone()
+        public override object Clone()
         {
             return new Knight(Position, Color);
         }

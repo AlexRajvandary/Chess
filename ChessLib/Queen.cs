@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace ChessLib
 {
-    public class Queen : IPiece
+    public class Queen : PieceBase
     {
-        public PieceColor Color { get; set; }
-        public Position Position { get; set; }
-        public bool IsDead { get; set; }
+        public override PieceColor Color { get; set; }
+        public override Position Position { get; set; }
+        public override bool IsDead { get; set; }
 
         /// <summary>
         /// Conditions for checking
@@ -33,8 +33,11 @@ namespace ChessLib
         /// </summary>
         /// <param name="GameField"></param>
         /// <returns>List of coordinates of free cells for move</returns>
-        public List<Position> AvailableMoves(string[,] GameField)
+        public override List<Position> AvailableMoves(string[,] GameField)
         {
+#if DEBUG
+            TrackAvailableMoves();
+#endif
             var AvailableMovesList = new List<Position>();
             for (int i = 0; i < 8; i++)
             {
@@ -105,7 +108,7 @@ namespace ChessLib
         /// </summary>
         /// <param name="GameField">Game field</param>
         /// <returns>List of coordinates of enemy pieces for attack</returns>
-        public List<Position> AvailableKills(string[,] GameField)
+        public override List<Position> AvailableKills(string[,] GameField)
         {
             List<Position> AvailableKillsList = new List<Position>();
             SetOppositeAndFreindPieces();
@@ -133,12 +136,12 @@ namespace ChessLib
             }
         }
 
-        public void ChangePosition(Position position)
+        public override void ChangePosition(Position position)
         {
             this.Position = position;
         }
 
-        public object Clone()
+        public override object Clone()
         {
             return new Queen(Color, Position);
         }

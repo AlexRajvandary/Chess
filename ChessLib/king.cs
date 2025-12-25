@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ChessLib
 {
-    public class King : IPiece
+    public class King : PieceBase
     {
         private string pieces;
 
@@ -15,9 +15,9 @@ namespace ChessLib
             IsMoved = false;
         }
 
-        public PieceColor Color { get; set; }
-        public Position Position { get; set; }
-        public bool IsDead { get; set; }
+        public override PieceColor Color { get; set; }
+        public override Position Position { get; set; }
+        public override bool IsDead { get; set; }
         public bool IsMoved { get; set; }
 
         private void AvailableMoveInOneDirection(string[,] GameField, List<Position> AvailableMovesList, Position Direction, Func<int, int, bool> Condition)
@@ -32,8 +32,11 @@ namespace ChessLib
             }
         }
 
-        public List<Position> AvailableMoves(string[,] GameField)
+        public override List<Position> AvailableMoves(string[,] GameField)
         {
+#if DEBUG
+            TrackAvailableMoves();
+#endif
             var AvailableMovesList = new List<Position>();
             for (int i = 0; i < 8; i++)
             {
@@ -100,7 +103,7 @@ namespace ChessLib
             return Color == PieceColor.White ? "K" : "k";
         }
         
-        public List<Position> AvailableKills(string[,] GameField)
+        public override List<Position> AvailableKills(string[,] GameField)
         {
             var AvailableKillsList = new List<Position>();
 
@@ -133,12 +136,12 @@ namespace ChessLib
             }
         }
 
-        public void ChangePosition(Position newPosition)
+        public override void ChangePosition(Position newPosition)
         {
             Position = newPosition;
         }
 
-        public object Clone()
+        public override object Clone()
         {
             return new King(this.Position, this.Color);
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ChessLib
 {
-    public class Rook : IPiece
+    public class Rook : PieceBase
     {
         /// <summary>
         /// обозначения вражеских фигур
@@ -16,9 +16,9 @@ namespace ChessLib
 
         public RookKind RookKind { get; }
         public bool IsMoved { get; set; }
-        public PieceColor Color { get; set; }
-        public Position Position { get; set; }
-        public bool IsDead { get; set; }
+        public override PieceColor Color { get; set; }
+        public override Position Position { get; set; }
+        public override bool IsDead { get; set; }
 
         /*Direction for piece search
          * (will add first coordinate to first coordinate of piece position
@@ -40,8 +40,11 @@ namespace ChessLib
         /// </summary>
         /// <param name="GameField"></param>
         /// <returns>List of coordinates of available cells for move</returns>
-        public List<Position> AvailableMoves(string[,] GameField)
+        public override List<Position> AvailableMoves(string[,] GameField)
         {
+#if DEBUG
+            TrackAvailableMoves();
+#endif
             var AvailableMovesList = new List<Position>();
             //North
             AvailableMovesInDirection(North, GameField, AvailableMovesList, NorthCondition);
@@ -105,7 +108,7 @@ namespace ChessLib
         /// </summary>
         /// <param name="GameField">Game field</param>
         /// <returns>List of coordinates of enemy pieces for attack</returns>
-        public List<Position> AvailableKills(string[,] GameField)
+        public override List<Position> AvailableKills(string[,] GameField)
         {
             var AvailableKillsList = new List<Position>();
 
@@ -137,12 +140,12 @@ namespace ChessLib
                 myPieces = "kbnpqr";
             }
         }
-        public void ChangePosition(Position newPosition)
+        public override void ChangePosition(Position newPosition)
         {
             Position = newPosition;
         }
 
-        public object Clone()
+        public override object Clone()
         {
             return new Rook(Position, Color);
         }
