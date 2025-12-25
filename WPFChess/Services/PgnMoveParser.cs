@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ChessLib;
+using ChessLib.Pieces;
 
 #nullable disable
 namespace ChessWPF.Services
@@ -58,14 +59,14 @@ namespace ChessWPF.Services
             var destSquare = destMatch.Groups[1].Value;
             var toX = FileMap[destSquare[0]];
             var toY = RankMap[destSquare[1]];
-            var to = new ChessLib.Position(toX, toY);
+            var to = new ChessLib.Common.Position(toX, toY);
 
             // Determine piece type
             char pieceChar = moveNotation[0];
             bool isCapture = moveNotation.Contains('x');
             
             IPiece piece = null;
-            ChessLib.Position from = default;
+            ChessLib.Common.Position from = default;
 
             // Remove capture symbol and destination for parsing
             var movePart = moveNotation.Replace("x", "").Replace(destSquare, "");
@@ -110,12 +111,12 @@ namespace ChessWPF.Services
                 return null;
 
             int kingNewX = isShort ? 6 : 2;
-            var to = new ChessLib.Position(kingNewX, king.Position.Y);
+            var to = new ChessLib.Common.Position(kingNewX, king.Position.Y);
 
             return new MoveInfo { From = king.Position, To = to, Piece = king };
         }
 
-        private static IPiece FindPieceByType(char pieceChar, Game game, ChessLib.Position to, string disambiguation)
+        private static IPiece FindPieceByType(char pieceChar, Game game, ChessLib.Common.Position to, string disambiguation)
         {
             Type pieceType = pieceChar switch
             {
@@ -168,7 +169,7 @@ namespace ChessWPF.Services
             return candidates.FirstOrDefault();
         }
 
-        private static IPiece FindPawn(Game game, ChessLib.Position to, string disambiguation, bool isCapture)
+        private static IPiece FindPawn(Game game, ChessLib.Common.Position to, string disambiguation, bool isCapture)
         {
             var pawns = game.Pieces
                 .Where(p => p is Pawn &&
@@ -205,8 +206,8 @@ namespace ChessWPF.Services
     /// </summary>
     public class MoveInfo
     {
-        public ChessLib.Position From { get; set; }
-        public ChessLib.Position To { get; set; }
+        public ChessLib.Common.Position From { get; set; }
+        public ChessLib.Common.Position To { get; set; }
         public IPiece Piece { get; set; }
     }
 }

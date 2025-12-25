@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Threading;
-using ChessLib;
+using ChessLib.Pieces;
 using ChessWPF.Models;
 using ChessWPF.Services;
 

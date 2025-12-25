@@ -1,7 +1,8 @@
-﻿using System.Linq;
+﻿using ChessLib.Pieces;
+using System.Linq;
 using System.Text;
 
-namespace ChessLib
+namespace ChessLib.Services
 {
     /// <summary>
     /// FEN (Forsyth-Edwards Notation) notation generator

@@ -1,10 +1,7 @@
 using System;
 
-namespace ChessLib
+namespace ChessLib.Common
 {
-    /// <summary>
-    /// Represents a position on the chess board
-    /// </summary>
     public struct Position : IEquatable<Position>
     {
         public int X { get; }
@@ -74,4 +71,3 @@ namespace ChessLib
         }
     }
 }
-

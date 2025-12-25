@@ -1,11 +1,11 @@
-﻿using System;
+﻿using ChessLib.Common;
+using System;
 using System.Collections.Generic;
 
-namespace ChessLib
+namespace ChessLib.Pieces
 {
     public class Pawn : PieceBase
     {
-        private static int _logged;
         public override bool IsDead { get; set; }
         public override PieceColor Color { get; set; }
         public override Position Position { get; set; }

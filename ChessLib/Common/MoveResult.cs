@@ -1,8 +1,7 @@
-namespace ChessLib
+using ChessLib.Pieces;
+
+namespace ChessLib.Common
 {
-    /// <summary>
-    /// Result of a move attempt
-    /// </summary>
     public class MoveResult
     {
         public bool IsValid { get; set; }
@@ -30,17 +29,4 @@ namespace ChessLib
             };
         }
     }
-
-    /// <summary>
-    /// Type of move
-    /// </summary>
-    public enum MoveType
-    {
-        Normal,
-        Capture,
-        Castle,
-        EnPassant,
-        Promotion
-    }
 }
-

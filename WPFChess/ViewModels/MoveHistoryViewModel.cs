@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Windows.Threading;
-using ChessLib;
+using ChessLib.Pieces;
 using ChessWPF.Models;
 using ChessWPF.Services;
 

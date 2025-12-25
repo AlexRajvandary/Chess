@@ -1,7 +1,9 @@
+using ChessLib.Common;
+using ChessLib.Pieces;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChessLib
+namespace ChessLib.Services
 {
     /// <summary>
     /// Executes chess moves
@@ -87,4 +89,3 @@ namespace ChessLib
         }
     }
 }
-

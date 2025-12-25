@@ -1,7 +1,8 @@
-﻿using System;
+﻿using ChessLib.Common;
+using System;
 using System.Collections.Generic;
 
-namespace ChessLib
+namespace ChessLib.Pieces
 {
     public class Knight : PieceBase
     {

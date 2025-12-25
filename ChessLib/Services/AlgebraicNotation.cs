@@ -1,8 +1,10 @@
+using ChessLib.Common;
+using ChessLib.Pieces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ChessLib
+namespace ChessLib.Services
 {
     public static class AlgebraicNotation
     {

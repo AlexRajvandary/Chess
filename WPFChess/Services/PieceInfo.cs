@@ -1,4 +1,4 @@
-using ChessLib;
+using ChessLib.Pieces;
 
 namespace ChessWPF.Services
 {

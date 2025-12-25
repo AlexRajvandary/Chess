@@ -5,7 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using ChessLib;
+using ChessLib.Common;
+using ChessLib.Pieces;
 using ChessWPF.Models;
 using ChessWPF.Services;
 
@@ -309,7 +310,7 @@ namespace ChessWPF.ViewModels
         private void HandleCellClick(CellViewModel currentCell)
         {
             var previousActiveCell = Board.FirstOrDefault(x => x.Active);
-            var currentPos = new ChessLib.Position(currentCell.Position.Horizontal, currentCell.Position.Vertical);
+            var currentPos = new ChessLib.Common.Position(currentCell.Position.Horizontal, currentCell.Position.Vertical);
 
             if (previousActiveCell is null)
             {
@@ -345,7 +346,7 @@ namespace ChessWPF.ViewModels
         private void HandleMoveOrReselect(
             CellViewModel previousActiveCell,
             CellViewModel currentCell,
-            ChessLib.Position currentPos)
+            ChessLib.Common.Position currentPos)
         {
             if (timerViewModel.IsTimeExpired)
             {
@@ -358,7 +359,7 @@ namespace ChessWPF.ViewModels
                 return;
             }
 
-            var fromPos = new ChessLib.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
+            var fromPos = new ChessLib.Common.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
             var result = gameService.MakeMove(fromPos, currentPos);
 
             if (result.IsValid)
@@ -402,7 +403,7 @@ namespace ChessWPF.ViewModels
             CleanupAfterAction();
         }
 
-        private void HandleInvalidMove(CellViewModel previousActiveCell, CellViewModel currentCell, ChessLib.Position fromPos)
+        private void HandleInvalidMove(CellViewModel previousActiveCell, CellViewModel currentCell, ChessLib.Common.Position fromPos)
         {
             if (currentCell.State != CellUIState.Empty)
             {
@@ -463,7 +464,7 @@ namespace ChessWPF.ViewModels
             return date.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("en-US"));
         }
 
-        private static void IncorrectMoveMessage(CellViewModel currentCell, List<ChessLib.Position> validMoves)
+        private static void IncorrectMoveMessage(CellViewModel currentCell, List<ChessLib.Common.Position> validMoves)
         {
             string info = "";
             foreach (var move in validMoves)
@@ -482,7 +483,7 @@ namespace ChessWPF.ViewModels
             }
 
             ClearAvailableMoves();
-            var pos = new ChessLib.Position(cell.Position.Horizontal, cell.Position.Vertical);
+            var pos = new ChessLib.Common.Position(cell.Position.Horizontal, cell.Position.Vertical);
             var validMoves = gameService.GetValidMoves(pos);
             var boardState = gameService.GetBoardState();
             bool isWhitePiece = cell.State == CellUIState.WhitePawn ||

@@ -1,4 +1,4 @@
-﻿namespace ChessLib
+﻿namespace ChessLib.Pieces
 {
     public enum RookKind
     {

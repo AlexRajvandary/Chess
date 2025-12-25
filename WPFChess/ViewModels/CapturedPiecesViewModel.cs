@@ -1,7 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using ChessLib;
+using ChessLib.Pieces;
 using ChessWPF.Models;
 using ChessWPF.Services;
 

@@ -1,8 +1,8 @@
 using System;
 using System.Media;
 using System.Windows.Media;
-using ChessLib;
 using System.Threading.Tasks;
+using ChessLib.Common;
 
 namespace ChessWPF.Services
 {

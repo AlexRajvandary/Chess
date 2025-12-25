@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace ChessLib
+namespace ChessLib.Tools
 {
     public static class CustomTraceLogger
     {

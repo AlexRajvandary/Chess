@@ -1,10 +1,8 @@
+using ChessLib.Pieces;
 using System.Collections.Generic;
 
-namespace ChessLib
+namespace ChessLib.Services
 {
-    /// <summary>
-    /// Represents the current state of the game
-    /// </summary>
     public class GameState
     {
         public PieceColor CurrentPlayerColor { get; set; }
@@ -23,4 +21,3 @@ namespace ChessLib
         }
     }
 }
-

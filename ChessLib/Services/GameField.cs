@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using ChessLib.Common;
+using ChessLib.Pieces;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace ChessLib
+namespace ChessLib.Services
 {
     public class GameField
     {

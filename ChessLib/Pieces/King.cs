@@ -1,7 +1,9 @@
-﻿using System;
+﻿using ChessLib.Common;
+using ChessLib.Services;
+using System;
 using System.Collections.Generic;
 
-namespace ChessLib
+namespace ChessLib.Pieces
 {
     public class King : PieceBase
     {

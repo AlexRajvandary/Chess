@@ -1,4 +1,4 @@
-using ChessLib;
+using ChessLib.Common;
 using Xunit;
 
 namespace ChessLib.Tests

@@ -5,6 +5,7 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using ChessWPF.Data;
 using ChessWPF.Models;
+using ChessLib.Pieces;
 using ChessLib;
 
 #nullable disable

@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using ChessLib.Pieces;
+using System.Collections.Generic;
 
-namespace ChessLib
+namespace ChessLib.Common
 {
     public class Player
     {

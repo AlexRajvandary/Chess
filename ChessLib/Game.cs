@@ -1,4 +1,7 @@
-﻿using System;
+﻿using ChessLib.Common;
+using ChessLib.Pieces;
+using ChessLib.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 

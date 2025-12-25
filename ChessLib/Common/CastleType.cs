@@ -1,4 +1,4 @@
-namespace ChessLib
+namespace ChessLib.Common
 {
     /// <summary>
     /// Type of castling

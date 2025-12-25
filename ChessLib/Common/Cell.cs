@@ -1,4 +1,6 @@
-﻿namespace ChessLib
+﻿using ChessLib.Pieces;
+
+namespace ChessLib.Common
 {
     public class Cell
     {
