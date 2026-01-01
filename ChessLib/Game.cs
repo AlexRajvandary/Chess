@@ -13,6 +13,8 @@ namespace ChessLib
         private readonly MoveValidator moveValidator;
         private readonly MoveExecutor moveExecutor;
         private readonly MoveStrategyService moveStrategyService;
+        private readonly EnPassantStrategy enPassantStrategy;
+        private readonly CastlingStrategy castlingStrategy;
 
         public Game()
         {
@@ -33,6 +35,8 @@ namespace ChessLib
             var strategyRegistry = new MoveStrategyRegistry(strategies);
             var cache = new ChessLib.Caching.MoveCache();
             moveStrategyService = new MoveStrategyService(strategyRegistry, cache);
+            enPassantStrategy = new EnPassantStrategy();
+            castlingStrategy = new CastlingStrategy();
             
             moveValidator = new MoveValidator(GameField, moveStrategyService);
             moveExecutor = new MoveExecutor(GameField);
@@ -274,24 +278,47 @@ namespace ChessLib
 
         private MoveResult TryCastling(King king, Position to, string[,] gameFieldString)
         {
+            var boardQuery = new BoardQuery(Pieces, GameField, gameFieldString);
+            if (!castlingStrategy.CanExecuteSpecialMove(king, to, Pieces, boardQuery))
+            {
+                return null;
+            }
+
             int y = king.Position.Y;
+            CastleType castleType;
+            Rook rook;
 
             if (to.X == 6 && to.Y == y)
             {
-                if (Pieces.FirstOrDefault(p => p is Rook r && r.Color == king.Color && !r.IsMoved && !r.IsDead && r.Position.X == 7 && r.Position.Y == y) is Rook rook && moveValidator.CanCastle(Pieces, king, rook, CastleType.Short, gameFieldString))
-                {
-                    return moveExecutor.ExecuteCastling(Pieces, king, rook, CastleType.Short);
-                }
+                castleType = CastleType.Short;
+                rook = Pieces.FirstOrDefault(p => p is Rook r && 
+                                                   r.Color == king.Color && 
+                                                   !r.IsMoved && 
+                                                   !r.IsDead && 
+                                                   r.Position.X == 7 && 
+                                                   r.Position.Y == y) as Rook;
             }
             else if (to.X == 2 && to.Y == y)
             {
-                if (Pieces.FirstOrDefault(p => p is Rook r && r.Color == king.Color && !r.IsMoved && !r.IsDead && r.Position.X == 0 && r.Position.Y == y) is Rook rook && moveValidator.CanCastle(Pieces, king, rook, CastleType.Long, gameFieldString))
-                {
-                    return moveExecutor.ExecuteCastling(Pieces, king, rook, CastleType.Long);
-                }
+                castleType = CastleType.Long;
+                rook = Pieces.FirstOrDefault(p => p is Rook r && 
+                                                   r.Color == king.Color && 
+                                                   !r.IsMoved && 
+                                                   !r.IsDead && 
+                                                   r.Position.X == 0 && 
+                                                   r.Position.Y == y) as Rook;
+            }
+            else
+            {
+                return null;
             }
 
-            return null;
+            if (rook == null)
+            {
+                return null;
+            }
+
+            return moveExecutor.ExecuteCastling(Pieces, king, rook, castleType);
         }
 
         private MoveResult TryEnPassant(IPiece piece, Position to, string[,] gameFieldString)
@@ -311,36 +338,25 @@ namespace ChessLib
                 return null;
             }
 
-            // Check if there's an enemy pawn that can be captured en passant
-            var enemyPawns = Pieces.Where(p => p is Pawn p2 && p2.Color != pawn.Color && !p2.IsDead && p2.EnPassantAvailable).Cast<Pawn>().ToList();
-
-            foreach (var enemyPawn in enemyPawns)
+            var boardQuery = new BoardQuery(Pieces, GameField, gameFieldString);
+            if (!enPassantStrategy.CanExecuteSpecialMove(pawn, to, Pieces, boardQuery))
             {
-                // Check if pawns are on the same rank (horizontal)
-                if (pawn.Position.Y != enemyPawn.Position.Y)
-                {
-                    continue;
-                }
+                return null;
+            }
 
-                // Check if pawns are adjacent horizontally
-                if (Math.Abs(pawn.Position.X - enemyPawn.Position.X) != 1)
-                {
-                    continue;
-                }
+            var enemyPawn = Pieces
+                .Where(p => p is Pawn p2 && 
+                           p2.Color != pawn.Color && 
+                           !p2.IsDead && 
+                           ((Pawn)p2).EnPassantAvailable &&
+                           p2.Position.Y == pawn.Position.Y &&
+                           Math.Abs(p2.Position.X - pawn.Position.X) == 1)
+                .Cast<Pawn>()
+                .FirstOrDefault();
 
-                // Check if destination matches the en passant capture square
-                // For white: captures black pawn on rank 5 (y=4), moves to rank 6 (y=5)
-                // For black: captures white pawn on rank 4 (y=3), moves to rank 3 (y=2)
-                int expectedY = pawn.Color == PieceColor.White ? enemyPawn.Position.Y + 1 : enemyPawn.Position.Y - 1;
-
-                if (to.X == enemyPawn.Position.X && to.Y == expectedY)
-                {
-                    // Validate that this is a valid en passant move
-                    if (pawn.AvailableEnPassent(enemyPawn))
-                    {
-                        return moveExecutor.ExecuteEnPassant(Pieces, pawn, to, enemyPawn);
-                    }
-                }
+            if (enemyPawn != null)
+            {
+                return moveExecutor.ExecuteEnPassant(Pieces, pawn, to, enemyPawn);
             }
 
             return null;
@@ -384,56 +400,22 @@ namespace ChessLib
             var possibleMoves = moveStrategyService.GetPossibleMoves(piece, Pieces, GameField, gameFieldString);
             var possibleKills = moveStrategyService.GetPossibleCaptures(piece, Pieces, GameField, gameFieldString);
 
+            var boardQuery = new BoardQuery(Pieces, GameField, gameFieldString);
+            var allPossibleMoves = new List<Position>(possibleMoves);
+            allPossibleMoves.AddRange(possibleKills);
+
             if (piece is Pawn pawn)
             {
-                /*
-                 * Here we get destination positions to do enpassant:
-                 * first, filter all pieces to get enemies alive pawns with available enpassant flag
-                 * then, check if they are on the same position.Y and close by 1 in Position.X
-                 * finally, we have to check if the destination cell is empty
-                 * also, don't forget when we capture pawn with enpassant the destination cell isnt on the same position))
-                 */
-                var performEnPassantDestinations = Pieces
-                    .Where(p =>
-                    {
-                        if (p is not Pawn ||
-                            p.Color == pawn.Color ||
-                            p.IsDead ||
-                            (pawn.Color == PieceColor.White
-                                ? pawn.Position.Y != 4
-                                : pawn.Position.Y != 3) ||
-                            (p.Color == PieceColor.White
-                                ? p.Position.Y != 3
-                                : p.Position.Y != 4))
-                        {
-                            return false;
-                        }
-
-                        var enPassantAvailable = ((Pawn)p).EnPassantAvailable &&
-                               pawn.Position.Y == p.Position.Y &&
-                               Math.Abs(pawn.Position.X - p.Position.X) == 1;
-
-                        var destination = pawn.Color is PieceColor.White
-                            ? new Position(p.Position.X, p.Position.Y + 1)
-                            : new Position(p.Position.X, p.Position.Y - 1);
-
-                        var isCellFree = GameField.IsCellFree(destination);
-                        return isCellFree && enPassantAvailable;
-                    })
-                    .Select(enemyPawn => pawn.Color is PieceColor.White
-                        ? new Position(enemyPawn.Position.X, enemyPawn.Position.Y + 1)
-                        : new Position(enemyPawn.Position.X, enemyPawn.Position.Y - 1));
-
-                var possibleKillsWithEnPassant = possibleKills.Concat(performEnPassantDestinations);
-                var allPossibleMoves = possibleMoves.Concat(possibleKillsWithEnPassant).ToList();
-                return allPossibleMoves;
-                //return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
+                var enPassantMoves = enPassantStrategy.GetPossibleSpecialMoves(pawn, Pieces, boardQuery);
+                allPossibleMoves.AddRange(enPassantMoves);
             }
-            else
+            else if (piece is King king && !king.IsMoved)
             {
-                var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
-                return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
+                var castlingMoves = castlingStrategy.GetPossibleSpecialMoves(king, Pieces, boardQuery);
+                allPossibleMoves.AddRange(castlingMoves);
             }
+
+            return moveValidator.FilterValidMoves(Pieces, piece, allPossibleMoves, gameFieldString);
         }
 
         public bool IsValidMove(Position from, Position to)
