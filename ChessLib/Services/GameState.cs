@@ -1,9 +1,10 @@
 using ChessLib.Pieces;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ChessLib.Services
 {
-    public class GameState
+    public class GameState : IGameState
     {
         public PieceColor CurrentPlayerColor { get; set; }
         public bool IsCheck { get; set; }
@@ -13,6 +14,8 @@ namespace ChessLib.Services
         public string[,] BoardRepresentation { get; set; }
         public List<IPiece> Pieces { get; set; }
         public string GameOverReason { get; set; }
+
+        IReadOnlyList<IPieceInfo> IGameState.Pieces => Pieces.Select(PieceInfo.FromPiece).ToList();
 
         public GameState()
         {
