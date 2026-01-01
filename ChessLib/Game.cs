@@ -1,6 +1,7 @@
 ﻿using ChessLib.Common;
 using ChessLib.Pieces;
 using ChessLib.Services;
+using ChessLib.Strategies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace ChessLib
     {
         private readonly MoveValidator moveValidator;
         private readonly MoveExecutor moveExecutor;
+        private readonly MoveStrategyService moveStrategyService;
 
         public Game()
         {
@@ -18,8 +20,22 @@ namespace ChessLib
             Pieces = new List<IPiece>();
             Pieces = GetPiecesStartPosition();
             GameField = new GameField();
-            moveValidator = new MoveValidator(GameField);
+            
+            var strategies = new List<IMoveStrategy>
+            {
+                new PawnMoveStrategy(),
+                new KnightMoveStrategy(),
+                new BishopMoveStrategy(),
+                new RookMoveStrategy(),
+                new QueenMoveStrategy(),
+                new KingMoveStrategy()
+            };
+            var strategyRegistry = new MoveStrategyRegistry(strategies);
+            moveStrategyService = new MoveStrategyService(strategyRegistry);
+            
+            moveValidator = new MoveValidator(GameField, moveStrategyService);
             moveExecutor = new MoveExecutor(GameField);
+            
             MoveHistory = [];
             Player player1 = new(PieceColor.White, [.. Pieces.Where(x => x.Color == PieceColor.White)], "user1");
             Player player2 = new(PieceColor.Black, [.. Pieces.Where(x => x.Color == PieceColor.Black)], "user2");
@@ -364,8 +380,8 @@ namespace ChessLib
             }
 
             var gameFieldString = GetGameField(Pieces);
-            var possibleMoves = piece.AvailableMoves(gameFieldString);
-            var possibleKills = piece.AvailableKills(gameFieldString);
+            var possibleMoves = moveStrategyService.GetPossibleMoves(piece, Pieces, GameField, gameFieldString);
+            var possibleKills = moveStrategyService.GetPossibleCaptures(piece, Pieces, GameField, gameFieldString);
 
             if (piece is Pawn pawn)
             {
@@ -446,7 +462,7 @@ namespace ChessLib
             }
 
             var enemyPieces = Pieces.Where(p => p.Color != color && !p.IsDead).ToList();
-            return GameField.GetAtackStatus(enemyPieces, king.Position, gameFieldString);
+            return GameField.GetAtackStatus(enemyPieces, king.Position, gameFieldString, moveStrategyService);
         }
 
         public bool IsCheckmate(PieceColor color, bool? isCheck = null)
@@ -461,8 +477,8 @@ namespace ChessLib
 
             foreach (var piece in playerPieces)
             {
-                var possibleMoves = piece.AvailableMoves(gameFieldString);
-                var possibleKills = piece.AvailableKills(gameFieldString);
+                var possibleMoves = moveStrategyService.GetPossibleMoves(piece, Pieces, GameField, gameFieldString);
+                var possibleKills = moveStrategyService.GetPossibleCaptures(piece, Pieces, GameField, gameFieldString);
                 var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
 
                 foreach (var move in allPossibleMoves)

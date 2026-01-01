@@ -17,15 +17,23 @@ namespace ChessLib.Services
             }
         }
        
-        public bool GetAtackStatus(List<IPiece> pieces, Position cell, string[,] gameField)
+        public bool GetAtackStatus(List<IPiece> pieces, Position cell, string[,] gameField, MoveStrategyService moveStrategyService = null)
         {
             var AllPossibleMoves = new List<Position>();
             foreach (var piece in pieces)
             {
                 if (piece != null && !piece.IsDead)
                 {
-                    AllPossibleMoves.AddRange(piece.AvailableMoves(gameField));
-                    AllPossibleMoves.AddRange(piece.AvailableKills(gameField));
+                    if (moveStrategyService != null)
+                    {
+                        AllPossibleMoves.AddRange(moveStrategyService.GetPossibleMoves(piece, pieces, this, gameField));
+                        AllPossibleMoves.AddRange(moveStrategyService.GetPossibleCaptures(piece, pieces, this, gameField));
+                    }
+                    else
+                    {
+                        AllPossibleMoves.AddRange(piece.AvailableMoves(gameField));
+                        AllPossibleMoves.AddRange(piece.AvailableKills(gameField));
+                    }
                 }
             }
             bool isAttacked = AllPossibleMoves.Contains(cell);
@@ -88,7 +96,7 @@ namespace ChessLib.Services
             return false;
         }
        
-        public bool GetCheckStatusAfterMove(List<IPiece> Pieces, IPiece ChosenPiece, Position DestinationCell, Player CurrentPlayer)
+        public bool GetCheckStatusAfterMove(List<IPiece> Pieces, IPiece ChosenPiece, Position DestinationCell, Player CurrentPlayer, MoveStrategyService moveStrategyService = null)
         {
             List<IPiece> CopiedPieces = HardCloningOfTheList(Pieces);
             var CopiedChosenPiece = ChosenPiece.Clone();
@@ -101,8 +109,16 @@ namespace ChessLib.Services
 
             foreach (var EnemyPiece in EnemyPieces)
             {
-                AllAvalaibleAttacksOfEnemies.AddRange(EnemyPiece.AvailableMoves(gameFieldStringAfterMove));
-                AllAvalaibleAttacksOfEnemies.AddRange(EnemyPiece.AvailableKills(gameFieldStringAfterMove));
+                if (moveStrategyService != null)
+                {
+                    AllAvalaibleAttacksOfEnemies.AddRange(moveStrategyService.GetPossibleMoves(EnemyPiece, CopiedPieces, this, gameFieldStringAfterMove));
+                    AllAvalaibleAttacksOfEnemies.AddRange(moveStrategyService.GetPossibleCaptures(EnemyPiece, CopiedPieces, this, gameFieldStringAfterMove));
+                }
+                else
+                {
+                    AllAvalaibleAttacksOfEnemies.AddRange(EnemyPiece.AvailableMoves(gameFieldStringAfterMove));
+                    AllAvalaibleAttacksOfEnemies.AddRange(EnemyPiece.AvailableKills(gameFieldStringAfterMove));
+                }
             }
 
             return AllAvalaibleAttacksOfEnemies.Contains(MyKing.Position);
