@@ -15,6 +15,7 @@ namespace ChessLib
         private readonly MoveStrategyService moveStrategyService;
         private readonly EnPassantStrategy enPassantStrategy;
         private readonly CastlingStrategy castlingStrategy;
+        private IBoardRepresentation boardRepresentation;
 
         public Game()
         {
@@ -22,6 +23,8 @@ namespace ChessLib
             Pieces = new List<IPiece>();
             Pieces = GetPiecesStartPosition();
             GameField = new GameField();
+            boardRepresentation = new Representations.ArrayBoardRepresentation();
+            boardRepresentation.InitializeFromPieces(Pieces);
             
             var strategies = new List<IMoveStrategy>
             {
@@ -113,24 +116,9 @@ namespace ChessLib
 
         public static string[,] GetGameField(List<IPiece> pieces)
         {
-            string[,] GameField = new string[8, 8];
-            foreach (var piece in pieces)
-            {
-                GameField[piece.Position.X, piece.Position.Y] = piece.Color == PieceColor.White 
-                    ? piece.ToString().ToUpper()
-                    : piece.ToString();
-            }
-            for (int i = 0; i < 8; i++)
-            {
-                for (int j = 0; j < 8; j++)
-                {
-                    if (GameField[i, j] == null)
-                    {
-                        GameField[i, j] = " ";
-                    }
-                }
-            }
-            return GameField;
+            var representation = new Representations.ArrayBoardRepresentation();
+            representation.InitializeFromPieces(pieces);
+            return ((Representations.ArrayBoardRepresentation)representation).GetStringArray();
         }
 
         public MoveResult MakeMove(Position from, Position to)
@@ -506,6 +494,8 @@ namespace ChessLib
             MoveHistory = new List<MoveNotation>();
             IsGameOver = false;
             TimeLoser = null;
+            boardRepresentation = new Representations.ArrayBoardRepresentation();
+            boardRepresentation.InitializeFromPieces(Pieces);
 
             Players = new List<Player>
             {
@@ -554,6 +544,8 @@ namespace ChessLib
             MoveHistory = new List<MoveNotation>();
             IsGameOver = false;
             TimeLoser = null;
+            boardRepresentation = new Representations.ArrayBoardRepresentation();
+            boardRepresentation.InitializeFromPieces(Pieces);
 
             Players = new List<Player>
             {
