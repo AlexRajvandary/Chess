@@ -1,3 +1,4 @@
+using ChessLib.Common;
 using ChessLib.Pieces;
 using Xunit;
 
