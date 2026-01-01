@@ -13,7 +13,7 @@ namespace ChessLib.Services
         private readonly GameField gameField;
         private readonly MoveStrategyService moveStrategyService;
 
-        public MoveValidator(GameField gameField, MoveStrategyService moveStrategyService = null)
+        public MoveValidator(GameField gameField, MoveStrategyService moveStrategyService)
         {
             this.gameField = gameField;
             this.moveStrategyService = moveStrategyService;
@@ -32,17 +32,8 @@ namespace ChessLib.Services
                 return false;
 
             // Get all possible moves for the piece
-            List<Position> possibleMoves, possibleKills;
-            if (moveStrategyService != null)
-            {
-                possibleMoves = moveStrategyService.GetPossibleMoves(piece, allPieces, gameField, gameFieldString);
-                possibleKills = moveStrategyService.GetPossibleCaptures(piece, allPieces, gameField, gameFieldString);
-            }
-            else
-            {
-                possibleMoves = piece.AvailableMoves(gameFieldString);
-                possibleKills = piece.AvailableKills(gameFieldString);
-            }
+            var possibleMoves = moveStrategyService.GetPossibleMoves(piece, allPieces, gameField, gameFieldString);
+            var possibleKills = moveStrategyService.GetPossibleCaptures(piece, allPieces, gameField, gameFieldString);
             var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
 
             // Check if destination is in possible moves

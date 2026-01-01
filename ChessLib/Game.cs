@@ -31,7 +31,8 @@ namespace ChessLib
                 new KingMoveStrategy()
             };
             var strategyRegistry = new MoveStrategyRegistry(strategies);
-            moveStrategyService = new MoveStrategyService(strategyRegistry);
+            var cache = new ChessLib.Caching.MoveCache();
+            moveStrategyService = new MoveStrategyService(strategyRegistry, cache);
             
             moveValidator = new MoveValidator(GameField, moveStrategyService);
             moveExecutor = new MoveExecutor(GameField);

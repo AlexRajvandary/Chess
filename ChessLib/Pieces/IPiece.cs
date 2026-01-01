@@ -19,21 +19,9 @@ namespace ChessLib.Pieces
         /// </summary>
         public Position Position { get; set; }
         /// <summary>
-        /// Available cells for move
-        /// </summary>
-        /// <param name="GameField"></param>
-        /// <returns></returns>
-        public List<Position> AvailableMoves(string[,] GameField);
-        /// <summary>
         /// Changes piece position
         /// </summary>
         /// <param name="position">New position</param>
         public void ChangePosition(Position position);
-        /// <summary>
-        /// Checks which pieces can be captured
-        /// </summary>
-        /// <param name="GameField"></param>
-        /// <returns></returns>
-        public List<Position> AvailableKills(string[,] GameField);
     }
 }
