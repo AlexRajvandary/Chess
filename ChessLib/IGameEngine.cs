@@ -13,5 +13,9 @@ namespace ChessLib
         string GetMoveHistory();
         void StartNewGame();
         void EndGameByTime(PieceColor losingColor);
+        
+        void RestoreFromFen(string fen);
+        void RestoreFromMoveHistory(IEnumerable<string> moves);
+        void RestoreFromPgn(string pgn);
     }
 }

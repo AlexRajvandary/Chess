@@ -49,6 +49,21 @@ namespace ChessLib
         {
             game.EndGameByTime(losingColor);
         }
+
+        public void RestoreFromFen(string fen)
+        {
+            game.RestoreFromFen(fen);
+        }
+
+        public void RestoreFromMoveHistory(IEnumerable<string> moves)
+        {
+            game.RestoreFromMoveHistory(moves);
+        }
+
+        public void RestoreFromPgn(string pgn)
+        {
+            game.RestoreFromPgn(pgn);
+        }
     }
 }
 

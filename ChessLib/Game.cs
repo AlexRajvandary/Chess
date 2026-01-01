@@ -544,5 +544,67 @@ namespace ChessLib
         {
             return AlgebraicNotation.FormatMoveHistory(MoveHistory, Pieces, moveStrategyService);
         }
+
+        public void RestoreFromFen(string fen)
+        {
+            var fenState = FenParser.ParseFen(fen);
+            Pieces = fenState.Pieces;
+            CurrentPlayer = fenState.ActiveColor == PieceColor.White ? 0 : 1;
+            GameField = new GameField();
+            MoveHistory = new List<MoveNotation>();
+            IsGameOver = false;
+            TimeLoser = null;
+
+            Players = new List<Player>
+            {
+                new Player(PieceColor.White, Pieces.Where(x => x.Color == PieceColor.White).ToList(), "user1"),
+                new Player(PieceColor.Black, Pieces.Where(x => x.Color == PieceColor.Black).ToList(), "user2")
+            };
+
+            UpdateGameField();
+        }
+
+        public void RestoreFromMoveHistory(IEnumerable<string> moves)
+        {
+            StartNewGame();
+            
+            var gameEngine = new GameEngineWrapper(this);
+            
+            foreach (var moveNotation in moves)
+            {
+                var parsedMove = AlgebraicMoveParser.ParseMove(moveNotation, gameEngine);
+                if (parsedMove != null)
+                {
+                    MakeMove(parsedMove.From, parsedMove.To);
+                }
+            }
+        }
+
+        public void RestoreFromPgn(string pgn)
+        {
+            var moves = PgnParser.ParseMoves(pgn);
+            RestoreFromMoveHistory(moves);
+        }
+
+        private class GameEngineWrapper : IGameEngine
+        {
+            private readonly Game game;
+
+            public GameEngineWrapper(Game game)
+            {
+                this.game = game;
+            }
+
+            public MoveResult MakeMove(Position from, Position to) => game.MakeMove(from, to);
+            public IReadOnlyList<Position> GetValidMoves(Position position) => game.GetValidMoves(position).AsReadOnly();
+            public IGameState GetState() => game.GetState();
+            public string GetFen() => game.GetFen();
+            public string GetMoveHistory() => game.GetMoveHistory();
+            public void StartNewGame() => game.StartNewGame();
+            public void EndGameByTime(PieceColor losingColor) => game.EndGameByTime(losingColor);
+            public void RestoreFromFen(string fen) => game.RestoreFromFen(fen);
+            public void RestoreFromMoveHistory(IEnumerable<string> moves) => game.RestoreFromMoveHistory(moves);
+            public void RestoreFromPgn(string pgn) => game.RestoreFromPgn(pgn);
+        }
     }
 }
