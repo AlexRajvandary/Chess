@@ -45,7 +45,7 @@ namespace ChessLib.Services
             return isAttacked;
         }
         
-        public static bool GetCheckStatusAfterMove(List<IPiece> pieces, IPiece chosenPiece, Position destinationCell)
+        public static bool GetCheckStatusAfterMove(List<IPiece> pieces, IPiece chosenPiece, Position destinationCell, MoveStrategyService moveStrategyService = null)
         {
             pieces.Find(piece => piece == chosenPiece).Position = destinationCell;
 
@@ -67,6 +67,7 @@ namespace ChessLib.Services
             var gameFieldString = GetStringFromGameField(board);
             var allPieces = pieces.ToList();
             var enemyPieces = allPieces.Where(p => p.Color != chosenPiece.Color).ToList();
+            var gameField = new GameField();
             
             for (int i = 0; i < 8; i++)
             {
@@ -76,8 +77,16 @@ namespace ChessLib.Services
                     var allPossibleMoves = new List<Position>();
                     foreach (var piece in enemyPieces)
                     {
-                        allPossibleMoves.AddRange(piece.AvailableMoves(gameFieldString));
-                        allPossibleMoves.AddRange(piece.AvailableKills(gameFieldString));
+                        if (moveStrategyService != null)
+                        {
+                            allPossibleMoves.AddRange(moveStrategyService.GetPossibleMoves(piece, allPieces, gameField, gameFieldString));
+                            allPossibleMoves.AddRange(moveStrategyService.GetPossibleCaptures(piece, allPieces, gameField, gameFieldString));
+                        }
+                        else
+                        {
+                            allPossibleMoves.AddRange(piece.AvailableMoves(gameFieldString));
+                            allPossibleMoves.AddRange(piece.AvailableKills(gameFieldString));
+                        }
                     }
                     board[i, j].IsAtacked = allPossibleMoves.Contains(pos);
                 }

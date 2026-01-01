@@ -559,7 +559,7 @@ namespace ChessLib
 
         public string GetMoveHistory()
         {
-            return AlgebraicNotation.FormatMoveHistory(MoveHistory, Pieces);
+            return AlgebraicNotation.FormatMoveHistory(MoveHistory, Pieces, moveStrategyService);
         }
     }
 }
