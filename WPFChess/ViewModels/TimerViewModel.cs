@@ -9,7 +9,7 @@ namespace ChessWPF.ViewModels
 {
     public class TimerViewModel : NotifyPropertyChanged
     {
-        private readonly ChessGameService gameService;
+        private readonly IGameService gameService;
         private readonly DispatcherTimer gameTimer;
         private readonly SoundService soundService;
         private TimeSpan blackPlayerTime = TimeSpan.Zero;
@@ -21,7 +21,7 @@ namespace ChessWPF.ViewModels
         private TimeOption selectedTimeOption;
         private TimeSpan whitePlayerTime = TimeSpan.Zero;
         
-        public TimerViewModel(ChessGameService gameService, SoundService soundService)
+        public TimerViewModel(IGameService gameService, SoundService soundService)
         {
             this.gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));
             this.soundService = soundService ?? throw new ArgumentNullException(nameof(soundService));

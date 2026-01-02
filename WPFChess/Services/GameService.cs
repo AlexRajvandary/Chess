@@ -1,9 +1,11 @@
 using ChessLib;
 using ChessLib.Common;
 using ChessLib.Pieces;
+using ChessLib.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ChessWPF.Services
 {
@@ -77,6 +79,77 @@ namespace ChessWPF.Services
         {
             LogInfo($"EndGameByTime: Game ended, losing color: {losingColor}");
             _gameEngine.EndGameByTime(losingColor);
+        }
+
+        public void RestoreFromFen(string fen)
+        {
+            LogInfo($"RestoreFromFen: Restoring game from FEN");
+            _gameEngine.RestoreFromFen(fen);
+            LogInfo("RestoreFromFen: Game restored successfully");
+        }
+
+        public void RestoreFromMoveHistory(IEnumerable<string> moves)
+        {
+            LogInfo($"RestoreFromMoveHistory: Restoring game from {moves?.Count() ?? 0} moves");
+            _gameEngine.RestoreFromMoveHistory(moves);
+            LogInfo("RestoreFromMoveHistory: Game restored successfully");
+        }
+
+        public void RestoreFromPgn(string pgn)
+        {
+            LogInfo("RestoreFromPgn: Restoring game from PGN");
+            _gameEngine.RestoreFromPgn(pgn);
+            LogInfo("RestoreFromPgn: Game restored successfully");
+        }
+
+        public ParsedMove ParseMove(string moveNotation)
+        {
+            LogDebug($"ParseMove: Parsing move notation '{moveNotation}'");
+            var parsedMove = AlgebraicMoveParser.ParseMove(moveNotation, this);
+            if (parsedMove != null)
+            {
+                LogDebug($"ParseMove: Parsed successfully - {parsedMove.From} -> {parsedMove.To}");
+            }
+            else
+            {
+                LogWarning($"ParseMove: Failed to parse move notation '{moveNotation}'");
+            }
+            return parsedMove;
+        }
+
+        public string GeneratePgn(string whitePlayer = "White", string blackPlayer = "Black", 
+            string eventName = null, string site = null, string round = null, 
+            string result = null, PieceColor? timeLoser = null)
+        {
+            LogDebug("GeneratePgn: Generating PGN notation");
+            // Pass _gameEngine explicitly since PgnService expects IGameEngine
+            var pgn = ChessLib.Services.PgnService.GeneratePgn(
+                _gameEngine, 
+                whitePlayer, 
+                blackPlayer, 
+                eventName, 
+                site, 
+                round, 
+                result, 
+                timeLoser);
+            LogDebug($"GeneratePgn: Generated PGN ({pgn?.Length ?? 0} characters)");
+            return pgn;
+        }
+
+        public Dictionary<string, string> ParsePgnHeaders(string pgn)
+        {
+            LogDebug("ParsePgnHeaders: Parsing PGN headers");
+            var headers = PgnParser.ParseHeaders(pgn);
+            LogDebug($"ParsePgnHeaders: Parsed {headers.Count} headers");
+            return headers;
+        }
+
+        public List<string> ParsePgnMoves(string pgn)
+        {
+            LogDebug("ParsePgnMoves: Parsing PGN moves");
+            var moves = PgnParser.ParseMoves(pgn);
+            LogDebug($"ParsePgnMoves: Parsed {moves.Count} moves");
+            return moves;
         }
 
         #region Logging
