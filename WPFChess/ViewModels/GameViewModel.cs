@@ -6,8 +6,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using ChessLib;
-using ChessLib.Common;
-using ChessLib.Pieces;
 using ChessWPF.Models;
 using ChessWPF.Services;
 
@@ -19,7 +17,7 @@ namespace ChessWPF.ViewModels
         private BoardViewModel board;
         private ICommand cellCommand;
         private string fen;
-        private IGameService gameService;
+        private ChessGameService gameService;
         private string moveHistory;
         private ObservableCollection<string> moves;
         private ICommand newGameCommand;
@@ -38,7 +36,7 @@ namespace ChessWPF.ViewModels
         private readonly PanelManagementViewModel panelManagementViewModel;
 
         public GameViewModel(
-            IGameService gameService,
+            ChessGameService gameService,
             SoundService soundService,
             TimerViewModel timerViewModel,
             CapturedPiecesViewModel capturedPiecesViewModel,
@@ -107,7 +105,7 @@ namespace ChessWPF.ViewModels
             }
         }
 
-        public IGameService GameService => gameService;
+        public ChessGameService GameService => gameService;
 
         public IEnumerable<char> Letters => "ABCDEFGH";
 
@@ -238,24 +236,6 @@ namespace ChessWPF.ViewModels
             };
         }
 
-        private CellUIState GetStateFromPieceInfo(IPieceInfo pieceInfo)
-        {
-            if (pieceInfo == null)
-                return CellUIState.Empty;
-
-            bool isWhite = pieceInfo.Color == PieceColor.White;
-            return pieceInfo.Type switch
-            {
-                ChessLib.Common.PieceType.Pawn => isWhite ? CellUIState.WhitePawn : CellUIState.BlackPawn,
-                ChessLib.Common.PieceType.Rook => isWhite ? CellUIState.WhiteRook : CellUIState.BlackRook,
-                ChessLib.Common.PieceType.Knight => isWhite ? CellUIState.WhiteKnight : CellUIState.BlackKnight,
-                ChessLib.Common.PieceType.Bishop => isWhite ? CellUIState.WhiteBishop : CellUIState.BlackBishop,
-                ChessLib.Common.PieceType.Queen => isWhite ? CellUIState.WhiteQueen : CellUIState.BlackQueen,
-                ChessLib.Common.PieceType.King => isWhite ? CellUIState.WhiteKing : CellUIState.BlackKing,
-                _ => CellUIState.Empty
-            };
-        }
-
         public void SetupBoard()
         {
             UpdateViewFromGameState();
@@ -265,34 +245,29 @@ namespace ChessWPF.ViewModels
 
         public void UpdateViewFromGameState()
         {
-            var gameState = gameService.GetState();
-            ApplyBoardState(gameState);
+            var boardState = gameService.GetBoardState();
+            ApplyBoardState(boardState);
             ClearAvailableMoves();
             Fen = gameService.GetFen();
             MoveHistory = gameService.GetMoveHistory();
             moveHistoryViewModel.UpdateMoveHistoryItems();
         }
 
-        private void ApplyBoardState(IGameState gameState)
+        private void ApplyBoardState(BoardStateSnapshot boardState)
         {
-            // Initialize board as empty
             for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    Board[7 - i, j] = CellUIState.Empty;
-                }
-            }
-
-            // Fill board with pieces from game state
-            foreach (var pieceInfo in gameState.Pieces)
-            {
-                if (pieceInfo != null)
-                {
-                    var x = pieceInfo.Position.X;
-                    var y = pieceInfo.Position.Y;
-                    // Convert from library coordinates (0-7) to board view coordinates
-                    Board[7 - y, x] = GetStateFromPieceInfo(pieceInfo);
+                    var pieceInfo = boardState.Cells[j, i];
+                    if (pieceInfo != null)
+                    {
+                        Board[7 - i, j] = GetStateFromPiece(pieceInfo.Piece);
+                    }
+                    else
+                    {
+                        Board[7 - i, j] = CellUIState.Empty;
+                    }
                 }
             }
             OnPropertyChanged(nameof(Board));
@@ -334,7 +309,7 @@ namespace ChessWPF.ViewModels
         private void HandleCellClick(CellViewModel currentCell)
         {
             var previousActiveCell = Board.FirstOrDefault(x => x.Active);
-            var currentPos = new ChessLib.Common.Position(currentCell.Position.Horizontal, currentCell.Position.Vertical);
+            var currentPos = new ChessLib.Position(currentCell.Position.Horizontal, currentCell.Position.Vertical);
 
             if (previousActiveCell is null)
             {
@@ -370,7 +345,7 @@ namespace ChessWPF.ViewModels
         private void HandleMoveOrReselect(
             CellViewModel previousActiveCell,
             CellViewModel currentCell,
-            ChessLib.Common.Position currentPos)
+            ChessLib.Position currentPos)
         {
             if (timerViewModel.IsTimeExpired)
             {
@@ -383,7 +358,7 @@ namespace ChessWPF.ViewModels
                 return;
             }
 
-            var fromPos = new ChessLib.Common.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
+            var fromPos = new ChessLib.Position(previousActiveCell.Position.Horizontal, previousActiveCell.Position.Vertical);
             var result = gameService.MakeMove(fromPos, currentPos);
 
             if (result.IsValid)
@@ -427,7 +402,7 @@ namespace ChessWPF.ViewModels
             CleanupAfterAction();
         }
 
-        private void HandleInvalidMove(CellViewModel previousActiveCell, CellViewModel currentCell, ChessLib.Common.Position fromPos)
+        private void HandleInvalidMove(CellViewModel previousActiveCell, CellViewModel currentCell, ChessLib.Position fromPos)
         {
             if (currentCell.State != CellUIState.Empty)
             {
@@ -488,7 +463,7 @@ namespace ChessWPF.ViewModels
             return date.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("en-US"));
         }
 
-        private static void IncorrectMoveMessage(CellViewModel currentCell, IReadOnlyList<ChessLib.Common.Position> validMoves)
+        private static void IncorrectMoveMessage(CellViewModel currentCell, List<ChessLib.Position> validMoves)
         {
             string info = "";
             foreach (var move in validMoves)
@@ -507,9 +482,9 @@ namespace ChessWPF.ViewModels
             }
 
             ClearAvailableMoves();
-            var pos = new ChessLib.Common.Position(cell.Position.Horizontal, cell.Position.Vertical);
+            var pos = new ChessLib.Position(cell.Position.Horizontal, cell.Position.Vertical);
             var validMoves = gameService.GetValidMoves(pos);
-            var gameState = gameService.GetState();
+            var boardState = gameService.GetBoardState();
             bool isWhitePiece = cell.State == CellUIState.WhitePawn ||
                                cell.State == CellUIState.WhiteRook ||
                                cell.State == CellUIState.WhiteKnight ||
@@ -517,7 +492,7 @@ namespace ChessWPF.ViewModels
                                cell.State == CellUIState.WhiteQueen ||
                                cell.State == CellUIState.WhiteKing;
 
-            timerViewModel.OnFirstPieceSelected(isWhitePiece, gameState.CurrentPlayerColor);
+            timerViewModel.OnFirstPieceSelected(isWhitePiece, boardState.CurrentPlayerColor);
             if (settingsViewModel.ShowAvailableMoves)
             {
                 foreach (var move in validMoves)

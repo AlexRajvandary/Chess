@@ -39,11 +39,8 @@ namespace ChessWPF.ViewModels
         private ObservableCollection<object> availableYearsWithAll;
         private int? selectedYearFilter;
         
-        private readonly GameStorageService _gameStorageService;
-
-        public HistoricalGamesViewModel(GameStorageService gameStorageService)
+        public HistoricalGamesViewModel()
         {
-            _gameStorageService = gameStorageService ?? throw new ArgumentNullException(nameof(gameStorageService));
             HistoricalGames = new ObservableCollection<HistoricalGame>();
             availableYears = new ObservableCollection<int>();
             availableYearsWithAll = new ObservableCollection<object> { null };
@@ -462,7 +459,7 @@ namespace ChessWPF.ViewModels
                     {
                         try
                         {
-                            var result = _gameStorageService.ImportPgnFile(filePath, (progress, current, total) =>
+                            var result = GameStorageService.ImportPgnFile(filePath, (progress, current, total) =>
                             {
                                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                                 {

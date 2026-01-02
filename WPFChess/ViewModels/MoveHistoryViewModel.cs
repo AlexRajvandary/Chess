@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using System.Windows.Threading;
-using ChessLib.Pieces;
+using ChessLib;
 using ChessWPF.Models;
 using ChessWPF.Services;
 
@@ -13,7 +13,7 @@ namespace ChessWPF.ViewModels
     public class MoveHistoryViewModel : NotifyPropertyChanged
     {
         private readonly DispatcherTimer autoPlayTimer;
-        private readonly IGameService gameService;
+        private readonly ChessGameService gameService;
         private bool isAutoPlaying = false;
         private bool isGameLoaded = false;
         private List<string> loadedGameMoves = new List<string>();
@@ -27,7 +27,7 @@ namespace ChessWPF.ViewModels
         {
         }
 
-        public MoveHistoryViewModel(IGameService gameService)
+        public MoveHistoryViewModel(ChessGameService gameService)
         {
             this.gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));
             MoveHistoryItems = new ObservableCollection<MoveDisplayItem>();
@@ -151,11 +151,10 @@ namespace ChessWPF.ViewModels
             for (int i = 0; i <= moveIndex; i++)
             {
                 var moveNotation = loadedGameMoves[i];
-                // Use IGameService.ParseMove instead of direct library call
-                var parsedMove = gameService.ParseMove(moveNotation);
-                if (parsedMove != null)
+                var moveInfo = PgnMoveParser.ParseMove(moveNotation, gameService.CurrentGame);
+                if (moveInfo != null)
                 {
-                    _ = gameService.MakeMove(parsedMove.From, parsedMove.To);
+                    _ = gameService.MakeMove(moveInfo.From, moveInfo.To);
                 }
             }
 

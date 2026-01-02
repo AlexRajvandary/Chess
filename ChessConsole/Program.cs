@@ -1,5 +1,4 @@
 ﻿using ChessLib;
-using ChessLib.Common;
 using System;
 
 namespace ChessConsole

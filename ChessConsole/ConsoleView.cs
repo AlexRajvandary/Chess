@@ -1,4 +1,4 @@
-using ChessLib.Common;
+using ChessLib;
 using System;
 
 namespace ChessConsole
