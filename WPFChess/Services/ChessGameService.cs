@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using ChessLib;
-using ChessLib.Common;
-using ChessLib.Pieces;
 
 namespace ChessWPF.Services
 {
@@ -70,7 +68,7 @@ namespace ChessWPF.Services
         /// <summary>
         /// Gets valid moves for a piece at the given position
         /// </summary>
-        public List<ChessLib.Common.Position> GetValidMoves(ChessLib.Common.Position position)
+        public List<ChessLib.Position> GetValidMoves(ChessLib.Position position)
         {
             return _game.GetValidMoves(position);
         }
@@ -78,7 +76,7 @@ namespace ChessWPF.Services
         /// <summary>
         /// Makes a move and returns the result
         /// </summary>
-        public MoveResult MakeMove(ChessLib.Common.Position from, ChessLib.Common.Position to)
+        public MoveResult MakeMove(ChessLib.Position from, ChessLib.Position to)
         {
             return _game.MakeMove(from, to);
         }

@@ -5,7 +5,6 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using ChessWPF.Data;
 using ChessWPF.Models;
-using ChessLib.Pieces;
 using ChessLib;
 
 #nullable disable
@@ -13,11 +12,11 @@ namespace ChessWPF.Services
 {
     public class GameStorageService
     {
-        private readonly IGameService _gameService;
+        private readonly PgnService _pgnService;
 
-        public GameStorageService(IGameService gameService = null)
+        public GameStorageService()
         {
-            _gameService = gameService ?? new GameService();
+            _pgnService = new PgnService();
             EnsureDatabaseCreated();
         }
 
@@ -123,58 +122,20 @@ namespace ChessWPF.Services
             }
         }
 
-        public GameRecord SaveGame(IGameService gameService, 
+        public GameRecord SaveGame(Game game, 
                                    string whitePlayer = "White",
                                    string blackPlayer = "Black",
                                    string eventName = null,
                                    string site = null,
                                    string round = null)
         {
-            if (gameService == null)
-                throw new ArgumentNullException(nameof(gameService));
-
             try
             {
-                var state = gameService.GetState();
-                // Use IGameService.GeneratePgn instead of direct library call
-                var pgn = gameService.GeneratePgn(
-                    whitePlayer, 
-                    blackPlayer, 
-                    eventName, 
-                    site, 
-                    round,
-                    result: null, // Will be determined from state
-                    timeLoser: null // Not available in IGameState, would need to be passed separately
-                );
-                
+                var pgn = _pgnService.GeneratePgn(game, whitePlayer, blackPlayer, eventName, site, round);
                 // Get FEN after all moves (final position)
-                var finalFen = gameService.GetFen();
+                var finalFen = game.GetFen();
                 // Initial FEN is the starting position (standard or custom)
                 var initialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-                // Count moves from move history string
-                var moveHistory = gameService.GetMoveHistory();
-                var moveCount = string.IsNullOrEmpty(moveHistory) 
-                    ? 0 
-                    : moveHistory.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Count(m => !System.Text.RegularExpressions.Regex.IsMatch(m, @"^\d+\.?$"));
-
-                // Determine result from game state
-                string result = "*";
-                if (state.IsGameOver)
-                {
-                    if (state.IsCheckmate)
-                    {
-                        // The player who is checkmated loses
-                        // Current player is in checkmate, so opposite player wins
-                        var winner = state.CurrentPlayerColor == PieceColor.White ? PieceColor.Black : PieceColor.White;
-                        result = winner == PieceColor.White ? "1-0" : "0-1";
-                    }
-                    else
-                    {
-                        result = "1/2-1/2"; // Draw
-                    }
-                }
 
                 var gameRecord = new GameRecord
                 {
@@ -188,8 +149,14 @@ namespace ChessWPF.Services
                     Round = round,
                     InitialFen = initialFen,
                     FinalFen = finalFen,
-                    MoveCount = moveCount,
-                    Result = result
+                    MoveCount = game.MoveHistory?.Count ?? 0,
+                    Result = game.IsGameOver 
+                        ? (game.TimeLoser.HasValue
+                            ? (game.TimeLoser.Value == PieceColor.White ? "0-1" : "1-0")
+                            : (game.MoveHistory?.LastOrDefault()?.IsCheckmate == true
+                                ? (game.MoveHistory.Last().PlayerColor == PieceColor.White ? "1-0" : "0-1")
+                                : "1/2-1/2"))
+                        : "*"
                 };
 
                 using var context = new ChessDbContext();
@@ -587,7 +554,7 @@ namespace ChessWPF.Services
         /// <summary>
         /// Imports games from a PGN file with progress reporting
         /// </summary>
-        public ImportResult ImportPgnFile(string filePath, System.Action<int, int, int> progressCallback = null)
+        public static ImportResult ImportPgnFile(string filePath, System.Action<int, int, int> progressCallback = null)
         {
             var result = new ImportResult();
             
@@ -628,6 +595,7 @@ namespace ChessWPF.Services
                 progressCallback?.Invoke(0, 0, gameStrings.Count);
 
                 using var context = new ChessDbContext();
+                var pgnService = new PgnService();
                 var importedCount = 0;
                 var skippedCount = 0;
 
@@ -636,9 +604,8 @@ namespace ChessWPF.Services
                     try
                     {
                         var gamePgn = gameStrings[i];
-                        // Use IGameService methods instead of direct library calls
-                        var headers = _gameService.ParsePgnHeaders(gamePgn);
-                        var moves = _gameService.ParsePgnMoves(gamePgn);
+                        var headers = PgnService.ParsePgnHeaders(gamePgn);
+                        var moves = PgnService.ParsePgnMoves(gamePgn);
 
                         if (moves.Count == 0)
                         {
@@ -646,20 +613,21 @@ namespace ChessWPF.Services
                             continue;
                         }
 
-                        // Create a temporary game service to replay moves and get final FEN
-                        var tempGameService = new GameService();
+                        // Create a game and replay moves to get final FEN
+                        var game = new Game();
                         var initialFen = headers.ContainsKey("FEN") ? headers["FEN"] : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
                         
                         // Note: For now, we always start from standard position
                         // Custom FEN positions would require additional implementation
 
-                        // Replay moves using IGameService.ParseMove
+                        // Replay moves
+                        var pgnMoveParser = new PgnMoveParser();
                         foreach (var moveNotation in moves)
                         {
-                            var parsedMove = tempGameService.ParseMove(moveNotation);
-                            if (parsedMove != null)
+                            var moveInfo = PgnMoveParser.ParseMove(moveNotation, game);
+                            if (moveInfo != null)
                             {
-                                var moveResult = tempGameService.MakeMove(parsedMove.From, parsedMove.To);
+                                var moveResult = game.MakeMove(moveInfo.From, moveInfo.To);
                                 if (!moveResult.IsValid)
                                 {
                                     // Skip invalid moves
@@ -668,7 +636,7 @@ namespace ChessWPF.Services
                             }
                         }
 
-                        var finalFen = tempGameService.GetFen();
+                        var finalFen = game.GetFen();
                         var whitePlayer = headers.ContainsKey("White") ? headers["White"] : "White";
                         var blackPlayer = headers.ContainsKey("Black") ? headers["Black"] : "Black";
                         var eventName = headers.ContainsKey("Event") ? headers["Event"] : null;
@@ -737,5 +705,17 @@ namespace ChessWPF.Services
 
             return result;
         }
+    }
+
+    /// <summary>
+    /// Result of PGN file import operation
+    /// </summary>
+    public class ImportResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public int TotalGames { get; set; }
+        public int ImportedGames { get; set; }
+        public int SkippedGames { get; set; }
     }
 }

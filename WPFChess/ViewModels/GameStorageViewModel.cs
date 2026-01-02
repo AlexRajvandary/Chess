@@ -9,7 +9,7 @@ namespace ChessWPF.ViewModels
 {
     public class GameStorageViewModel : NotifyPropertyChanged
     {
-        private readonly IGameService gameService;
+        private readonly ChessGameService gameService;
         private readonly GameStorageService gameStorageService;
         private ICommand loadSelectedGameCommand;
         private ICommand refreshGamesCommand;
@@ -19,7 +19,7 @@ namespace ChessWPF.ViewModels
 
         public GameStorageViewModel() { }
 
-        public GameStorageViewModel(IGameService gameService, GameStorageService gameStorageService)
+        public GameStorageViewModel(ChessGameService gameService, GameStorageService gameStorageService)
         {
             this.gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));
             this.gameStorageService = gameStorageService ?? throw new ArgumentNullException(nameof(gameStorageService));
@@ -46,7 +46,7 @@ namespace ChessWPF.ViewModels
             try
             {
                 var gameRecord = gameStorageService.SaveGame(
-                    gameService,
+                    gameService.CurrentGame,
                     "White",
                     "Black",
                     "Casual Game",
