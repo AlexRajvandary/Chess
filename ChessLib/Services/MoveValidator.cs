@@ -11,10 +11,12 @@ namespace ChessLib.Services
     public class MoveValidator
     {
         private readonly GameField gameField;
+        private readonly MoveStrategyService moveStrategyService;
 
-        public MoveValidator(GameField gameField)
+        public MoveValidator(GameField gameField, MoveStrategyService moveStrategyService)
         {
             this.gameField = gameField;
+            this.moveStrategyService = moveStrategyService;
         }
 
         /// <summary>
@@ -30,8 +32,8 @@ namespace ChessLib.Services
                 return false;
 
             // Get all possible moves for the piece
-            var possibleMoves = piece.AvailableMoves(gameFieldString);
-            var possibleKills = piece.AvailableKills(gameFieldString);
+            var possibleMoves = moveStrategyService.GetPossibleMoves(piece, allPieces, gameField, gameFieldString);
+            var possibleKills = moveStrategyService.GetPossibleCaptures(piece, allPieces, gameField, gameFieldString);
             var allPossibleMoves = possibleMoves.Concat(possibleKills).ToList();
 
             // Check if destination is in possible moves
@@ -44,7 +46,7 @@ namespace ChessLib.Services
             if (king != null)
             {
                 var enemyPieces = allPieces.Where(p => p.Color != piece.Color && !p.IsDead).ToList();
-                isCurrentlyInCheck = gameField.GetAtackStatus(enemyPieces, king.Position, gameFieldString);
+                isCurrentlyInCheck = gameField.GetAtackStatus(enemyPieces, king.Position, gameFieldString, moveStrategyService);
             }
 
             // Check if move would leave own king in check
@@ -77,7 +79,7 @@ namespace ChessLib.Services
                 return false;
             
             var player = new Player(piece.Color, allPieces.Where(p => p.Color == piece.Color).ToList());
-            return gameField.GetCheckStatusAfterMove(allPieces, piece, destination, player);
+            return gameField.GetCheckStatusAfterMove(allPieces, piece, destination, player, moveStrategyService);
         }
 
         /// <summary>
@@ -86,7 +88,7 @@ namespace ChessLib.Services
         public bool IsSquareAttacked(List<IPiece> pieces, Position square, PieceColor byColor, string[,] gameFieldString)
         {
             var attackingPieces = pieces.Where(p => p.Color == byColor && !p.IsDead).ToList();
-            return gameField.GetAtackStatus(attackingPieces, square, gameFieldString);
+            return gameField.GetAtackStatus(attackingPieces, square, gameFieldString, moveStrategyService);
         }
 
         /// <summary>

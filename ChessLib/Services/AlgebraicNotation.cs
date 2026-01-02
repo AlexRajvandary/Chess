@@ -11,7 +11,7 @@ namespace ChessLib.Services
         private static readonly string[] Files = ["a", "b", "c", "d", "e", "f", "g", "h"];
         private static readonly string[] Ranks = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-        public static string ToAlgebraic(MoveNotation move, System.Collections.Generic.List<IPiece> allPieces)
+        public static string ToAlgebraic(MoveNotation move, System.Collections.Generic.List<IPiece> allPieces, MoveStrategyService moveStrategyService)
         {
             if (move == null || move.Piece == null)
                 return string.Empty;
@@ -52,7 +52,7 @@ namespace ChessLib.Services
                                     p != move.Piece)
                         .ToList();
 
-                    if (ambiguousPieces.Any(p => CanReachSquare(p, move.To, allPieces)))
+                    if (ambiguousPieces.Any(p => CanReachSquare(p, move.To, allPieces, moveStrategyService)))
                     {
                         bool needFile = ambiguousPieces.Any(p => p.Position.X == move.From.X && p.Position.Y != move.From.Y);
                         bool needRank = ambiguousPieces.Any(p => p.Position.Y == move.From.Y && p.Position.X != move.From.X);
@@ -120,7 +120,7 @@ namespace ChessLib.Services
         /// Note: This is a simplified check that only verifies if the square is in the piece's possible moves,
         /// without checking if the move would leave the king in check (which is not needed for ambiguity resolution).
         /// </summary>
-        private static bool CanReachSquare(IPiece piece, Position square, List<IPiece> allPieces)
+        private static bool CanReachSquare(IPiece piece, Position square, List<IPiece> allPieces, MoveStrategyService moveStrategyService)
         {
             if (piece == null || piece.IsDead || allPieces == null)
             {
@@ -154,13 +154,14 @@ namespace ChessLib.Services
                 }
             }
 
-            var possibleMoves = piece.AvailableMoves(gameField);
-            var possibleKills = piece.AvailableKills(gameField);
+            var gameFieldObj = new GameField();
+            var possibleMoves = moveStrategyService.GetPossibleMoves(piece, allPieces, gameFieldObj, gameField);
+            var possibleKills = moveStrategyService.GetPossibleCaptures(piece, allPieces, gameFieldObj, gameField);
             
             return possibleMoves.Contains(square) || possibleKills.Contains(square);
         }
 
-        public static string FormatMoveHistory(List<MoveNotation> moves, List<IPiece> allPieces)
+        public static string FormatMoveHistory(List<MoveNotation> moves, List<IPiece> allPieces, MoveStrategyService moveStrategyService)
         {
             if (moves == null || moves.Count == 0)
             {
@@ -185,7 +186,7 @@ namespace ChessLib.Services
                     result.Append($"{currentMoveNumber}. ");
                 }
 
-                string moveNotation = ToAlgebraic(move, allPieces);
+                string moveNotation = ToAlgebraic(move, allPieces, moveStrategyService);
                 if (!string.IsNullOrEmpty(moveNotation))
                 {
                     result.Append(moveNotation);

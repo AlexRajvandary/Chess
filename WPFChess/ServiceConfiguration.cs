@@ -9,7 +9,7 @@ namespace ChessWPF
         public static ServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
-            services.AddSingleton<ChessGameService>();
+            services.AddSingleton<IGameService, GameService>();
             services.AddSingleton<SoundService>();
             services.AddSingleton<GameStorageService>();
             services.AddSingleton<PanelManagementViewModel>();

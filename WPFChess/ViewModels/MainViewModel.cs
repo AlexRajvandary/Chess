@@ -18,6 +18,7 @@ namespace ChessWPF.ViewModels
         private readonly MoveHistoryViewModel moveHistoryViewModel;
         private readonly PanelManagementViewModel panelManagementViewModel;
         private readonly SettingsViewModel settingsViewModel;
+        private readonly IGameService gameService;
 
         public MainViewModel() { }
 
@@ -29,7 +30,8 @@ namespace ChessWPF.ViewModels
             HistoricalGamesViewModel historicalGamesViewModel,
             MoveHistoryViewModel moveHistoryViewModel,
             PanelManagementViewModel panelManagementViewModel,
-            SettingsViewModel settingsViewModel)
+            SettingsViewModel settingsViewModel,
+            IGameService gameService)
         {
             this.gameViewModel = gameViewModel ?? throw new ArgumentNullException(nameof(gameViewModel));
             this.timerViewModel = timerViewModel ?? throw new ArgumentNullException(nameof(timerViewModel));
@@ -37,6 +39,7 @@ namespace ChessWPF.ViewModels
             this.gameStorageViewModel = gameStorageViewModel ?? throw new ArgumentNullException(nameof(gameStorageViewModel));
             this.historicalGamesViewModel = historicalGamesViewModel ?? throw new ArgumentNullException(nameof(historicalGamesViewModel));
             this.moveHistoryViewModel = moveHistoryViewModel ?? throw new ArgumentNullException(nameof(moveHistoryViewModel));
+            this.gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));
             this.panelManagementViewModel = panelManagementViewModel ?? throw new ArgumentNullException(nameof(panelManagementViewModel));
             this.settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
 
@@ -77,7 +80,7 @@ namespace ChessWPF.ViewModels
             try
             {
                 timerViewModel.ResetForLoadedGame();
-                var moves = PgnService.ParsePgnMoves(historicalGame.PgnNotation);
+                var moves = gameService.ParsePgnMoves(historicalGame.PgnNotation);
                 moveHistoryViewModel.LoadGame(moves);
                 gameViewModel.SetHistoricalGameInfo(historicalGame);
                 historicalGamesViewModel.SelectedHistoricalGame = null;
@@ -93,7 +96,7 @@ namespace ChessWPF.ViewModels
             try
             {
                 timerViewModel.ResetForLoadedGame();
-                var moves = PgnService.ParsePgnMoves(gameRecord.PgnNotation);
+                var moves = gameService.ParsePgnMoves(gameRecord.PgnNotation);
                 moveHistoryViewModel.LoadGame(moves);
                 gameViewModel.SetHistoricalGameInfo(null);
                 gameStorageViewModel.SelectedGame = null;
@@ -135,9 +138,11 @@ namespace ChessWPF.ViewModels
                 gameViewModel.Fen = gameViewModel.GameService.GetFen();
                 gameViewModel.SetupBoard();
             };
+            // Captured pieces are now updated automatically when moves are made
+            // through GameViewModel.AddCapturedPiece, so this callback is no longer needed
             moveHistoryViewModel.OnCapturedPiecesUpdateRequired = () =>
             {
-                capturedPiecesViewModel.UpdateFromMoveHistory(gameViewModel.GetStateFromPiece);
+                // No-op: captured pieces are tracked per move via MoveResult.CapturedPiece
             };
             moveHistoryViewModel.GetMoveHistoryString = () => gameViewModel.MoveHistory;
             moveHistoryViewModel.GetStateFromPiece = gameViewModel.GetStateFromPiece;

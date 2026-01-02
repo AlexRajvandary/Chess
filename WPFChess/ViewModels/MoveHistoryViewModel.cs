@@ -13,7 +13,7 @@ namespace ChessWPF.ViewModels
     public class MoveHistoryViewModel : NotifyPropertyChanged
     {
         private readonly DispatcherTimer autoPlayTimer;
-        private readonly ChessGameService gameService;
+        private readonly IGameService gameService;
         private bool isAutoPlaying = false;
         private bool isGameLoaded = false;
         private List<string> loadedGameMoves = new List<string>();
@@ -27,7 +27,7 @@ namespace ChessWPF.ViewModels
         {
         }
 
-        public MoveHistoryViewModel(ChessGameService gameService)
+        public MoveHistoryViewModel(IGameService gameService)
         {
             this.gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));
             MoveHistoryItems = new ObservableCollection<MoveDisplayItem>();
@@ -151,10 +151,11 @@ namespace ChessWPF.ViewModels
             for (int i = 0; i <= moveIndex; i++)
             {
                 var moveNotation = loadedGameMoves[i];
-                var moveInfo = PgnMoveParser.ParseMove(moveNotation, gameService.CurrentGame);
-                if (moveInfo != null)
+                // Use IGameService.ParseMove instead of direct library call
+                var parsedMove = gameService.ParseMove(moveNotation);
+                if (parsedMove != null)
                 {
-                    _ = gameService.MakeMove(moveInfo.From, moveInfo.To);
+                    _ = gameService.MakeMove(parsedMove.From, parsedMove.To);
                 }
             }
 

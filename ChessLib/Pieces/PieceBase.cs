@@ -38,8 +38,6 @@ namespace ChessLib.Pieces
         public abstract Position Position { get; set; }
         public abstract bool IsDead { get; set; }
 
-        public abstract List<Position> AvailableKills(string[,] GameField);
-        public abstract List<Position> AvailableMoves(string[,] GameField);
         public abstract void ChangePosition(Position position);
         public abstract object Clone();
     }
