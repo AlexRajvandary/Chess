@@ -48,81 +48,488 @@ Chess/
 └── ChessLib.Tests/        # Unit tests
 ```
 
-### Architecture Layers
+### Architecture
 
 ```mermaid
-graph TB
-    subgraph WPF["WPF Application"]
-        direction TB
-        MW["MainWindow"]
-        MV["MainViewModel"]
-        GV["GameViewModel<br/>UI logic only"]
-        BV["BoardViewModel"]
-    end
+classDiagram
+    direction TB
     
-    subgraph Application["Application Layer"]
-        direction TB
-        IGS["IGameService<br/>Abstraction<br/>&lt;&lt;interface&gt;&gt;"]
-        GS_Impl["GameService<br/>Implementation"]
-    end
+    %% ============================================
+    %% WPF LAYER - Presentation
+    %% ============================================
     
-    subgraph ChessLib["ChessLib Domain"]
-        direction TB
-        IGE["IGameEngine<br/>Abstraction<br/>&lt;&lt;interface&gt;&gt;"]
-        GE["GameEngine<br/>Encapsulated<br/>implementation"]
-        IGS_State["IGameState<br/>State abstraction"]
-        Cache["StateCache<br/>Caching"]
-        
-        subgraph Board["Board Abstraction"]
-            IBS["IBoardState"]
-            IBR["IBoardRepresentation"]
-            ABR["ArrayBoardRep<br/>Current implementation"]
-            BBR["BitboardRep<br/>Future optimization"]
-        end
-        
-        subgraph Strategies["Move Strategies"]
-            IMS["IMoveStrategy<br/>&lt;&lt;interface&gt;&gt;"]
-            MSR["MoveStrategyRegistry"]
-            PMS["PawnMoveStrategy"]
-            KMS["KingMoveStrategy"]
-            QMS["QueenMoveStrategy"]
-            ISMS["ISpecialMoveStrategy<br/>&lt;&lt;interface&gt;&gt;<br/>Special moves"]
-            EPS["EnPassantStrategy<br/>En Passant"]
-            CS["CastlingStrategy<br/>Castling"]
-        end
-    end
+    class MainWindow {
+        +MainViewModel ViewModel
+        +ShowPanel()
+        +HidePanel()
+    }
     
-    %% Connections
-    MW --> MV
-    MV --> GV
-    GV --> BV
-    GV --> IGS
-    IGS -.->|"implements"| GS_Impl
-    GS_Impl --> IGE
-    IGE -.->|"implements"| GE
-    GE --> IBS
-    GE --> Cache
-    GE --> IGS_State
-    GE --> IMS
-    IBS --> IBR
-    IBR -.->|"implements"| ABR
-    IBR -.->|"future"| BBR
-    IMS -.->|"implements"| PMS
-    IMS -.->|"implements"| KMS
-    IMS -.->|"implements"| QMS
-    MSR --> IMS
-    ISMS -.->|"implements"| EPS
-    ISMS -.->|"implements"| CS
+    class MainViewModel {
+        +GameViewModel Game
+        +BoardViewModel Board
+        +TimerViewModel Timer
+        +CapturedPiecesViewModel CapturedPieces
+        +GameStorageViewModel GameStorage
+        +MoveHistoryViewModel MoveHistory
+        +SettingsViewModel Settings
+        +PanelManagementViewModel Panels
+        +Brush DarkSquareColor
+        +Brush LightSquareColor
+    }
     
-    %% Styling
-    style GV fill:#2f9e44,stroke:#1e7e34,stroke-width:3px,color:#ffffff
-    style IGS fill:#2f9e44,stroke:#1e7e34,stroke-width:3px,color:#ffffff
-    style GS_Impl fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
-    style IGE fill:#2f9e44,stroke:#1e7e34,stroke-width:3px,color:#ffffff
-    style GE fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
-    style IGS_State fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
-    style Cache fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
-    style BBR fill:#6c757d,stroke:#495057,stroke-width:2px,color:#ffffff
+    class GameViewModel {
+        -IGameService gameService
+        -BoardViewModel board
+        -SoundService soundService
+        +HandleCellClick(Position)
+        +UpdateViewFromGameState()
+        +GetStateFromPiece(IPiece) CellUIState
+        +string Fen
+        +string MoveHistory
+    }
+    
+    class BoardViewModel {
+        -CellViewModel[,] cells
+        +CellUIState this[int, int]
+        +UpdateFromState(IGameState)
+        +IEnumerable~CellViewModel~ GetEnumerator()
+    }
+    
+    class CellViewModel {
+        +Position Position
+        +CellUIState State
+        +bool Active
+        +bool AvailableMove
+    }
+    
+    class TimerViewModel {
+        +TimeSpan WhiteTime
+        +TimeSpan BlackTime
+        +void Start()
+        +void Pause()
+        +void Reset()
+    }
+    
+    class CapturedPiecesViewModel {
+        +ObservableCollection~IPieceInfo~ WhiteCaptured
+        +ObservableCollection~IPieceInfo~ BlackCaptured
+        +UpdateFromMoveHistory(Func~IPiece, CellUIState~)
+    }
+    
+    class GameStorageViewModel {
+        -IGameService gameService
+        -GameStorageService storageService
+        +ObservableCollection~GameRecord~ SavedGames
+        +GameRecord SelectedGame
+        +ICommand SaveGameCommand
+        +ICommand LoadSelectedGameCommand
+    }
+    
+    class MoveHistoryViewModel {
+        -IGameService gameService
+        +ObservableCollection~MoveDisplayItem~ MoveHistoryItems
+        +bool IsGameLoaded
+        +void LoadGame(List~string~)
+        +void NavigateToMove(int)
+    }
+    
+    class SettingsViewModel {
+        +ColorScheme CurrentScheme
+        +PanelPosition PanelPosition
+        +bool ShowAvailableMoves
+        +event OnColorSchemeChanged
+        +event OnPanelPositionChanged
+    }
+    
+    class PanelManagementViewModel {
+        +bool IsGamePanelOpen
+        +bool IsSettingsPanelOpen
+        +void ToggleGamePanel()
+        +void ToggleSettingsPanel()
+    }
+    
+    class HistoricalGamesViewModel {
+        +ObservableCollection~HistoricalGame~ Games
+        +HistoricalGame SelectedHistoricalGame
+        +Action~HistoricalGame~ OnGameLoadRequested
+    }
+    
+    %% ============================================
+    %% APPLICATION LAYER
+    %% ============================================
+    
+    class IGameService {
+        <<interface>>
+        +MoveResult MakeMove(Position, Position)
+        +IReadOnlyList~Position~ GetValidMoves(Position)
+        +IGameState GetState()
+        +void StartNewGame()
+        +string GetFen()
+        +string GetMoveHistory()
+    }
+    
+    class GameService {
+        -IGameEngine gameEngine
+        +MoveResult MakeMove(Position, Position)
+        +IReadOnlyList~Position~ GetValidMoves(Position)
+        +IGameState GetState()
+        +void StartNewGame()
+    }
+    
+    %% ============================================
+    %% CHESSLIB DOMAIN LAYER
+    %% ============================================
+    
+    class IGameEngine {
+        <<interface>>
+        +MoveResult MakeMove(Position, Position)
+        +IReadOnlyList~Position~ GetValidMoves(Position)
+        +IGameState GetState()
+        +void StartNewGame()
+        +string GetFen()
+        +string GetMoveHistory()
+        +void LoadFromPgn(string)
+        +void LoadFromFen(string)
+        +void LoadFromState(IGameState)
+    }
+    
+    class GameEngine {
+        -Game game
+        -IGameStateCache cache
+        -IMoveCalculator moveCalculator
+        +MoveResult MakeMove(Position, Position)
+        +IReadOnlyList~Position~ GetValidMoves(Position)
+        +IGameState GetState()
+    }
+    
+    class IGameState {
+        <<interface>>
+        +PieceColor CurrentPlayerColor
+        +bool IsCheck
+        +bool IsCheckmate
+        +bool IsGameOver
+        +IReadOnlyList~IPieceInfo~ Pieces
+    }
+    
+    class GameState {
+        +PieceColor CurrentPlayerColor
+        +bool IsCheck
+        +bool IsCheckmate
+        +bool IsGameOver
+        +IReadOnlyList~IPieceInfo~ Pieces
+    }
+    
+    class IGameStateCache {
+        <<interface>>
+        +IGameState GetState()
+        +void Invalidate()
+        +void UpdateAfterMove(Move)
+    }
+    
+    class GameStateCache {
+        -IGameState cachedState
+        -Dictionary~Position, List~Position~~ cachedMoves
+        +IGameState GetState()
+        +void Invalidate()
+    }
+    
+    class IMoveCalculator {
+        <<interface>>
+        +List~Position~ GetValidMoves(IPiece, IGameState)
+    }
+    
+    class MoveCalculator {
+        -IMoveStrategyRegistry strategyRegistry
+        -ISpecialMoveStrategy[] specialStrategies
+        -IMoveValidator moveValidator
+        +List~Position~ GetValidMoves(IPiece, IGameState)
+    }
+    
+    class IMoveStrategy {
+        <<interface>>
+        +PieceType PieceType
+        +List~Position~ GetPossibleMoves(IPiece, IBoardQuery)
+        +List~Position~ GetPossibleCaptures(IPiece, IBoardQuery)
+    }
+    
+    class IMoveStrategyRegistry {
+        <<interface>>
+        +IMoveStrategy GetStrategy(PieceType)
+    }
+    
+    class MoveStrategyRegistry {
+        -Dictionary~PieceType, IMoveStrategy~ strategies
+        +IMoveStrategy GetStrategy(PieceType)
+    }
+    
+    class PawnMoveStrategy {
+        +List~Position~ GetPossibleMoves(IPiece, IBoardQuery)
+        +List~Position~ GetPossibleCaptures(IPiece, IBoardQuery)
+    }
+    
+    class KingMoveStrategy {
+        +List~Position~ GetPossibleMoves(IPiece, IBoardQuery)
+        +List~Position~ GetPossibleCaptures(IPiece, IBoardQuery)
+    }
+    
+    class QueenMoveStrategy {
+        +List~Position~ GetPossibleMoves(IPiece, IBoardQuery)
+        +List~Position~ GetPossibleCaptures(IPiece, IBoardQuery)
+    }
+    
+    class RookMoveStrategy {
+        +List~Position~ GetPossibleMoves(IPiece, IBoardQuery)
+        +List~Position~ GetPossibleCaptures(IPiece, IBoardQuery)
+    }
+    
+    class BishopMoveStrategy {
+        +List~Position~ GetPossibleMoves(IPiece, IBoardQuery)
+        +List~Position~ GetPossibleCaptures(IPiece, IBoardQuery)
+    }
+    
+    class KnightMoveStrategy {
+        +List~Position~ GetPossibleMoves(IPiece, IBoardQuery)
+        +List~Position~ GetPossibleCaptures(IPiece, IBoardQuery)
+    }
+    
+    class ISpecialMoveStrategy {
+        <<interface>>
+        +List~Position~ GetSpecialMoves(IPiece, IGameState)
+    }
+    
+    class EnPassantStrategy {
+        +List~Position~ GetSpecialMoves(IPiece, IGameState)
+    }
+    
+    class CastlingStrategy {
+        +List~Position~ GetSpecialMoves(IPiece, IGameState)
+    }
+    
+    class IBoardQuery {
+        <<interface>>
+        +IPieceInfo GetPieceAt(Position)
+        +bool IsCellFree(Position)
+        +bool IsCellAttacked(Position, PieceColor)
+    }
+    
+    class BoardQuery {
+        -IGameState state
+        +IPieceInfo GetPieceAt(Position)
+        +bool IsCellFree(Position)
+        +bool IsCellAttacked(Position, PieceColor)
+    }
+    
+    class IBoardState {
+        <<interface>>
+        +IPieceInfo GetPieceAt(Position)
+        +bool IsCellFree(Position)
+        +IReadOnlyList~Position~ GetAttackedCells(PieceColor)
+    }
+    
+    class BoardState {
+        -IBoardRepresentation representation
+        +IPieceInfo GetPieceAt(Position)
+        +bool IsCellFree(Position)
+    }
+    
+    class IBoardRepresentation {
+        <<interface>>
+        +IPieceInfo GetPieceAt(Position)
+        +void SetPieceAt(Position, IPieceInfo)
+        +void ClearCell(Position)
+        +void UpdateAfterMove(Move)
+    }
+    
+    class ArrayBoardRepresentation {
+        -IPieceInfo[,] board
+        +IPieceInfo GetPieceAt(Position)
+        +void UpdateAfterMove(Move)
+    }
+    
+    class BitboardRepresentation {
+        -ulong[] whitePieces
+        -ulong[] blackPieces
+        +IPieceInfo GetPieceAt(Position)
+        +void UpdateAfterMove(Move)
+    }
+    
+    class IPieceInfo {
+        <<interface>>
+        +PieceType Type
+        +PieceColor Color
+        +Position Position
+    }
+    
+    class PieceInfo {
+        +PieceType Type
+        +PieceColor Color
+        +Position Position
+    }
+    
+    class IPiece {
+        <<interface>>
+        +PieceType Type
+        +PieceColor Color
+        +Position Position
+        +bool IsDead
+    }
+    
+    class IMoveValidator {
+        <<interface>>
+        +bool IsValidMove(IPiece, Position, IGameState)
+        +List~Position~ FilterValidMoves(IPiece, List~Position~, IGameState)
+    }
+    
+    class MoveValidator {
+        +bool IsValidMove(IPiece, Position, IGameState)
+        +List~Position~ FilterValidMoves(IPiece, List~Position~, IGameState)
+    }
+    
+    class IMoveExecutor {
+        <<interface>>
+        +MoveResult ExecuteMove(IPiece, Position, IGameState)
+        +MoveResult ExecuteEnPassant(Pawn, Position, Pawn, IGameState)
+        +MoveResult ExecuteCastling(King, Rook, CastleType, IGameState)
+    }
+    
+    class MoveExecutor {
+        +MoveResult ExecuteMove(IPiece, Position, IGameState)
+        +MoveResult ExecuteEnPassant(Pawn, Position, Pawn, IGameState)
+        +MoveResult ExecuteCastling(King, Rook, CastleType, IGameState)
+    }
+    
+    class MoveResult {
+        +bool Success
+        +MoveType MoveType
+        +string ErrorMessage
+        +IPieceInfo CapturedPiece
+        +bool IsCheck
+        +bool IsCheckmate
+    }
+    
+    %% ============================================
+    %% WPF SERVICES
+    %% ============================================
+    
+    class SoundService {
+        +void PlayMoveSound()
+        +void PlayCaptureSound()
+        +void PlayCheckSound()
+    }
+    
+    class GameStorageService {
+        +void SaveGame(GameRecord)
+        +List~GameRecord~ LoadSavedGames()
+        +void ImportGames(string)
+    }
+    
+    class PgnService {
+        +string GeneratePgn(IGameState)
+        +List~string~ ParsePgnMoves(string)
+        +Dictionary~string, string~ ParsePgnHeaders(string)
+    }
+    
+    %% ============================================
+    %% CONNECTIONS - WPF Layer
+    %% ============================================
+    
+    MainWindow --> MainViewModel
+    MainViewModel --> GameViewModel
+    MainViewModel --> BoardViewModel
+    MainViewModel --> TimerViewModel
+    MainViewModel --> CapturedPiecesViewModel
+    MainViewModel --> GameStorageViewModel
+    MainViewModel --> MoveHistoryViewModel
+    MainViewModel --> SettingsViewModel
+    MainViewModel --> PanelManagementViewModel
+    MainViewModel --> HistoricalGamesViewModel
+    
+    GameViewModel --> IGameService : ✅ через интерфейс
+    GameViewModel --> BoardViewModel
+    GameViewModel --> SoundService
+    BoardViewModel --> CellViewModel
+    
+    GameStorageViewModel --> IGameService
+    GameStorageViewModel --> GameStorageService
+    MoveHistoryViewModel --> IGameService
+    
+    %% ============================================
+    %% CONNECTIONS - Application Layer
+    %% ============================================
+    
+    IGameService <|.. GameService : implements
+    GameService --> IGameEngine : ✅ через интерфейс
+    
+    %% ============================================
+    %% CONNECTIONS - Domain Layer
+    %% ============================================
+    
+    IGameEngine <|.. GameEngine : implements
+    GameEngine --> IGameStateCache
+    GameEngine --> IMoveCalculator
+    GameEngine --> IGameState : returns
+    
+    IGameStateCache <|.. GameStateCache : implements
+    IGameState <|.. GameState : implements
+    
+    IMoveCalculator <|.. MoveCalculator : implements
+    MoveCalculator --> IMoveStrategyRegistry
+    MoveCalculator --> ISpecialMoveStrategy
+    MoveCalculator --> IMoveValidator
+    
+    IMoveStrategyRegistry <|.. MoveStrategyRegistry : implements
+    IMoveStrategyRegistry --> IMoveStrategy : provides
+    
+    IMoveStrategy <|.. PawnMoveStrategy : implements
+    IMoveStrategy <|.. KingMoveStrategy : implements
+    IMoveStrategy <|.. QueenMoveStrategy : implements
+    IMoveStrategy <|.. RookMoveStrategy : implements
+    IMoveStrategy <|.. BishopMoveStrategy : implements
+    IMoveStrategy <|.. KnightMoveStrategy : implements
+    
+    ISpecialMoveStrategy <|.. EnPassantStrategy : implements
+    ISpecialMoveStrategy <|.. CastlingStrategy : implements
+    
+    IMoveStrategy --> IBoardQuery : uses
+    IBoardQuery <|.. BoardQuery : implements
+    BoardQuery --> IGameState
+    
+    IBoardState <|.. BoardState : implements
+    BoardState --> IBoardRepresentation
+    IBoardRepresentation <|.. ArrayBoardRepresentation : implements
+    IBoardRepresentation <|.. BitboardRepresentation : implements
+    
+    IMoveValidator <|.. MoveValidator : implements
+    IMoveExecutor <|.. MoveExecutor : implements
+    
+    GameState --> IPieceInfo
+    IPieceInfo <|.. PieceInfo : implements
+    
+    %% ============================================
+    %% STYLING
+    %% ============================================
+    
+    style MainWindow fill:#4a90e2,stroke:#2c5aa0,stroke-width:2px,color:#ffffff
+    style MainViewModel fill:#4a90e2,stroke:#2c5aa0,stroke-width:2px,color:#ffffff
+    style GameViewModel fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style BoardViewModel fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style CellViewModel fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    
+    style IGameService fill:#2f9e44,stroke:#1e7e34,stroke-width:3px,color:#ffffff
+    style GameService fill:#2f9e44,stroke:#1e7e44,stroke-width:2px,color:#ffffff
+    
+    style IGameEngine fill:#2f9e44,stroke:#1e7e34,stroke-width:3px,color:#ffffff
+    style GameEngine fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style IGameState fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style IGameStateCache fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style IMoveCalculator fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style IMoveStrategy fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style ISpecialMoveStrategy fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style IBoardQuery fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style IBoardState fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style IBoardRepresentation fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style IPieceInfo fill:#2f9e44,stroke:#1e7e34,stroke-width:2px,color:#ffffff
+    style BitboardRepresentation fill:#6c757d,stroke:#495057,stroke-width:2px,color:#ffffff
 ```
 
 ### Key Principles
